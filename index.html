@@ -96,10 +96,10 @@
     .detective-scene > img { width:100%; height:100%; display:block; object-fit:cover; }
     .detective-bubble { position:absolute; top:4%; right:4%; width:48%; padding:clamp(12px,2.5vw,22px); border:3px solid #30354c; border-radius:28px; background:rgba(255,255,255,.96); box-shadow:0 8px 20px rgba(30,34,53,.16); font-size:clamp(1rem,2.4vw,1.4rem); font-weight:850; line-height:1.55; text-align:left; }
     .detective-bubble::after { content:''; position:absolute; left:12%; bottom:-22px; width:34px; height:34px; background:white; border-right:3px solid #30354c; border-bottom:3px solid #30354c; transform:skew(-24deg) rotate(36deg); }
-    .detective-word { display:inline-flex; align-items:baseline; gap:2px; white-space:nowrap; }
+    .detective-word { display:inline-flex; align-items:baseline; gap:3px; margin:0 .22em; padding:.08em .38em .16em; border-radius:11px; background:#fff0a8; box-shadow:inset 0 -3px 0 #ffd35c, 0 2px 7px rgba(95,72,15,.16); white-space:nowrap; vertical-align:middle; }
     .detective-shown { display:inline-block; min-width:.62em; text-align:center; }
-    .detective-letter { width:1.05em; min-width:24px; height:1.45em; margin:0 1px; padding:0; border:0; border-bottom:3px solid var(--primary); border-radius:5px 5px 0 0; outline:none; background:#f0efff; color:var(--ink); font:inherit; font-weight:1000; line-height:1; text-align:center; text-transform:lowercase; }
-    .detective-letter:focus { background:#dedbff; box-shadow:0 0 0 2px rgba(108,99,255,.28); }
+    .detective-letter { width:1.05em; min-width:24px; height:1.45em; margin:0 1px; padding:0; border:0; border-bottom:3px solid #5148db; border-radius:5px 5px 0 0; outline:none; background:#fff; color:var(--ink); font:inherit; font-weight:1000; line-height:1; text-align:center; text-transform:lowercase; }
+    .detective-letter:focus { background:#eeeaff; box-shadow:0 0 0 2px rgba(81,72,219,.3); }
     @media (max-width:600px){ .detective-bubble { width:58%; font-size:.9rem; line-height:1.42; border-radius:20px; } .detective-letter { min-width:19px; } }
     .result-score { font-size:clamp(3rem,12vw,6rem); font-weight:1000; margin:10px 0; }
     .mistakes { margin:18px 0; display:grid; gap:8px; }
