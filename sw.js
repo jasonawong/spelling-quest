@@ -1,5 +1,6 @@
-const CACHE = 'spelling-quest-v1';
-const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png'];
+const CACHE = 'spelling-quest-v13';
+const DETECTIVE_WORDS = ['mask','track','stamp','stage','grade','they','batch','chance','graph','trade','raise','eight','safety','wrapped','laugh','ramp','crane','flame','magical','station'];
+const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./word-picture-sprite.png',...DETECTIVE_WORDS.map(word=>`./word-detective/${word}.png`)];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
