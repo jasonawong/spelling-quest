@@ -6,7 +6,7 @@ A touch-first, offline-capable spelling practice PWA for one child using one iPa
 - Read-only list of 20 spelling words
 - Type the Word with a one-second preview, picture clues, and the device's speech synthesis
 - Build the Word with touch-friendly letter tiles
-- Sound the Word with capybara-themed sound-to-spelling chunk mapping
+- Sound the Word with picture clues and capybara-themed sound-to-spelling chunk mapping
 - Write the Word with a one-second preview, picture clue, and finger handwriting canvas
 - Word Detective with 20 sentence-matched anime scenes and inline missing-letter clues
 - 20-word Practice Test with score shown at the end
