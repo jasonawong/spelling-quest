@@ -43,6 +43,8 @@
     .hero-row { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
     .hero h2 { margin:0; font-size:clamp(1.7rem,5vw,2.5rem); }
     .hero p { margin:7px 0 0; opacity:.9; font-weight:700; }
+    .hero-reset { min-height:44px; margin-top:14px; padding:0 16px; border:2px solid rgba(255,255,255,.7); border-radius:14px; background:rgba(255,255,255,.14); color:white; font-weight:900; cursor:pointer; }
+    .hero-reset:active { background:rgba(255,255,255,.25); transform:translateY(1px); }
     .progress-wrap { min-width:250px; flex:1; max-width:420px; }
     .progress-label { display:flex; justify-content:space-between; font-weight:900; font-size:.95rem; margin-bottom:8px; }
     .progress { height:14px; border-radius:99px; background:rgba(255,255,255,.22); overflow:hidden; }
@@ -51,6 +53,8 @@
     @media (max-width:700px){ .grid,.word-list{grid-template-columns:1fr;} }
     .game-card { border:0; text-align:left; min-height:148px; border-radius:var(--radius); padding:20px; background:var(--card); box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; color:var(--ink); }
     .game-card .emoji { font-size:34px; }
+    .game-card-icon { width:58px; height:58px; object-fit:contain; filter:drop-shadow(0 5px 7px rgba(46,52,90,.16)); }
+    .keycap-icon { width:48px; height:48px; display:grid; place-items:center; border:2px solid #cdd2df; border-bottom-width:6px; border-radius:11px; background:linear-gradient(#fff,#eef0f6); color:#343a52; box-shadow:0 5px 10px rgba(46,52,90,.14); font-size:1.55rem; font-weight:1000; }
     .game-card strong { font-size:1.22rem; display:block; margin-top:12px; }
     .game-card span { display:block; color:var(--muted); margin-top:6px; font-weight:650; line-height:1.35; }
     .stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin:18px 0; }
@@ -101,6 +105,21 @@
     .detective-letter { width:1.05em; min-width:24px; height:1.45em; margin:0 1px; padding:0; border:0; border-bottom:3px solid #5148db; border-radius:5px 5px 0 0; outline:none; background:#fff; color:var(--ink); font:inherit; font-weight:1000; line-height:1; text-align:center; text-transform:lowercase; }
     .detective-letter:focus { background:#eeeaff; box-shadow:0 0 0 2px rgba(81,72,219,.3); }
     @media (max-width:600px){ .detective-bubble { width:58%; font-size:.9rem; line-height:1.42; border-radius:20px; } .detective-letter { min-width:19px; } }
+    .sound-panel { overflow:hidden; background:linear-gradient(160deg,#fffdf8 0%,#f4fbff 58%,#eef7ff 100%); }
+    .sound-hero { display:grid; grid-template-columns:minmax(150px,230px) 1fr; align-items:center; gap:clamp(16px,4vw,34px); margin:0 auto 20px; text-align:left; }
+    .sound-mascot { width:100%; max-height:250px; object-fit:contain; filter:drop-shadow(0 12px 18px rgba(72,91,112,.2)); }
+    .sound-copy h2 { margin:0 0 8px; }
+    .sound-copy .sub { margin-bottom:14px; }
+    .sound-speak { width:94px; height:94px; border:0; border-radius:999px; background:linear-gradient(145deg,#55bde8,#348ac7); color:white; box-shadow:0 12px 26px rgba(52,138,199,.3); font-size:42px; cursor:pointer; }
+    .sound-label { margin:10px 0 8px; color:#4f6479; font-size:.88rem; font-weight:1000; letter-spacing:.08em; text-transform:uppercase; }
+    .sound-map { display:flex; flex-wrap:wrap; justify-content:center; gap:11px; min-height:90px; padding:14px; border:3px solid #9bd7ed; border-radius:22px; background:rgba(225,247,255,.75); }
+    .sound-slot { position:relative; min-width:68px; height:62px; padding:0 14px; border:2px dashed #72bfdc; border-radius:16px; background:#fff; color:#22364b; font-size:1.35rem; font-weight:1000; cursor:pointer; }
+    .sound-slot::after { content:'~'; position:absolute; left:50%; bottom:-18px; transform:translateX(-50%); color:#62b4d5; font-size:1rem; }
+    .sound-slot.filled { border-style:solid; border-color:#4da6ca; background:#fff7cc; box-shadow:0 5px 12px rgba(72,128,151,.16); }
+    .sound-bank { display:flex; flex-wrap:wrap; justify-content:center; gap:11px; min-height:84px; padding:14px; border-radius:22px; background:#f4e4cf; }
+    .sound-tile { min-width:70px; height:58px; padding:0 15px; border:0; border-radius:15px; background:linear-gradient(#fffdf7,#f8e8c9); color:#3e3127; box-shadow:0 5px 0 #c99d6d,0 8px 15px rgba(83,59,35,.16); font-size:1.25rem; font-weight:1000; cursor:pointer; }
+    .sound-tile:active { transform:translateY(3px); box-shadow:0 2px 0 #c99d6d,0 4px 8px rgba(83,59,35,.14); }
+    @media (max-width:600px){ .sound-hero { grid-template-columns:120px 1fr; } .sound-mascot { max-height:180px; } .sound-speak { width:76px; height:76px; font-size:34px; } .sound-slot,.sound-tile { min-width:58px; } }
     .result-score { font-size:clamp(3rem,12vw,6rem); font-weight:1000; margin:10px 0; }
     .mistakes { margin:18px 0; display:grid; gap:8px; }
     .mistake { display:flex; justify-content:space-between; gap:12px; padding:12px 14px; background:#fff4f4; border-radius:14px; font-weight:800; }
@@ -124,7 +143,7 @@
         <div class="hero-row">
           <div>
             <h2>This week's quest</h2>
-            <p id="weekLabel">Ready to practice?</p>
+            <button class="hero-reset" id="resetProgressBtn">Reset Progress</button>
           </div>
           <div class="progress-wrap">
             <div class="progress-label"><span>Mastered</span><span id="masteredText">0 / 20</span></div>
@@ -140,8 +159,9 @@
       </div>
 
       <div class="grid">
-        <button class="game-card" data-action="listen"><div class="emoji">🔊</div><div><strong>Type the Word</strong><span>See and hear a word, then type the spelling.</span></div></button>
+        <button class="game-card" data-action="listen"><div class="keycap-icon" aria-hidden="true">A</div><div><strong>Type the Word</strong><span>See and hear a word, then type the spelling.</span></div></button>
         <button class="game-card" data-action="build"><div class="emoji">🧩</div><div><strong>Build the Word</strong><span>Drag scrambled letters into the correct order.</span></div></button>
+        <button class="game-card" data-action="sound"><img class="game-card-icon" src="sound-the-word-capybara.png" alt="" /><div><strong>Sound the Word</strong><span>Map each sound to its spelling chunk.</span></div></button>
         <button class="game-card" data-action="write"><div class="emoji">✏️</div><div><strong>Write the Word</strong><span>Use your finger to practice handwriting.</span></div></button>
         <button class="game-card" data-action="detective"><div class="emoji">🕵️</div><div><strong>Word Detective</strong><span>Complete the missing letters in each character's sentence.</span></div></button>
         <button class="game-card" data-action="test"><div class="emoji">🏁</div><div><strong>Practice Test</strong><span>All 20 words. No hints. Score at the end.</span></div></button>
@@ -170,6 +190,27 @@
         <input id="listenAnswer" class="answer-input" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="done" />
         <div class="row" style="justify-content:center;margin-top:14px"><button class="btn primary" id="listenCheck">Check ✓</button><button class="btn ghost" id="listenNext">Skip</button></div>
         <div id="listenFeedback" class="feedback"></div>
+      </div>
+    </section>
+
+    <section id="sound" class="screen">
+      <button class="btn ghost back" data-go="home">← Home</button>
+      <div class="panel center sound-panel">
+        <div class="question-meta"><span id="soundCounter">Word 1 of 20</span><span>Sound Mapper</span></div>
+        <div class="sound-hero">
+          <img class="sound-mascot" src="sound-the-word-capybara.png" alt="Anime capybara guide wearing headphones" />
+          <div class="sound-copy">
+            <h2>Sound the Word</h2>
+            <p class="sub">Listen carefully. Then place the spelling chunks in the order you hear them.</p>
+            <button class="sound-speak" id="soundSpeak" aria-label="Hear the word">🔊</button>
+          </div>
+        </div>
+        <div class="sound-label">Sound boxes</div>
+        <div id="soundSlots" class="sound-map"></div>
+        <div class="sound-label">Spelling chunks</div>
+        <div id="soundTiles" class="sound-bank"></div>
+        <div class="row" style="justify-content:center;margin-top:18px"><button class="btn ghost" id="soundReset">Reset</button><button class="btn primary" id="soundCheck">Check ✓</button></div>
+        <div id="soundFeedback" class="feedback" aria-live="polite"></div>
       </div>
     </section>
 
@@ -255,11 +296,16 @@
     'mask','track','stamp','stage','grade','they','batch','chance','graph','trade',
     'raise','eight','safety','wrapped','laugh','ramp','crane','flame','magical','station'
   ];
+  const SOUND_MAPS = {
+    mask:['m','a','s','k'], track:['t','r','a','ck'], stamp:['s','t','a','m','p'], stage:['s','t','a','ge'], grade:['g','r','a','de'],
+    they:['th','ey'], batch:['b','a','tch'], chance:['ch','a','n','ce'], graph:['g','r','a','ph'], trade:['t','r','a','de'],
+    raise:['r','ai','se'], eight:['eigh','t'], safety:['s','a','fe','t','y'], wrapped:['wr','a','pp','ed'], laugh:['l','au','gh'],
+    ramp:['r','a','m','p'], crane:['c','r','a','ne'], flame:['f','l','a','me'], magical:['m','a','g','i','c','al'], station:['s','t','a','tion']
+  };
   const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
   const VISUAL_SPRITE_SIZE = 1254;
   const VISUAL_COLUMNS = [{x:17,width:288},{x:327,width:289},{x:638,width:288},{x:948,width:289}];
   const VISUAL_ROWS = [{y:18,height:253},{y:292,height:250},{y:562,height:235},{y:817,height:198},{y:1034,height:202}];
-  const PREFERRED_VOICE_NAME = 'Samantha';
   const DETECTIVE_SENTENCES = {
     mask: 'I wear a mask for the school play.',
     track: 'I run around the track after school.',
@@ -325,9 +371,8 @@
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
     const englishVoices=speechSynthesis.getVoices().filter(voice=>/^en(?:-|_)/i.test(voice.lang));
-    const preferredVoice=englishVoices.find(voice=>voice.name.toLowerCase().includes(PREFERRED_VOICE_NAME.toLowerCase()));
     const defaultEnglishVoice=englishVoices.find(voice=>voice.default);
-    const selectedVoice=preferredVoice||defaultEnglishVoice;
+    const selectedVoice=defaultEnglishVoice||englishVoices[0];
     if(selectedVoice){ u.voice=selectedVoice; u.lang=selectedVoice.lang; }
     else u.lang='en-US';
     u.rate=.78; u.pitch=1.0;
@@ -355,9 +400,13 @@
     document.getElementById('starsStat').textContent=`${state.stars} ⭐`;
     document.getElementById('streakStat').textContent=`${state.bestStreak} 🔥`;
     document.getElementById('triesStat').textContent=state.answers;
-    const d=new Date(state.weekStarted||Date.now());
-    document.getElementById('weekLabel').textContent=`Week started ${d.toLocaleDateString(undefined,{month:'short',day:'numeric'})}`;
   }
+  document.getElementById('resetProgressBtn').onclick=()=>{
+    if(!window.confirm('Reset all stars, streaks, mastery, and answers for this quest?')) return;
+    state.words=state.words.map(wordObj=>({word:wordObj.word,correct:0,wrong:0,streak:0}));
+    state.stars=0; state.bestStreak=0; state.currentStreak=0; state.answers=0; state.testHistory=null; state.weekStarted=new Date().toISOString();
+    saveState(); toast('Progress reset for this quest.');
+  };
 
   function renderWordList(){
     const list=document.getElementById('wordListDisplay'); list.innerHTML='';
@@ -372,6 +421,7 @@
     const a=b.dataset.action;
     if(a==='listen') startListen();
     if(a==='build') startBuild();
+    if(a==='sound') startSound();
     if(a==='write') startWrite();
     if(a==='detective') startDetective();
     if(a==='test') startTest();
@@ -421,6 +471,42 @@
     const ok=fields.every(field=>normalize(field.value)===field.dataset.answer); record(currentWord,ok); feedback.className='feedback '+(ok?'good':'bad');
     if(ok){ feedback.textContent=`🔎 Case solved! The word is ${currentWord.word}.`; fields.forEach(field=>field.disabled=true); document.getElementById('detectiveCheck').disabled=true; setTimeout(nextDetective,1100); }
     else { feedback.textContent='Not quite — inspect the scene and try the missing letters again.'; fields.forEach(field=>field.value=''); fields[0]?.focus(); }
+  };
+
+  // Sound the Word
+  let soundN=0, soundRemaining=[], soundTotal=0, soundOrder=[], soundTilePool=[], soundInitialTiles=[];
+  function startSound(){
+    soundN=0; soundRemaining=state.words.filter(word=>SOUND_MAPS[word.word]); soundTotal=soundRemaining.length;
+    if(!soundTotal){ toast('Sound the Word needs the current quest word list.'); return; }
+    show('sound'); nextSound();
+  }
+  function nextSound(){
+    if(!soundRemaining.length){ currentWord=null; show('home'); toast(`Sound the Word complete — you mapped all ${soundTotal} words!`); return; }
+    soundN++; currentWord=weightedWord(soundRemaining); soundRemaining=soundRemaining.filter(word=>word!==currentWord);
+    soundOrder=[]; soundInitialTiles=shuffle([...SOUND_MAPS[currentWord.word]]); soundTilePool=[...soundInitialTiles];
+    document.getElementById('soundCounter').textContent=`Word ${soundN} of ${soundTotal}`;
+    const feedback=document.getElementById('soundFeedback'); feedback.className='feedback'; feedback.textContent='';
+    document.getElementById('soundCheck').disabled=false; renderSound(); setTimeout(()=>speak(currentWord.word),100);
+  }
+  function renderSound(){
+    const parts=SOUND_MAPS[currentWord.word], slots=document.getElementById('soundSlots'), tiles=document.getElementById('soundTiles'); slots.innerHTML=''; tiles.innerHTML='';
+    parts.forEach((part,index)=>{
+      const slot=document.createElement('button'); slot.className='sound-slot'+(soundOrder[index]?' filled':''); slot.textContent=soundOrder[index]?.toUpperCase()||'•'; slot.setAttribute('aria-label',soundOrder[index]?`Sound box ${index+1}: ${soundOrder[index]}`:`Empty sound box ${index+1}`);
+      slot.onclick=()=>{ if(soundOrder[index]){ const [returned]=soundOrder.splice(index,1); soundTilePool.push(returned); renderSound(); } }; slots.appendChild(slot);
+    });
+    soundTilePool.forEach((part,index)=>{
+      const tile=document.createElement('button'); tile.className='sound-tile'; tile.textContent=part.toUpperCase(); tile.setAttribute('aria-label',`Use spelling chunk ${part}`);
+      tile.onclick=()=>{ if(soundOrder.length<parts.length){ const [selected]=soundTilePool.splice(index,1); soundOrder.push(selected); renderSound(); } }; tiles.appendChild(tile);
+    });
+  }
+  document.getElementById('soundSpeak').onclick=()=>currentWord&&speak(currentWord.word);
+  document.getElementById('soundReset').onclick=()=>{ soundOrder=[]; soundTilePool=[...soundInitialTiles]; renderSound(); };
+  document.getElementById('soundCheck').onclick=()=>{
+    const expected=SOUND_MAPS[currentWord.word], feedback=document.getElementById('soundFeedback');
+    if(soundOrder.length!==expected.length){ feedback.className='feedback bad'; feedback.textContent='Fill every sound box first.'; return; }
+    const ok=soundOrder.every((part,index)=>part===expected[index]); record(currentWord,ok); feedback.className='feedback '+(ok?'good':'bad');
+    if(ok){ feedback.textContent=`⭐ Great mapping! ${expected.map(part=>part.toUpperCase()).join(' • ')} = ${currentWord.word.toUpperCase()}`; document.getElementById('soundCheck').disabled=true; setTimeout(nextSound,1300); }
+    else { feedback.textContent='Listen again, then put the spelling chunks in sound order.'; soundOrder=[]; soundTilePool=[...soundInitialTiles]; renderSound(); setTimeout(()=>speak(currentWord.word),100); }
   };
 
   // Type the Word
