@@ -375,11 +375,6 @@
     if(!('speechSynthesis' in window)){ toast('Speech is not available on this device.'); return; }
     speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(text);
-    const englishVoices=speechSynthesis.getVoices().filter(voice=>/^en(?:-|_)/i.test(voice.lang));
-    const defaultEnglishVoice=englishVoices.find(voice=>voice.default);
-    const selectedVoice=defaultEnglishVoice||englishVoices[0];
-    if(selectedVoice){ u.voice=selectedVoice; u.lang=selectedVoice.lang; }
-    else u.lang='en-US';
     u.rate=.78; u.pitch=1.0;
     speechSynthesis.speak(u);
   }

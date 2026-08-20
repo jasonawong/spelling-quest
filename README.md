@@ -34,6 +34,6 @@ The core app will also open from `index.html` directly, but install/offline cach
 5. Tap **Word List** to review the 20 words in the quest.
 
 ## Notes
-- Speech uses the iPad/browser's built-in speech synthesis. It prefers the device's default English voice and falls back to another installed English voice, then `en-US`.
+- Speech uses the iPad/browser's built-in speech synthesis without assigning a specific voice, allowing the device/browser default voice to be used.
 - Handwriting is intentionally self-checking in V1 rather than using handwriting recognition.
 - No account, cloud service, analytics, or external API is required.
