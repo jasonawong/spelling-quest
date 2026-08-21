@@ -298,42 +298,46 @@
 <script>
 (() => {
   const DEFAULT_WORDS = [
-    'mask','track','stamp','stage','grade','they','batch','chance','graph','trade',
-    'raise','eight','safety','wrapped','laugh','ramp','crane','flame','magical','station'
+    'wrench','hello','yellow','bread','kept','better','sentence','eggshell','medal','metal',
+    'remember','reading','peaches','peace','piece','east','west','many','special','beanstalk'
   ];
   const SOUND_MAPS = {
-    mask:['m','a','s','k'], track:['t','r','a','ck'], stamp:['s','t','a','m','p'], stage:['s','t','a','ge'], grade:['g','r','a','de'],
-    they:['th','ey'], batch:['b','a','tch'], chance:['ch','a','n','ce'], graph:['g','r','a','ph'], trade:['t','r','a','de'],
-    raise:['r','ai','se'], eight:['eigh','t'], safety:['s','a','fe','t','y'], wrapped:['wr','a','pp','ed'], laugh:['l','au','gh'],
-    ramp:['r','a','m','p'], crane:['c','r','a','ne'], flame:['f','l','a','me'], magical:['m','a','g','i','c','al'], station:['s','t','a','tion']
+    wrench:['wr','e','n','ch'], hello:['h','e','ll','o'], yellow:['y','e','ll','ow'], bread:['br','ea','d'], kept:['k','e','p','t'],
+    better:['b','e','tt','er'], sentence:['s','e','n','t','e','n','ce'], eggshell:['e','gg','sh','e','ll'], medal:['m','e','d','al'], metal:['m','e','t','al'],
+    remember:['r','e','m','e','m','b','er'], reading:['r','ea','d','ing'], peaches:['p','ea','ch','es'], peace:['p','ea','ce'], piece:['p','ie','ce'],
+    east:['ea','s','t'], west:['w','e','s','t'], many:['m','a','n','y'], special:['sp','e','cial'], beanstalk:['b','ea','n','s','t','al','k']
   };
   const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
   const VISUAL_SPRITE_SIZE = 1254;
   const VISUAL_COLUMNS = [{x:17,width:288},{x:327,width:289},{x:638,width:288},{x:948,width:289}];
   const VISUAL_ROWS = [{y:18,height:253},{y:292,height:250},{y:562,height:235},{y:817,height:198},{y:1034,height:202}];
-  const DETECTIVE_SENTENCES = {
-    mask: 'I wear a mask for the school play.',
-    track: 'I run around the track after school.',
-    stamp: 'I put a stamp on the letter.',
-    stage: 'I sing on the stage tonight.',
-    grade: 'I earned a good grade on my test.',
-    they: 'They are building a sandcastle together.',
-    batch: 'I baked a batch of cookies for everyone.',
-    chance: 'I have a chance to win the game.',
-    graph: 'I made a graph of our class votes.',
-    trade: 'Can we trade my apple for your orange?',
-    raise: 'I raise my hand when I know the answer.',
-    eight: 'I counted eight balloons in the sky.',
-    safety: 'Safety comes first when I ride my bike.',
-    wrapped: 'I wrapped the gift with a bright ribbon.',
-    laugh: 'That silly joke made me laugh.',
-    ramp: 'I rode my skateboard down the ramp.',
-    crane: 'The crane lifted the heavy beam.',
-    flame: 'The small flame warmed our campsite.',
-    magical: 'The magical wand filled the room with stars.',
-    station: 'I waited at the station for the train.'
+  const VISUAL_OVERRIDES = {
+    peaches:{width:288,height:198}, peace:{width:289,height:198},
+    many:{width:289,height:202}, special:{width:288,height:202}, beanstalk:{width:289,height:202}
   };
-  const STORAGE_KEY = 'spellingQuestV1';
+  const DETECTIVE_SENTENCES = {
+    wrench: 'I used a wrench to tighten the loose bolt.',
+    hello: 'I wave and say hello to my friend.',
+    yellow: 'The yellow kite sailed above the trees.',
+    bread: 'Dad sliced the warm bread for lunch.',
+    kept: 'I kept my special shell in a small box.',
+    better: 'I feel better after a good night\'s sleep.',
+    sentence: 'I wrote a complete sentence in my notebook.',
+    eggshell: 'A tiny chick pecked through the eggshell.',
+    medal: 'She won a gold medal at the race.',
+    metal: 'The bridge is made from strong metal.',
+    remember: 'Please remember to bring your library book.',
+    reading: 'We enjoy reading together after dinner.',
+    peaches: 'The basket is full of ripe peaches.',
+    peace: 'The dove is a symbol of peace.',
+    piece: 'I found the missing piece of the puzzle.',
+    east: 'The sun rises in the east each morning.',
+    west: 'The sun sets in the west each evening.',
+    many: 'Many bright stars filled the night sky.',
+    special: 'Grandma made a special cake for my birthday.',
+    beanstalk: 'The giant beanstalk reached above the clouds.'
+  };
+  const STORAGE_KEY = 'spellingQuestV3';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
     stars: 0, bestStreak: 0, currentStreak: 0, answers: 0,
@@ -346,7 +350,18 @@
   let buildOrder = [], buildTilePool = [], buildInitialTiles = [];
 
   function loadState(){
-    try { return {...sampleState(), ...JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}')}; }
+    try {
+      const saved=JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
+      const savedWords=new Map((Array.isArray(saved.words)?saved.words:[]).map(wordObj=>[wordObj.word,wordObj]));
+      return {
+        ...sampleState(),
+        ...saved,
+        words:DEFAULT_WORDS.map(word=>{
+          const previous=savedWords.get(word);
+          return {word,correct:Number(previous?.correct)||0,wrong:Number(previous?.wrong)||0,streak:Number(previous?.streak)||0};
+        })
+      };
+    }
     catch { return sampleState(); }
   }
   function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); refreshHome(); }
@@ -382,12 +397,21 @@
   function show(id){ document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
   function requireWords(){ if(!state.words || state.words.length<1){ toast('The word list is empty.'); return false; } return true; }
   function showWordPicture(element, word){
+    const override=VISUAL_OVERRIDES[word];
+    if(override){
+      element.classList.remove('fallback'); element.textContent='';
+      element.style.aspectRatio=`${override.width}/${override.height}`;
+      element.style.backgroundImage=`url('word-pictures/${word}.png')`;
+      element.style.backgroundSize='100% 100%'; element.style.backgroundPosition='center';
+      element.setAttribute('aria-label',`Picture clue for ${word}`); return;
+    }
     const index=VISUAL_WORDS.get(word);
-    if(index===undefined){ element.classList.add('fallback'); element.textContent='🖼️'; element.style.aspectRatio='5/4'; element.style.backgroundSize='auto'; element.style.backgroundPosition='center'; element.setAttribute('aria-label',`Picture clue unavailable for ${word}`); return; }
+    if(index===undefined){ element.classList.add('fallback'); element.textContent='🖼️'; element.style.aspectRatio='5/4'; element.style.backgroundImage='none'; element.style.backgroundSize='auto'; element.style.backgroundPosition='center'; element.setAttribute('aria-label',`Picture clue unavailable for ${word}`); return; }
     const sourceCol=VISUAL_COLUMNS[index%4], sourceRow=VISUAL_ROWS[Math.floor(index/4)], inset=6;
     const x=sourceCol.x+inset, y=sourceRow.y+inset, width=sourceCol.width-inset*2, height=sourceRow.height-inset*2;
     element.classList.remove('fallback'); element.textContent='';
     element.style.aspectRatio=`${width}/${height}`;
+    element.style.backgroundImage="url('word-picture-sprite.png')";
     element.style.backgroundSize=`${VISUAL_SPRITE_SIZE/width*100}% ${VISUAL_SPRITE_SIZE/height*100}%`;
     element.style.backgroundPosition=`${x/(VISUAL_SPRITE_SIZE-width)*100}% ${y/(VISUAL_SPRITE_SIZE-height)*100}%`;
     element.setAttribute('aria-label',`Picture clue for ${word}`);
