@@ -1,6 +1,7 @@
-const CACHE = 'spelling-quest-v19';
-const DETECTIVE_WORDS = ['mask','track','stamp','stage','grade','they','batch','chance','graph','trade','raise','eight','safety','wrapped','laugh','ramp','crane','flame','magical','station'];
-const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./word-picture-sprite.png','./sound-the-word-capybara.png',...DETECTIVE_WORDS.map(word=>`./word-detective/${word}.png`)];
+const CACHE = 'spelling-quest-v22';
+const DETECTIVE_WORDS = ['wrench','hello','yellow','bread','kept','better','sentence','eggshell','medal','metal','remember','reading','peaches','peace','piece','east','west','many','special','beanstalk'];
+const PICTURE_OVERRIDES = ['peaches','peace','many','special','beanstalk'];
+const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./word-picture-sprite.png','./sound-the-word-capybara.png',...PICTURE_OVERRIDES.map(word=>`./word-pictures/${word}.png`),...DETECTIVE_WORDS.map(word=>`./word-detective/${word}.png`)];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });
