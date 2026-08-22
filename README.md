@@ -9,6 +9,7 @@ A touch-first, offline-capable spelling practice PWA for one child using one iPa
 - Sound the Word with picture clues and capybara-themed sound-to-spelling chunk mapping
 - Write the Word with a one-second preview, picture clue, and finger handwriting canvas
 - Word Detective with 20 sentence-matched anime scenes and inline missing-letter clues
+- Sky-High Spelling, a timed balloon flight where correct spellings create altitude boosts
 - 20-word Practice Test with score shown at the end
 - Stars, streaks, and weekly mastery
 - Local-only progress storage
