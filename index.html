@@ -410,7 +410,7 @@
           <div class="premier-card-copy"><span class="premier-badge">Premier flight</span><strong>Sky-High Spelling</strong><span>Spell all 20 words to fire the burner, stay in the air, and complete the sky route.</span></div>
         </button>
         <button class="game-card premier-card detective-card" data-action="detective">
-          <div class="detective-card-art" aria-hidden="true"><img src="word-detective/wrench.png" alt="" /></div>
+          <div class="detective-card-art" aria-hidden="true"><img src="word-detective/wrench.png?v=48" alt="" /></div>
           <div class="premier-card-copy"><span class="premier-badge">Premier mystery</span><strong>Word Detective</strong><span>Investigate illustrated scenes and complete the missing letters in each character's sentence.</span></div>
         </button>
         <button class="game-card premier-card bridge-card" data-action="bridge">
@@ -957,6 +957,7 @@
     special: 'Grandma made a special cake for my birthday.',
     beanstalk: 'The giant beanstalk reached above the clouds.'
   };
+  const DETECTIVE_ART_VERSION = 48;
   const STORAGE_KEY = 'spellingQuestV3';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
@@ -1106,7 +1107,7 @@
     if(!detectiveRemaining.length){ currentWord=null; show('home'); toast(`Word Detective complete — you solved all ${detectiveTotal} cases!`); return; }
     detectiveN++; currentWord=weightedWord(detectiveRemaining); detectiveRemaining=detectiveRemaining.filter(word=>word!==currentWord);
     document.getElementById('detectiveCounter').textContent=`Case ${detectiveN} of ${detectiveTotal}`;
-    const image=document.getElementById('detectiveImage'); image.src=`word-detective/${currentWord.word}.png`; image.alt='Anime scene illustrating the sentence clue';
+    const image=document.getElementById('detectiveImage'); image.src=`word-detective/${currentWord.word}.png?v=${DETECTIVE_ART_VERSION}`; image.alt='Anime scene illustrating the sentence clue';
     const feedback=document.getElementById('detectiveFeedback'); feedback.className='feedback'; feedback.textContent='';
     document.getElementById('detectiveCheck').disabled=false; renderDetectiveSentence();
     setTimeout(()=>document.querySelector('#detectiveBubble .detective-letter')?.focus(),80);
