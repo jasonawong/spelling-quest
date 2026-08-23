@@ -1,34 +1,36 @@
 import * as THREE from './vendor/three.module.min.js';
 
 const STORAGE_KEY = 'spellingQuestIslandV1';
-const SESSION_VERSION = 4;
+const SESSION_VERSION = 5;
 const TOTAL_COINS = 10;
 const PLAYER_RADIUS = .72;
 const TURN_INPUT_SCALE = .58;
 const PLAYER_TURN_RESPONSE = 7;
 const CAMERA_TURN_RESPONSE = 2.8;
 const WORLD_SCALE = 1.5;
+const ISLAND_LENGTH_SCALE = .75;
+const ISLAND_X_SCALE = WORLD_SCALE * ISLAND_LENGTH_SCALE;
 const ISLAND_WIDTH_SCALE = 2.65;
-const ISLAND_HALF_LENGTH = 43 * WORLD_SCALE;
-const STORE_POSITION = { x: 28 * WORLD_SCALE, z: 0 };
+const ISLAND_HALF_LENGTH = 43 * ISLAND_X_SCALE;
+const STORE_POSITION = { x: 28 * ISLAND_X_SCALE, z: 0 };
 const STORE_ENTRY_POSITION = { x: STORE_POSITION.x - 7, z:STORE_POSITION.z };
-const START_POSITION = { x: -38 * WORLD_SCALE, z: 0 };
+const START_POSITION = { x: -38 * ISLAND_X_SCALE, z: 0 };
 const COIN_LOCATIONS = [
-  { x: -35 * WORLD_SCALE, z: 4.1 * WORLD_SCALE, label: 'west beach' },
-  { x: -28 * WORLD_SCALE, z: -6.1 * WORLD_SCALE, label: 'sea grass cove' },
-  { x: -20 * WORLD_SCALE, z: 7.2 * WORLD_SCALE, label: 'north shore' },
-  { x: -13 * WORLD_SCALE, z: -4.8 * WORLD_SCALE, label: 'live oak lane' },
-  { x: -5 * WORLD_SCALE, z: 7.7 * WORLD_SCALE, label: 'ocean overlook' },
-  { x: 3 * WORLD_SCALE, z: -7.4 * WORLD_SCALE, label: 'marsh trail' },
-  { x: 11 * WORLD_SCALE, z: 5.9 * WORLD_SCALE, label: 'station path' },
-  { x: 18 * WORLD_SCALE, z: -5.6 * WORLD_SCALE, label: 'palmetto grove' },
-  { x: 25 * WORLD_SCALE, z: 6.2 * WORLD_SCALE, label: 'village beach' },
-  { x: 36 * WORLD_SCALE, z: 1.8 * WORLD_SCALE, label: 'island point' }
+  { x: -35 * ISLAND_X_SCALE, z: 4.1 * WORLD_SCALE, label: 'west beach' },
+  { x: -28 * ISLAND_X_SCALE, z: -6.1 * WORLD_SCALE, label: 'sea grass cove' },
+  { x: -20 * ISLAND_X_SCALE, z: 7.2 * WORLD_SCALE, label: 'north shore' },
+  { x: -13 * ISLAND_X_SCALE, z: -4.8 * WORLD_SCALE, label: 'live oak lane' },
+  { x: -5 * ISLAND_X_SCALE, z: 7.7 * WORLD_SCALE, label: 'ocean overlook' },
+  { x: 3 * ISLAND_X_SCALE, z: -7.4 * WORLD_SCALE, label: 'marsh trail' },
+  { x: 11 * ISLAND_X_SCALE, z: 5.9 * WORLD_SCALE, label: 'station path' },
+  { x: 18 * ISLAND_X_SCALE, z: -5.6 * WORLD_SCALE, label: 'palmetto grove' },
+  { x: 25 * ISLAND_X_SCALE, z: 6.2 * WORLD_SCALE, label: 'village beach' },
+  { x: 36 * ISLAND_X_SCALE, z: 1.8 * WORLD_SCALE, label: 'island point' }
 ];
 const HOUSE_LOCATIONS = [
-  { x:-18 * WORLD_SCALE, z:-11 * WORLD_SCALE, color:0xd7d4b7, scale:1.05, rotation:.16 },
-  { x:2 * WORLD_SCALE, z:12 * WORLD_SCALE, color:0xb9d4c7, scale:1, rotation:-.18 },
-  { x:12 * WORLD_SCALE, z:-14 * WORLD_SCALE, color:0xd7c8bb, scale:1.06, rotation:.11 }
+  { x:-18 * ISLAND_X_SCALE, z:-11 * WORLD_SCALE, color:0xd7d4b7, scale:1.05, rotation:.16 },
+  { x:2 * ISLAND_X_SCALE, z:12 * WORLD_SCALE, color:0xb9d4c7, scale:1, rotation:-.18 },
+  { x:8 * ISLAND_X_SCALE, z:-14 * WORLD_SCALE, color:0xd7c8bb, scale:1.06, rotation:.11 }
 ];
 const TREE_LOCATIONS = {
   palms:[[-36,-8,.9],[-18,9,.86],[5,-9.5,.94],[24,8.5,.9],[37,-7,.82]],
@@ -47,6 +49,7 @@ let waterSurface = null;
 let waterBasePositions = null;
 let waterTexture = null;
 const shorelineWaves = [];
+const backgroundShips = [];
 let canvasHost = null;
 let player = null;
 let playerParts = null;
@@ -151,7 +154,7 @@ function createSession(){
 }
 
 function isValidSavedSession(value){
-  if(!value || ![1, 2, 3, SESSION_VERSION].includes(value.version) || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
+  if(!value || ![1, 2, 3, 4, SESSION_VERSION].includes(value.version) || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
   if(!Array.isArray(value.collected) || value.collected.length !== TOTAL_COINS) return false;
   const available = new Set(services.words.map(item => item.word));
   return value.words.every(word => available.has(word));
@@ -162,12 +165,12 @@ function loadSession(){
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if(!isValidSavedSession(saved)) return null;
     if(saved.version !== SESSION_VERSION){
-      const sourceScale = ({ 1:1, 2:4, 3:2 })[saved.version] || WORLD_SCALE;
+      const sourceScale = ({ 1:1, 2:4, 3:2, 4:WORLD_SCALE })[saved.version] || WORLD_SCALE;
       const positionScale = WORLD_SCALE / sourceScale;
       saved.version = SESSION_VERSION;
       saved.player = {
-        x:(saved.player?.x ?? START_POSITION.x / positionScale) * positionScale,
-        z:(saved.player?.z ?? START_POSITION.z) * positionScale,
+        x:saved.player?.x == null ? START_POSITION.x : saved.player.x * positionScale * ISLAND_LENGTH_SCALE,
+        z:saved.player?.z == null ? START_POSITION.z : saved.player.z * positionScale,
         heading:saved.player?.heading ?? Math.PI / 2
       };
     }
@@ -859,7 +862,7 @@ function addDock(){
 function addBeachDetails(){
   const shellMat = material(0xf7c2a2);
   [[-40,6.5],[33,-6.8],[7,9.5],[-12,-9.4],[20,9.2],[-29,-8.5]].forEach(([bx,bz], index) => {
-    const x = bx * WORLD_SCALE;
+    const x = bx * ISLAND_X_SCALE;
     const z = bz * WORLD_SCALE;
     const star = new THREE.Group();
     for(let i = 0; i < 5; i++){
@@ -876,7 +879,7 @@ function addBeachDetails(){
 
   const rockMat = material(0x858d83);
   [[-39,-5.4,1.2],[-18,-9,1],[14,8.6,.8],[39,-4.2,1.1],[30,8.1,.85],[-7,-10.2,.9]].forEach(([bx,bz,s]) => {
-    const x = bx * WORLD_SCALE;
+    const x = bx * ISLAND_X_SCALE;
     const z = bz * WORLD_SCALE;
     const rock = mesh(new THREE.DodecahedronGeometry(s, 0), rockMat);
     rock.scale.y = .6;
@@ -954,12 +957,145 @@ function addShorelineWaves(){
   }
 }
 
+function addCharlestonHarborBackdrop(){
+  const skyline = new THREE.Group();
+  const buildingMats = [
+    new THREE.MeshBasicMaterial({ color:0x8aa6a0, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0x9db3aa, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0x789590, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0xb2baaa, fog:true })
+  ];
+  const roofMat = new THREE.MeshBasicMaterial({ color:0x6e8580, fog:true });
+  const buildings = [
+    [-43,5.2,5.2],[-37,4.2,4.4],[-31,6.8,5.2],[-24,4.7,6],[-16,5.4,4.6],[-9,7.5,6.2],
+    [-1,5.1,5.4],[7,6.2,6.2],[15,4.4,5.4],[23,7.2,6.4],[31,5.2,5.2],[39,4.2,6]
+  ];
+  buildings.forEach(([z,height,width],index) => {
+    const building = mesh(new THREE.BoxGeometry(2.1,height,width),buildingMats[index % buildingMats.length],false,false);
+    building.position.set(0,height / 2 - .15,z);
+    skyline.add(building);
+    if(index % 3 === 0){
+      const roof = mesh(new THREE.ConeGeometry(width * .46,1.25,4),roofMat,false,false);
+      roof.position.set(0,height + .45,z);
+      roof.rotation.y = Math.PI / 4;
+      skyline.add(roof);
+    }
+  });
+  [[-28,11.8],[4,14.2],[28,10.6]].forEach(([z,height],index) => {
+    const tower = mesh(new THREE.BoxGeometry(1.4,height * .58,2.2),buildingMats[(index + 1) % buildingMats.length],false,false);
+    tower.position.set(-.2,height * .29,z);
+    const steeple = mesh(new THREE.ConeGeometry(.72,height * .48,6),roofMat,false,false);
+    steeple.position.set(-.2,height * .82,z);
+    skyline.add(tower,steeple);
+  });
+  const waterfront = mesh(new THREE.BoxGeometry(2.4,.65,96),new THREE.MeshBasicMaterial({ color:0x607f7b, fog:true }),false,false);
+  waterfront.position.set(0,.04,0);
+  skyline.add(waterfront);
+  skyline.position.set(128,0,-7);
+  scene.add(skyline);
+
+  const bridge = new THREE.Group();
+  const bridgeMat = new THREE.MeshBasicMaterial({ color:0xdde2d5, fog:true });
+  const bridgeShade = new THREE.MeshBasicMaterial({ color:0xaebbb4, fog:true });
+  const deck = mesh(new THREE.BoxGeometry(2.2,.5,72),bridgeMat,false,false);
+  deck.position.y = 4.1;
+  bridge.add(deck);
+  [-15,15].forEach(towerZ => {
+    const leftLeg = cylinderBetween(new THREE.Vector3(-.25,4.25,towerZ - 1.05),new THREE.Vector3(0,18,towerZ),.26,bridgeMat,8);
+    const rightLeg = cylinderBetween(new THREE.Vector3(.25,4.25,towerZ + 1.05),new THREE.Vector3(0,18,towerZ),.26,bridgeMat,8);
+    const crown = mesh(new THREE.BoxGeometry(.8,.45,2.2),bridgeMat,false,false);
+    crown.position.set(0,17.8,towerZ);
+    bridge.add(leftLeg,rightLeg,crown);
+    const cableEnds = towerZ < 0 ? [-34,-30,-26,-22,-8,-4,0,4] : [-4,0,4,8,22,26,30,34];
+    cableEnds.forEach((endZ,index) => {
+      const cable = cylinderBetween(new THREE.Vector3(0,17.25 - (index % 4) * .36,towerZ),new THREE.Vector3(0,4.48,endZ),.035,bridgeShade,5);
+      bridge.add(cable);
+    });
+  });
+  [-32,-24,-6,6,24,32].forEach(z => {
+    const pier = mesh(new THREE.CylinderGeometry(.18,.24,4.3,8),bridgeShade,false,false);
+    pier.position.set(0,1.8,z);
+    bridge.add(pier);
+  });
+  bridge.traverse(item => { if(item.isMesh){ item.castShadow = false; item.receiveShadow = false; } });
+  bridge.position.set(110,0,0);
+  scene.add(bridge);
+
+  const port = new THREE.Group();
+  const craneMat = new THREE.MeshBasicMaterial({ color:0x748d8a, fog:true });
+  [34,43].forEach((z,index) => {
+    const mast = mesh(new THREE.BoxGeometry(.7,10,.7),craneMat,false,false);
+    mast.position.set(0,5,z);
+    const boom = mesh(new THREE.BoxGeometry(.55,.48,10),craneMat,false,false);
+    boom.position.set(0,9.3,z - 4.3);
+    boom.rotation.x = -.08 - index * .04;
+    const brace = cylinderBetween(new THREE.Vector3(0,8.8,z),new THREE.Vector3(0,6.3,z - 7.5),.11,craneMat,6);
+    port.add(mast,boom,brace);
+  });
+  port.position.x = 121;
+  scene.add(port);
+}
+
+function addContainerShip(x, z, speed, shipScale = 1){
+  const ship = new THREE.Group();
+  ship.scale.setScalar(shipScale);
+  const hullMat = new THREE.MeshBasicMaterial({ color:0x405e66, fog:true });
+  const deckMat = new THREE.MeshBasicMaterial({ color:0xd6d6c7, fog:true });
+  const wakeMat = new THREE.MeshBasicMaterial({ color:0xe5f0e8, transparent:true, opacity:.42, depthWrite:false, side:THREE.DoubleSide, fog:true });
+  const hull = mesh(new THREE.BoxGeometry(2.6,1.05,10.5),hullMat,false,false);
+  hull.position.y = .25;
+  const bow = mesh(new THREE.ConeGeometry(1.32,2.3,4),hullMat,false,false);
+  bow.rotation.x = Math.PI / 2;
+  bow.rotation.z = Math.PI / 4;
+  bow.position.set(0,.25,5.8);
+  const deck = mesh(new THREE.BoxGeometry(2.35,.25,8.7),deckMat,false,false);
+  deck.position.y = .9;
+  ship.add(hull,bow,deck);
+  const containerColors = [0xa94f43,0x3f7776,0xb48745,0x6b7890,0xb86b4a];
+  for(let level = 0; level < 3; level++){
+    for(let row = -3; row <= 2; row++){
+      for(const column of [-.62,.62]){
+        const container = mesh(new THREE.BoxGeometry(1,.56,1.18),new THREE.MeshBasicMaterial({ color:containerColors[(level * 5 + row + (column > 0 ? 2 : 0) + 8) % containerColors.length], fog:true }),false,false);
+        container.position.set(column,1.28 + level * .59,row * 1.15);
+        ship.add(container);
+      }
+    }
+  }
+  const bridgeBlock = mesh(new THREE.BoxGeometry(2.1,2.35,1.5),deckMat,false,false);
+  bridgeBlock.position.set(0,2.05,-4.25);
+  ship.add(bridgeBlock);
+  for(const side of [-1,1]){
+    const wake = mesh(new THREE.PlaneGeometry(.38,8.5),wakeMat,false,false);
+    wake.rotation.x = -Math.PI / 2;
+    wake.position.set(side * 1.45,.03,-6.3);
+    wake.rotation.z = side * .13;
+    ship.add(wake);
+  }
+  ship.position.set(x,-.12,z);
+  ship.rotation.y = speed < 0 ? Math.PI : 0;
+  ship.userData = { speed, baseY:-.12, phase:backgroundShips.length * 2.3, minZ:-58, maxZ:58 };
+  backgroundShips.push(ship);
+  scene.add(ship);
+}
+
+function animateHarbor(elapsed, delta){
+  backgroundShips.forEach(ship => {
+    if(!reducedMotion.matches){
+      ship.position.z += ship.userData.speed * delta;
+      if(ship.userData.speed > 0 && ship.position.z > ship.userData.maxZ) ship.position.z = ship.userData.minZ;
+      if(ship.userData.speed < 0 && ship.position.z < ship.userData.minZ) ship.position.z = ship.userData.maxZ;
+      ship.position.y = ship.userData.baseY + Math.sin(elapsed * .72 + ship.userData.phase) * .07;
+    }
+  });
+}
+
 function buildWorld(){
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x91ceca);
   scene.fog = new THREE.Fog(0xc3ded6, 118, 218);
   colliders.length = 0;
   shorelineWaves.length = 0;
+  backgroundShips.length = 0;
 
   const hemisphere = new THREE.HemisphereLight(0xdff4e9, 0x536554, 1.48);
   scene.add(hemisphere);
@@ -991,6 +1127,9 @@ function buildWorld(){
   waterGlow.rotation.x = -Math.PI / 2;
   waterGlow.position.y = -.37;
   scene.add(waterGlow);
+  addCharlestonHarborBackdrop();
+  addContainerShip(76,-42,2.15,.82);
+  addContainerShip(89,34,-1.55,1.02);
 
   const sandTexture = makeGroundTexture('#e6dfbd', ['#fff7d9','#b9ad85','#efe7c7','#c9bd93']);
   const grassTexture = makeGroundTexture('#70a477', ['#355f4e','#b5c69b','#4e8062','#93aa78']);
@@ -1020,8 +1159,8 @@ function buildWorld(){
 
   HOUSE_LOCATIONS.forEach(({x,z,color,scale,rotation}) => addHouse(x, z, color, scale, rotation));
 
-  TREE_LOCATIONS.palms.forEach(([x,z,scale]) => addPalm(x * WORLD_SCALE, z * WORLD_SCALE, scale));
-  TREE_LOCATIONS.liveOaks.forEach(([x,z,scale]) => addLiveOak(x * WORLD_SCALE, z * WORLD_SCALE, scale));
+  TREE_LOCATIONS.palms.forEach(([x,z,scale]) => addPalm(x * ISLAND_X_SCALE, z * WORLD_SCALE, scale));
+  TREE_LOCATIONS.liveOaks.forEach(([x,z,scale]) => addLiveOak(x * ISLAND_X_SCALE, z * WORLD_SCALE, scale));
 
   createPlayer();
   rebuildCoins();
@@ -1789,6 +1928,7 @@ function renderFrame(now){
   updatePlayer(delta, elapsed);
   animateCoins(now);
   animateWater(now);
+  animateHarbor(elapsed,delta);
   updateReward(now);
   updateCamera(delta);
   renderer.render(scene, camera);
@@ -2051,4 +2191,4 @@ function stop(){
 
 window.IslandQuest = { start, stop };
 
-export { TOTAL_COINS, WORLD_SCALE, ISLAND_WIDTH_SCALE, ISLAND_HALF_LENGTH, START_POSITION, STORE_POSITION, COIN_LOCATIONS, HOUSE_LOCATIONS, TREE_LOCATIONS, normalize, shuffled, islandEdge, islandHalfWidth, cameraRelativeMovement };
+export { TOTAL_COINS, WORLD_SCALE, ISLAND_LENGTH_SCALE, ISLAND_WIDTH_SCALE, ISLAND_HALF_LENGTH, START_POSITION, STORE_POSITION, COIN_LOCATIONS, HOUSE_LOCATIONS, TREE_LOCATIONS, normalize, shuffled, islandEdge, islandHalfWidth, cameraRelativeMovement };
