@@ -1641,7 +1641,7 @@ function updateHUD(){
   refs.counter.textContent = `${count} / ${TOTAL_COINS} coins`;
   if(session.phase === 'storeUnlocked') refs.objective.textContent = 'All coins found! Follow the golden beacon to the ice cream shop.';
   else if(session.phase === 'reward') refs.objective.textContent = 'Enjoy your giant victory cone!';
-  else if(session.phase === 'complete') refs.objective.textContent = 'Island quest complete!';
+  else if(session.phase === 'complete') refs.objective.textContent = 'Ice Cream Quest complete!';
   else refs.objective.textContent = `Explore the island and find ${TOTAL_COINS - count} more ${TOTAL_COINS - count === 1 ? 'coin' : 'coins'}.`;
 }
 
@@ -1937,7 +1937,7 @@ function updateReward(now){
     rewardCone.scale.setScalar(scale);
     if(seconds > 4.55){
       rewardCone.visible = false;
-      refs.rewardCaption.textContent = 'Every last bite! Sullivan’s Island Coin Quest complete!';
+      refs.rewardCaption.textContent = 'Every last bite! Ice Cream Quest complete!';
       player.position.y = .08 + Math.abs(Math.sin(seconds * 7)) * .18;
     }
   }
@@ -2057,7 +2057,7 @@ function showIntro(saved){
   }
   setOverlay({
     eyebrow:'Sullivan’s Island mission',
-    title:'Island Coin Quest',
+    title:'Ice Cream Quest',
     text:saved && count
       ? `Welcome back! You have ${count} of 10 coins. Find the rest, solve each spelling challenge, then visit the ice cream shop.`
       : 'Explore a sunny Lowcountry island, collect 10 gold coins, and spell every word you hear. Find them all to unlock a giant ice cream cone!',

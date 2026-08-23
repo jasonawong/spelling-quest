@@ -7,18 +7,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Spelling Quest" />
-  <meta name="description" content="A touch-friendly spelling practice adventure with pictures, speech, games, and a Sullivan’s Island coin quest." />
+  <meta name="description" content="A touch-friendly spelling practice adventure with pictures, speech, games, and Ice Cream Quest on Sullivan’s Island." />
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Spelling Quest" />
-  <meta property="og:description" content="Practice spelling through playful challenges, including a 3D Sullivan’s Island coin adventure." />
+  <meta property="og:description" content="Practice spelling through playful challenges, including the 3D Sullivan’s Island adventure Ice Cream Quest." />
   <meta property="og:url" content="https://spelling-quest-island.thewong.chatgpt.site" />
   <meta property="og:image" content="https://spelling-quest-island.thewong.chatgpt.site/og.png" />
   <meta property="og:image:width" content="1672" />
   <meta property="og:image:height" content="941" />
-  <meta property="og:image:alt" content="Spelling Quest Sullivan’s Island Coin Quest adventure" />
+  <meta property="og:image:alt" content="Spelling Quest Ice Cream Quest adventure" />
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Spelling Quest" />
-  <meta name="twitter:description" content="Practice spelling through playful challenges, including a 3D Sullivan’s Island coin adventure." />
+  <meta name="twitter:description" content="Practice spelling through playful challenges, including the 3D Sullivan’s Island adventure Ice Cream Quest." />
   <meta name="twitter:image" content="https://spelling-quest-island.thewong.chatgpt.site/og.png" />
   <link rel="canonical" href="https://spelling-quest-island.thewong.chatgpt.site" />
   <link rel="manifest" href="manifest.webmanifest" />
@@ -386,7 +386,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=51" />
+  <link rel="stylesheet" href="island-quest.css?v=52" />
 </head>
 <body>
 <div class="app">
@@ -420,12 +420,6 @@
       </div>
 
       <div class="grid">
-        <button class="game-card premier-card island-card" data-action="island">
-          <div class="island-card-art" aria-hidden="true">
-            <span class="island-card-ground"></span><span class="island-card-shop"></span><span class="island-card-avatar"></span><span class="island-card-coin">★</span>
-          </div>
-          <div class="premier-card-copy"><span class="premier-badge">Premier island adventure</span><strong>Sullivan’s Island Coin Quest</strong><span>Explore the island, collect 10 gold coins, spell each hidden word, and unlock a giant ice cream cone.</span></div>
-        </button>
         <button class="game-card premier-card sky-card" data-action="sky">
           <div class="sky-card-art" aria-hidden="true"><span class="sky-card-cloud one"></span><span class="sky-card-cloud two"></span><img src="sky-high-balloon.png" alt="" /></div>
           <div class="premier-card-copy"><span class="premier-badge">Premier flight</span><strong>Sky-High Spelling</strong><span>Spell all 20 words to fire the burner, stay in the air, and complete the sky route.</span></div>
@@ -486,6 +480,12 @@
             </svg>
           </div>
           <div class="premier-card-copy"><span class="premier-badge">Premier construction</span><strong>Bridge Builder</strong><span>Choose every correctly spelled word to build Charleston Harbor's bridge section by section.</span></div>
+        </button>
+        <button class="game-card premier-card island-card" data-action="island">
+          <div class="island-card-art" aria-hidden="true">
+            <span class="island-card-sun"></span><span class="island-card-water"></span><span class="island-card-ground"></span><span class="island-card-palm"></span><span class="island-card-shop"></span><span class="island-card-avatar"></span><span class="island-card-coin">★</span>
+          </div>
+          <div class="premier-card-copy"><span class="premier-badge">Premier island adventure</span><strong>Ice Cream Quest</strong><span>Explore Sullivan’s Island, collect 10 gold coins, spell each hidden word, and unlock a giant ice cream cone.</span></div>
         </button>
         <div class="activity-grid-spacer" aria-hidden="true"></div>
         <button class="game-card" data-action="listen"><div class="keycap-icon" aria-hidden="true">A</div><div><strong>Type the Word</strong><span>See and hear a word, then type the spelling.</span></div></button>
@@ -912,7 +912,7 @@
 
     <section id="island" class="screen">
       <button class="btn ghost back" id="islandHome">← Home</button>
-      <div class="island-game-shell" id="islandGameShell" aria-label="Sullivan’s Island spelling coin adventure">
+      <div class="island-game-shell" id="islandGameShell" aria-label="Ice Cream Quest island spelling adventure">
         <div class="island-canvas-wrap"><canvas id="islandCanvas" aria-label="3D island game. Use arrow keys, WASD, click and drag, or the touch joystick to move."></canvas></div>
         <div class="island-vignette" aria-hidden="true"></div>
         <div class="island-hud" aria-live="polite">
@@ -925,7 +925,7 @@
         <div class="island-overlay" id="islandOverlay">
           <div class="island-overlay-card">
             <span class="island-eyebrow" id="islandOverlayEyebrow">Sullivan’s Island mission</span>
-            <h2 id="islandOverlayTitle">Island Coin Quest</h2>
+            <h2 id="islandOverlayTitle">Ice Cream Quest</h2>
             <p id="islandOverlayText">Explore the island, collect 10 gold coins, and spell every word you hear.</p>
             <div class="island-result-grid" id="islandOverlayResults" hidden>
               <div class="island-result-card"><strong id="islandResultFirst">0 / 10</strong><span>First try</span></div>
@@ -1589,12 +1589,12 @@
       refreshingForUpdate = true;
       location.reload();
     });
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=51',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=52',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=51"></script>
+<script type="module" src="island-quest.js?v=52"></script>
 </body>
 </html>

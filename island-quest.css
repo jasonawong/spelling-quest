@@ -1,19 +1,18 @@
 .island-card {
-  --premier-shadow:#7c5a2d;
-  background:linear-gradient(135deg,#dcece5 0%,#aed5cf 46%,#eee4bd 100%);
+  --premier-shadow:#496f63;
+  background:linear-gradient(135deg,#e8f5ee 0%,#b9ddd2 45%,#f4e7bd 100%);
 }
 .island-card::before {
   content:'';
   position:absolute;
-  right:-35px;
-  bottom:-90px;
-  width:310px;
-  height:190px;
-  border:4px solid rgba(23,76,85,.22);
-  border-radius:58% 42% 51% 49% / 44% 55% 45% 56%;
-  background:linear-gradient(#6faeb7 0 40%,#e5ddbb 41% 55%,#729c78 56%);
-  clip-path:polygon(1% 48%,7% 27%,21% 12%,43% 5%,68% 9%,89% 24%,99% 45%,94% 67%,79% 85%,54% 96%,29% 90%,9% 74%);
-  transform:rotate(-8deg);
+  right:-46px;
+  bottom:-104px;
+  width:330px;
+  height:205px;
+  border:4px solid rgba(31,91,83,.18);
+  border-radius:50%;
+  background:radial-gradient(ellipse at 46% 42%,#6f9f70 0 34%,#dcca99 35% 51%,#77b7bd 52% 100%);
+  transform:rotate(-7deg);
 }
 .island-card .premier-badge { background:#ffd24e; color:#3e3216 !important; }
 .island-card-art {
@@ -22,6 +21,7 @@
   width:150px;
   min-width:150px;
   height:138px;
+  isolation:isolate;
 }
 .island-card-art::before {
   content:'';
@@ -29,129 +29,197 @@
   inset:8px 0 7px;
   border:3px solid #173d42;
   border-radius:19px;
-  background:linear-gradient(180deg,#94cfca 0 42%,#699fad 43% 100%);
-  box-shadow:5px 6px 0 rgba(23,61,66,.16);
+  background:linear-gradient(180deg,#7ccbdd 0 45%,#a3dce3 46% 52%,#5ca8b6 53% 100%);
+  box-shadow:5px 6px 0 rgba(23,61,66,.17),inset 0 -16px 22px rgba(33,91,101,.18);
 }
 .island-card-art::after {
   content:'';
   position:absolute;
+  z-index:3;
+  left:12px;
+  right:11px;
+  bottom:27px;
+  height:11px;
+  border-top:3px solid rgba(239,255,250,.94);
+  border-radius:50%;
+  box-shadow:0 5px 0 -2px rgba(239,255,250,.66);
+  transform:rotate(-2deg);
+}
+.island-card-sun {
+  position:absolute;
   z-index:1;
-  left:8px;
-  right:8px;
-  bottom:22px;
-  height:18px;
-  background:repeating-radial-gradient(ellipse at 50% 100%,transparent 0 11px,rgba(238,255,252,.9) 12px 14px,transparent 15px 22px);
-  opacity:.82;
+  right:16px;
+  top:18px;
+  width:21px;
+  height:21px;
+  border:2px solid #7f6422;
+  border-radius:50%;
+  background:radial-gradient(circle at 35% 31%,#fff4a6 0 18%,#ffd34e 20% 100%);
+  box-shadow:0 0 0 5px rgba(255,225,105,.2);
+}
+.island-card-water {
+  position:absolute;
+  z-index:2;
+  left:9px;
+  right:9px;
+  bottom:18px;
+  height:48px;
+  border-radius:0 0 14px 14px;
+  background:repeating-linear-gradient(169deg,transparent 0 9px,rgba(218,248,245,.5) 10px 12px,transparent 13px 20px);
 }
 .island-card-ground {
   position:absolute;
-  z-index:2;
-  left:10px;
-  right:10px;
-  bottom:21px;
-  height:57px;
+  z-index:3;
+  left:13px;
+  right:12px;
+  bottom:27px;
+  height:54px;
   border:3px solid #173d42;
-  border-radius:54% 46% 57% 43% / 48% 54% 46% 52%;
-  background:linear-gradient(165deg,#719c78 0 48%,#e5ddbb 49% 100%);
-  clip-path:polygon(1% 48%,8% 20%,27% 5%,54% 1%,81% 10%,98% 33%,94% 70%,77% 94%,45% 99%,15% 86%);
-  box-shadow:7px 8px 0 rgba(23,61,66,.16);
+  border-radius:51% 49% 46% 54% / 43% 46% 54% 57%;
+  background:
+    radial-gradient(ellipse at 49% 36%,rgba(216,233,176,.72) 0 10%,transparent 11%),
+    linear-gradient(163deg,#46765c 0 9%,#6e9c6e 10% 43%,#c6b67e 44% 50%,#e8d59f 51% 100%);
+  clip-path:polygon(0 47%,7% 24%,19% 11%,38% 3%,59% 1%,80% 10%,96% 29%,100% 52%,93% 72%,74% 91%,51% 100%,27% 94%,9% 79%);
+  box-shadow:7px 8px 0 rgba(23,61,66,.18),inset 0 -9px 0 rgba(174,143,87,.18);
+}
+.island-card-palm {
+  position:absolute;
+  z-index:5;
+  left:28px;
+  bottom:48px;
+  width:8px;
+  height:48px;
+  border:2px solid #4f3b25;
+  border-radius:70% 40% 35% 65%;
+  background:repeating-linear-gradient(10deg,#9a6832 0 5px,#c78e45 6px 9px);
+  box-shadow:3px 3px 0 rgba(31,63,54,.14);
+  transform:rotate(8deg);
+  transform-origin:50% 100%;
+}
+.island-card-palm::before {
+  content:'';
+  position:absolute;
+  left:-25px;
+  top:-19px;
+  width:58px;
+  height:37px;
+  border:2px solid #173d42;
+  background:conic-gradient(from 8deg at 50% 72%,#315f43,#68a85d 10%,#2e6949 18%,#78b965 27%,#326b4b 36%,#6da959 47%,#2a6144 58%,#6fb15e 69%,#2d6548 81%,#73ad5d 90%,#315f43);
+  clip-path:polygon(49% 100%,45% 48%,0 39%,37% 31%,9% 0,45% 24%,44% 0,52% 27%,72% 0,58% 31%,100% 20%,63% 45%,96% 67%,58% 55%);
+  filter:drop-shadow(2px 3px 0 rgba(23,61,66,.18));
+  transform:rotate(-8deg);
+}
+.island-card-palm::after {
+  content:'';
+  position:absolute;
+  left:1px;
+  top:3px;
+  bottom:3px;
+  width:2px;
+  border-radius:999px;
+  background:rgba(255,211,121,.45);
 }
 .island-card-shop {
   position:absolute;
-  z-index:4;
-  right:15px;
-  bottom:39px;
-  width:61px;
-  height:47px;
+  z-index:5;
+  right:16px;
+  bottom:43px;
+  width:66px;
+  height:42px;
   border:3px solid #173d42;
-  border-radius:6px;
-  background:linear-gradient(90deg,#dfa29d,#ffc8bb 42%,#e9a9a4);
-  box-shadow:5px 5px 0 rgba(23,61,66,.14);
+  border-radius:5px 5px 3px 3px;
+  background:
+    linear-gradient(90deg,transparent 0 62%,#275c5c 63% 75%,transparent 76%),
+    linear-gradient(90deg,#cf817e,#f3b7a7 46%,#d98e86);
+  box-shadow:6px 6px 0 rgba(23,61,66,.18),inset -8px 0 0 rgba(134,76,73,.12);
 }
 .island-card-shop::before {
   content:'';
   position:absolute;
-  left:-5px;
-  right:-5px;
-  top:-13px;
-  height:15px;
+  left:-7px;
+  right:-7px;
+  top:-14px;
+  height:16px;
   border:3px solid #173d42;
-  border-radius:5px 5px 2px 2px;
-  background:repeating-linear-gradient(90deg,#fff3df 0 9px,#df5a62 9px 18px);
+  border-radius:5px 5px 1px 1px;
+  background:repeating-linear-gradient(90deg,#fff1d7 0 9px,#d95c60 9px 18px);
+  clip-path:polygon(7% 0,93% 0,100% 100%,0 100%);
 }
 .island-card-shop::after {
-  content:"SULLIVAN'S";
+  content:'ICE CREAM';
   position:absolute;
-  left:5px;
-  right:5px;
-  top:8px;
-  padding:3px 0;
+  left:6px;
+  right:6px;
+  top:5px;
+  padding:2px 0;
   border:1px solid #173d42;
   border-radius:3px;
   background:#fff7df;
-  color:#315b57;
-  font-size:5.6px;
+  color:#294e4d;
+  font-size:5.4px;
   font-weight:1000;
-  letter-spacing:.02em;
+  letter-spacing:.04em;
   text-align:center;
 }
 .island-card-avatar {
   position:absolute;
-  z-index:6;
-  left:72px;
-  bottom:30px;
-  width:16px;
-  height:27px;
+  z-index:7;
+  left:71px;
+  bottom:31px;
+  width:18px;
+  height:25px;
   border:2px solid #173d42;
-  border-radius:7px 7px 6px 6px;
-  background:linear-gradient(90deg,#99372f,#c84d3f 52%,#99372f);
-  box-shadow:-5px 18px 0 -2px #765236,5px 18px 0 -2px #765236;
+  border-radius:7px 7px 5px 5px;
+  background:linear-gradient(90deg,#8d2f2c,#ca493e 50%,#8d2f2c);
+  box-shadow:-5px 17px 0 -2px #68472f,6px 17px 0 -2px #68472f,0 5px 6px rgba(23,61,66,.22);
 }
 .island-card-avatar::before {
   content:'';
   position:absolute;
-  left:0;
-  top:-12px;
-  width:15px;
-  height:13px;
+  left:-1px;
+  top:-13px;
+  width:17px;
+  height:14px;
   border:2px solid #173d42;
-  border-radius:50%;
+  border-radius:48% 52% 46% 54%;
   background:
-    radial-gradient(circle at 31% 66%,transparent 0 1.5px,#263737 1.8px 2.6px,transparent 2.9px),
-    radial-gradient(circle at 69% 66%,transparent 0 1.5px,#263737 1.8px 2.6px,transparent 2.9px),
-    linear-gradient(#35251e 0 48%,#e3bda4 49%);
+    radial-gradient(ellipse at 14% 22%,#32241e 0 20%,transparent 22%),
+    radial-gradient(ellipse at 50% 8%,#2a211d 0 34%,transparent 36%),
+    radial-gradient(ellipse at 82% 24%,#35251f 0 24%,transparent 26%),
+    linear-gradient(#3b2922 0 43%,#dba98d 44% 100%);
 }
 .island-card-avatar::after {
   content:'♣';
   position:absolute;
-  left:-2px;
-  top:5px;
-  width:16px;
-  height:16px;
+  left:-3px;
+  top:3px;
+  width:20px;
+  height:18px;
   border:2px solid #173d42;
   border-radius:6px 6px 8px 8px;
   display:grid;
   place-items:center;
-  background:linear-gradient(90deg,#294941,#426960 55%,#294941);
-  color:#f4dd9a;
-  font-size:8px;
+  background:linear-gradient(90deg,#263f38,#477064 52%,#263f38);
+  color:#f5dda0;
+  font-size:9px;
   line-height:1;
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.16);
 }
 .island-card-coin {
   position:absolute;
-  z-index:3;
-  left:78px;
-  top:13px;
-  width:33px;
-  height:33px;
+  z-index:6;
+  left:80px;
+  top:15px;
+  width:31px;
+  height:31px;
   display:grid;
   place-items:center;
   border:3px solid #6d4f19;
   border-radius:50%;
-  background:#ffd247;
+  background:radial-gradient(circle at 34% 28%,#fff39c 0 9%,#ffd247 12% 62%,#e5a926 64% 100%);
   color:#7d5817;
-  box-shadow:4px 5px 0 rgba(109,79,25,.23);
-  font-size:1.15rem;
+  box-shadow:4px 5px 0 rgba(109,79,25,.24),inset -3px -4px 0 rgba(169,111,19,.18);
+  font-size:1.05rem;
   font-weight:1000;
   transform:rotate(7deg);
 }
