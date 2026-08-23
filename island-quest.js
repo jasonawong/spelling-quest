@@ -1017,6 +1017,8 @@ function start(api){
   if(!services?.words || !document.getElementById('islandGameShell')) return;
   const saved = loadSession();
   session = saved || createSession();
+  if(session?.phase === 'challenge') session.phase = collectedCount() === TOTAL_COINS ? 'storeUnlocked' : 'exploring';
+  if(session?.phase === 'reward') session.phase = 'storeUnlocked';
   if(!initialized){
     try { setupRenderer(); }
     catch(error){
