@@ -501,18 +501,32 @@ function createPlayer(){
   eyeRight.position.set(.19, 2.55, .5);
   const armLeft = mesh(new THREE.CapsuleGeometry(.12, .64, 4, 7), skin);
   const armRight = armLeft.clone();
-  armLeft.position.set(-.62, 1.48, 0);
-  armRight.position.set(.62, 1.48, 0);
+  const armLeftPivot = new THREE.Group();
+  const armRightPivot = new THREE.Group();
+  armLeftPivot.position.set(-.62, 1.84, 0);
+  armRightPivot.position.set(.62, 1.84, 0);
+  armLeft.position.y = -.38;
+  armRight.position.y = -.38;
+  armLeftPivot.add(armLeft);
+  armRightPivot.add(armRight);
   const legLeft = mesh(new THREE.CapsuleGeometry(.15, .58, 4, 7), shorts);
   const legRight = legLeft.clone();
-  legLeft.position.set(-.24, .55, 0);
-  legRight.position.set(.24, .55, 0);
+  const legLeftPivot = new THREE.Group();
+  const legRightPivot = new THREE.Group();
+  legLeftPivot.position.set(-.24, .96, 0);
+  legRightPivot.position.set(.24, .96, 0);
+  legLeft.position.y = -.38;
+  legRight.position.y = -.38;
+  legLeftPivot.add(legLeft);
+  legRightPivot.add(legRight);
   const shoeLeft = mesh(new THREE.BoxGeometry(.32, .2, .52), shoe);
   const shoeRight = shoeLeft.clone();
-  shoeLeft.position.set(-.24, .16, .13);
-  shoeRight.position.set(.24, .16, .13);
-  player.add(body, head, hair, eyeLeft, eyeRight, armLeft, armRight, legLeft, legRight, shoeLeft, shoeRight);
-  playerParts = { body, head, armLeft, armRight, legLeft, legRight };
+  shoeLeft.position.set(0, -.82, .13);
+  shoeRight.position.set(0, -.82, .13);
+  legLeftPivot.add(shoeLeft);
+  legRightPivot.add(shoeRight);
+  player.add(body, head, hair, eyeLeft, eyeRight, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
+  playerParts = { body, head, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
   player.position.set(session?.player?.x ?? START_POSITION.x, .04, session?.player?.z ?? START_POSITION.z);
   scene.add(player);
 
@@ -649,12 +663,19 @@ function updatePlayer(delta, elapsed){
 
 function animatePlayer(moving, elapsed){
   if(!playerParts) return;
-  const swing = moving ? Math.sin(elapsed * 10) * .58 : 0;
-  playerParts.legLeft.rotation.x = swing;
-  playerParts.legRight.rotation.x = -swing;
-  playerParts.armLeft.rotation.x = -swing * .7;
-  if(session?.phase !== 'reward') playerParts.armRight.rotation.x = swing * .7;
-  playerParts.body.position.y = 1.45 + (moving ? Math.abs(Math.sin(elapsed * 10)) * .06 : Math.sin(elapsed * 2.2) * .018);
+  const stride = moving ? Math.sin(elapsed * 8.6) : 0;
+  const legSwing = stride * .62;
+  const armSwing = stride * .46;
+  playerParts.legLeft.rotation.x = legSwing;
+  playerParts.legRight.rotation.x = -legSwing;
+  playerParts.armLeft.rotation.x = -armSwing;
+  if(session?.phase !== 'reward') playerParts.armRight.rotation.x = armSwing;
+  playerParts.armLeft.rotation.z = moving ? .035 : .06;
+  playerParts.armRight.rotation.z = moving ? -.035 : -.06;
+  playerParts.body.rotation.z = moving ? -stride * .025 : 0;
+  playerParts.head.rotation.z = moving ? stride * .018 : 0;
+  playerParts.body.position.y = 1.45 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .055 : Math.sin(elapsed * 2.2) * .018);
+  if(session?.phase !== 'reward') player.position.y = .04 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .035 : 0);
 }
 
 function checkTriggers(){
@@ -680,6 +701,9 @@ function checkTriggers(){
 
 function openChallenge(index){
   if(!session || session.phase !== 'exploring') return;
+  keys.clear();
+  pointerVector.set(0, 0);
+  releaseJoystick();
   currentCoinIndex = index;
   session.phase = 'challenge';
   const word = session.words[index];
@@ -953,6 +977,8 @@ function releaseJoystick(){
 function bindEvents(){
   window.addEventListener('keydown', event => {
     if(!active) return;
+    const textEntry = event.target?.closest?.('input, textarea, select, [contenteditable="true"]');
+    if(textEntry || !refs.challenge.hidden || !refs.overlay.hidden) return;
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].includes(event.code)){
       keys.add(event.code);
       event.preventDefault();
