@@ -317,6 +317,21 @@
   letter-spacing:.05em;
   text-transform:uppercase;
 }
+.island-challenge-meta { display:flex; align-items:center; gap:10px; }
+.island-challenge-exit {
+  min-height:34px;
+  padding:0 10px;
+  border:2px solid #163d42;
+  border-radius:10px;
+  background:#fff;
+  color:#395e60;
+  box-shadow:0 2px 0 #163d42;
+  font:inherit;
+  letter-spacing:.03em;
+  text-transform:none;
+  cursor:pointer;
+}
+.island-challenge-exit:active { transform:translateY(2px); box-shadow:none; }
 .island-challenge-content { display:grid; grid-template-columns:minmax(0,150px) minmax(0,1fr); align-items:center; gap:18px; padding:14px; border-radius:18px; background:#f5fbf7; }
 .word-picture.island-picture { width:100%; max-width:150px; min-width:0; justify-self:center; border:3px solid #163d42; border-radius:17px; box-shadow:4px 5px 0 rgba(22,61,66,.16); }
 .island-challenge-copy { min-width:0; }
@@ -403,6 +418,7 @@
   .island-challenge { padding:10px; }
   .island-challenge-card { padding:14px; }
   .island-challenge-top { font-size:.72rem; }
+  .island-challenge-meta { width:100%; justify-content:space-between; }
   .island-challenge-content { grid-template-columns:1fr; gap:12px; padding:12px; text-align:center; }
   .word-picture.island-picture { width:min(150px,52vw); border-radius:15px; }
   .island-challenge-copy h2 { font-size:1.28rem; }

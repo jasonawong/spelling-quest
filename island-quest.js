@@ -1,12 +1,13 @@
 import * as THREE from './vendor/three.module.min.js';
 
 const STORAGE_KEY = 'spellingQuestIslandV1';
-const SESSION_VERSION = 2;
+const SESSION_VERSION = 3;
 const TOTAL_COINS = 10;
 const PLAYER_RADIUS = .72;
-const WORLD_SCALE = 4;
+const WORLD_SCALE = 2;
 const ISLAND_HALF_LENGTH = 43 * WORLD_SCALE;
-const STORE_POSITION = { x: 28 * WORLD_SCALE, z: -1.4 * WORLD_SCALE };
+const STORE_POSITION = { x: 28 * WORLD_SCALE, z: 0 };
+const STORE_ENTRY_POSITION = { x: STORE_POSITION.x - 7, z:STORE_POSITION.z };
 const START_POSITION = { x: -38 * WORLD_SCALE, z: 0 };
 const COIN_LOCATIONS = [
   { x: -35 * WORLD_SCALE, z: 4.1 * WORLD_SCALE, label: 'lighthouse dunes' },
@@ -29,6 +30,10 @@ let scene = null;
 let camera = null;
 let sunlight = null;
 let sunlightTarget = null;
+let waterSurface = null;
+let waterBasePositions = null;
+let waterTexture = null;
+const shorelineWaves = [];
 let canvasHost = null;
 let player = null;
 let playerParts = null;
@@ -39,6 +44,8 @@ let raf = 0;
 let previousTime = 0;
 let session = null;
 let currentCoinIndex = -1;
+let exitedCoinIndex = -1;
+let challengeCooldownUntil = 0;
 let rewardStartedAt = 0;
 let lastPositionSave = 0;
 let lastStoreHint = 0;
@@ -81,6 +88,7 @@ function bindRefs(){
   refs.secondary = document.getElementById('islandOverlaySecondary');
   refs.challenge = document.getElementById('islandChallenge');
   refs.challengeStep = document.getElementById('islandChallengeStep');
+  refs.challengeExit = document.getElementById('islandChallengeExit');
   refs.picture = document.getElementById('islandPicture');
   refs.hear = document.getElementById('islandHear');
   refs.form = document.getElementById('islandChallengeForm');
@@ -130,7 +138,7 @@ function createSession(){
 }
 
 function isValidSavedSession(value){
-  if(!value || ![1, SESSION_VERSION].includes(value.version) || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
+  if(!value || ![1, 2, SESSION_VERSION].includes(value.version) || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
   if(!Array.isArray(value.collected) || value.collected.length !== TOTAL_COINS) return false;
   const available = new Set(services.words.map(item => item.word));
   return value.words.every(word => available.has(word));
@@ -140,12 +148,13 @@ function loadSession(){
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if(!isValidSavedSession(saved)) return null;
-    if(saved.version === 1){
+    if(saved.version !== SESSION_VERSION){
+      const positionScale = saved.version === 1 ? WORLD_SCALE : .5;
       saved.version = SESSION_VERSION;
       saved.player = {
-        x:(saved.player?.x ?? START_POSITION.x / WORLD_SCALE) * WORLD_SCALE,
-        z:(saved.player?.z ?? START_POSITION.z) * WORLD_SCALE,
-        heading:Math.PI / 2
+        x:(saved.player?.x ?? START_POSITION.x / positionScale) * positionScale,
+        z:(saved.player?.z ?? START_POSITION.z) * positionScale,
+        heading:saved.player?.heading ?? Math.PI / 2
       };
     }
     return saved;
@@ -170,9 +179,26 @@ function mesh(geometry, mat, cast = true, receive = true){
   return item;
 }
 
-function islandHalfWidth(x, inset = 0){
+function baseIslandHalfWidth(x, inset = 0){
   const normalizedX = Math.min(1, Math.abs(x) / (ISLAND_HALF_LENGTH - inset));
   return Math.max(3.5 * WORLD_SCALE, (5.4 + 6.2 * Math.sqrt(Math.max(0, 1 - normalizedX * normalizedX))) * WORLD_SCALE - inset * .58);
+}
+
+function islandEdge(x, side = 1, inset = 0){
+  const base = baseIslandHalfWidth(x, inset);
+  const edgeFade = Math.sqrt(Math.max(0, 1 - Math.pow(Math.abs(x) / Math.max(1, ISLAND_HALF_LENGTH - inset), 2)));
+  const centerDrift = Math.sin(x * .055) * 1.25 * WORLD_SCALE * edgeFade;
+  const phase = side > 0 ? .35 : 2.4;
+  const shoreline = (
+    Math.sin(x * .13 + phase) * 1.05 +
+    Math.sin(x * .31 + phase * 1.7) * .42 +
+    Math.sin(x * .047 + phase * .6) * .72
+  ) * WORLD_SCALE * edgeFade;
+  return centerDrift + side * base + shoreline;
+}
+
+function islandHalfWidth(x, inset = 0){
+  return (islandEdge(x, 1, inset) - islandEdge(x, -1, inset)) / 2;
 }
 
 function buildIslandShape(inset = 0){
@@ -181,12 +207,12 @@ function buildIslandShape(inset = 0){
   const maxX = ISLAND_HALF_LENGTH - inset;
   for(let i = 0; i <= 96; i++){
     const x = minX + (maxX - minX) * (i / 96);
-    const z = islandHalfWidth(x, inset);
+    const z = islandEdge(x, 1, inset);
     if(i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
   }
   for(let i = 96; i >= 0; i--){
     const x = minX + (maxX - minX) * (i / 96);
-    shape.lineTo(x, -islandHalfWidth(x, inset));
+    shape.lineTo(x, islandEdge(x, -1, inset));
   }
   shape.closePath();
   return shape;
@@ -234,6 +260,69 @@ function makeGroundTexture(base, flecks){
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(18, 7);
   texture.anisotropy = Math.min(8, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+  return texture;
+}
+
+function makeWaterTexture(){
+  const surface = document.createElement('canvas');
+  surface.width = 512;
+  surface.height = 256;
+  const context = surface.getContext('2d');
+  const gradient = context.createLinearGradient(0, 0, 0, 256);
+  gradient.addColorStop(0, '#328da8');
+  gradient.addColorStop(.5, '#54b9c8');
+  gradient.addColorStop(1, '#79d1d6');
+  context.fillStyle = gradient;
+  context.fillRect(0, 0, 512, 256);
+  for(let row = 0; row < 44; row++){
+    const y = 5 + row * 6 + Math.sin(row * 1.7) * 2;
+    context.strokeStyle = row % 3 ? 'rgba(223,250,246,.16)' : 'rgba(16,104,134,.12)';
+    context.lineWidth = row % 3 ? 1 : 2;
+    context.beginPath();
+    for(let x = -10; x <= 522; x += 12){
+      const waveY = y + Math.sin(x * .055 + row * .7) * 2.2;
+      if(x === -10) context.moveTo(x, waveY); else context.lineTo(x, waveY);
+    }
+    context.stroke();
+  }
+  const texture = new THREE.CanvasTexture(surface);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(7, 5);
+  texture.anisotropy = Math.min(8, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+  return texture;
+}
+
+function makeMasonryTexture(){
+  const surface = document.createElement('canvas');
+  surface.width = 256;
+  surface.height = 256;
+  const context = surface.getContext('2d');
+  context.fillStyle = '#8c887f';
+  context.fillRect(0, 0, 256, 256);
+  context.strokeStyle = 'rgba(55,54,49,.35)';
+  context.lineWidth = 3;
+  for(let y = 0; y <= 256; y += 32){
+    context.beginPath();
+    context.moveTo(0, y);
+    context.lineTo(256, y);
+    context.stroke();
+    const offset = (y / 32) % 2 ? 32 : 0;
+    for(let x = offset; x <= 256; x += 64){
+      context.beginPath();
+      context.moveTo(x, y);
+      context.lineTo(x, y + 32);
+      context.stroke();
+    }
+  }
+  for(let i = 0; i < 180; i++){
+    context.fillStyle = `rgba(${70 + i % 35},${67 + i % 28},${59 + i % 22},.16)`;
+    context.fillRect(Math.random() * 256, Math.random() * 256, 2 + Math.random() * 5, 2 + Math.random() * 4);
+  }
+  const texture = new THREE.CanvasTexture(surface);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(4, 2);
   return texture;
 }
 
@@ -382,56 +471,105 @@ function addLiveOak(x, z, scale = 1){
 
 function addLighthouse(){
   const group = new THREE.Group();
-  const colors = [0xf7f1df, 0xea625d, 0xf7f1df, 0xea625d, 0xf7f1df];
-  for(let i = 0; i < 7; i++){
-    const segment = mesh(new THREE.CylinderGeometry(.8 - i * .055, .88 - i * .055, 1.25, 24), material(colors[i % colors.length], .68));
-    segment.position.y = .63 + i * 1.23;
+  const aluminumWhite = material(0xe8e9e4, .42, .2);
+  const aluminumBlack = material(0x222a2d, .5, .18);
+  const base = mesh(new THREE.BoxGeometry(5.2, 2.7, 5), material(0xd9dbd5, .58, .08));
+  base.position.y = 1.35;
+  group.add(base);
+  const baseDoor = mesh(new THREE.BoxGeometry(1.1, 1.9, .14), material(0x273b43, .62), false);
+  baseDoor.position.set(0, 1.05, 2.56);
+  group.add(baseDoor);
+  const segmentHeight = 1.08;
+  for(let i = 0; i < 15; i++){
+    const lowerRadius = 1.72 - i * .035;
+    const upperRadius = lowerRadius - .045;
+    const segment = mesh(new THREE.CylinderGeometry(upperRadius, lowerRadius, segmentHeight, 3), i < 8 ? aluminumWhite : aluminumBlack);
+    segment.position.y = 2.72 + segmentHeight / 2 + i * segmentHeight;
+    segment.rotation.y = Math.PI / 6;
     group.add(segment);
+    const seam = mesh(new THREE.CylinderGeometry(upperRadius + .02, upperRadius + .02, .035, 3), material(i < 8 ? 0xaeb4b2 : 0x090d0f, .55, .25), false);
+    seam.position.y = 3.24 + i * segmentHeight;
+    seam.rotation.y = Math.PI / 6;
+    group.add(seam);
   }
-  const gallery = mesh(new THREE.CylinderGeometry(1.05, 1.05, .2, 24), material(0x243c43, .6));
-  gallery.position.y = 8.68;
-  const lamp = mesh(new THREE.CylinderGeometry(.62, .68, 1.05, 18), material(0x9ee7ec, .2, .05, { transparent:true, opacity:.82 }));
-  lamp.position.y = 9.28;
-  const roof = mesh(new THREE.ConeGeometry(.85, .8, 18), material(0x243c43, .7));
-  roof.position.y = 10.16;
-  const railMat = material(0x243c43, .68);
-  for(let i = 0; i < 12; i++){
-    const angle = i / 12 * Math.PI * 2;
-    const post = mesh(new THREE.CylinderGeometry(.025, .025, .65, 6), railMat, false);
-    post.position.set(Math.sin(angle) * .91, 9, Math.cos(angle) * .91);
-    group.add(post);
+  for(let i = 0; i < 6; i++){
+    const window = mesh(new THREE.BoxGeometry(.34, .42, .07), material(0x8dc9d0, .22, .08, { emissive:0x193f49, emissiveIntensity:.18 }), false);
+    window.position.set(0, 4.6 + i * 2.05, 1.61 - i * .06);
+    group.add(window);
   }
-  const door = mesh(new THREE.BoxGeometry(.58, 1.15, .12), material(0x314b52), false);
-  door.position.set(0, .72, .84);
-  group.add(gallery, lamp, roof, door);
-  group.position.set(-34 * WORLD_SCALE, 0, -2.1 * WORLD_SCALE);
+  const towerTop = 2.72 + segmentHeight * 15;
+  const gallery = mesh(new THREE.CylinderGeometry(1.75, 1.75, .24, 3), aluminumBlack);
+  gallery.position.y = towerTop + .1;
+  gallery.rotation.y = Math.PI / 6;
+  const lamp = mesh(new THREE.CylinderGeometry(1.08, 1.18, 1.45, 8), material(0x9fe0e5, .18, .12, { transparent:true, opacity:.8, emissive:0xcafcff, emissiveIntensity:.24 }));
+  lamp.position.y = towerTop + .93;
+  const roof = mesh(new THREE.ConeGeometry(1.4, .95, 3), aluminumBlack);
+  roof.position.y = towerTop + 2.08;
+  roof.rotation.y = Math.PI / 6;
+  group.add(gallery, lamp, roof);
+  group.position.set(-33 * WORLD_SCALE, 0, 7 * WORLD_SCALE);
   scene.add(group);
-  addCollider(group.position.x, group.position.z, 1.5);
+  addCollider(group.position.x, group.position.z, 3.15);
 }
 
 function addFort(){
   const group = new THREE.Group();
-  const stone = material(0x8b8173);
-  const wall = mesh(new THREE.BoxGeometry(11, 2.4, 5.2), stone);
-  wall.position.y = 1.2;
-  group.add(wall);
-  for(let i = -4.7; i <= 4.7; i += 1.55){
-    const top = mesh(new THREE.BoxGeometry(.9, .72, 1), stone);
-    top.position.set(i, 2.75, 0);
-    group.add(top);
-  }
-  const arch = mesh(new THREE.BoxGeometry(1.7, 1.8, .38), material(0x393936), false);
-  arch.position.set(0, .92, 2.62);
-  group.add(arch);
-  for(let i = 0; i < 16; i++){
-    const stoneBlock = mesh(new THREE.BoxGeometry(.9 + (i % 3) * .17, .08, .08), material(i % 2 ? 0xa19789 : 0x746d63), false);
-    stoneBlock.position.set(-4.8 + (i % 8) * 1.35, .55 + Math.floor(i / 8) * .7, 2.66);
-    group.add(stoneBlock);
-  }
-  group.position.set(-25 * WORLD_SCALE, 0, 1.2 * WORLD_SCALE);
-  group.rotation.y = -.08;
+  const masonryMap = makeMasonryTexture();
+  const stone = material(0xffffff, .92, 0, { map:masonryMap, bumpMap:masonryMap, bumpScale:.08 });
+  const earth = material(0x61734b, .98);
+  const courtyard = mesh(new THREE.PlaneGeometry(17, 9), material(0x758a5c, .95), false, true);
+  courtyard.rotation.x = -Math.PI / 2;
+  courtyard.position.y = .03;
+  group.add(courtyard);
+  const backWall = mesh(new THREE.BoxGeometry(23, 3.4, 2.4), stone);
+  backWall.position.set(0, 1.7, -6.5);
+  const sideLeft = mesh(new THREE.BoxGeometry(2.4, 3.4, 11), stone);
+  const sideRight = sideLeft.clone();
+  sideLeft.position.set(-10.3, 1.7, -.4);
+  sideRight.position.set(10.3, 1.7, -.4);
+  const frontLeft = mesh(new THREE.BoxGeometry(9.2, 3.4, 2.4), stone);
+  const frontRight = frontLeft.clone();
+  frontLeft.position.set(-6.9, 1.7, 5.3);
+  frontRight.position.set(6.9, 1.7, 5.3);
+  group.add(backWall, sideLeft, sideRight, frontLeft, frontRight);
+  [[-9.4,-5.5,-.35],[9.4,-5.5,.35],[-9.4,4.4,.35],[9.4,4.4,-.35]].forEach(([x,z,rotation]) => {
+    const bastion = mesh(new THREE.BoxGeometry(5.8, 3.6, 4.8), stone);
+    bastion.position.set(x, 1.8, z);
+    bastion.rotation.y = rotation;
+    const berm = mesh(new THREE.BoxGeometry(5.9, .42, 4.9), earth);
+    berm.position.set(x, 3.72, z);
+    berm.rotation.y = rotation;
+    group.add(bastion, berm);
+  });
+  const rampartTop = [
+    [0,3.52,-6.5,23,2.5],[-10.3,3.52,-.4,2.5,11],[10.3,3.52,-.4,2.5,11],[-6.9,3.52,5.3,9.2,2.5],[6.9,3.52,5.3,9.2,2.5]
+  ];
+  rampartTop.forEach(([x,y,z,w,d]) => {
+    const grassCap = mesh(new THREE.BoxGeometry(w,.32,d), earth);
+    grassCap.position.set(x,y,z);
+    group.add(grassCap);
+  });
+  const entry = mesh(new THREE.BoxGeometry(3.2, 2.25, .35), material(0x242828, .96), false);
+  entry.position.set(0, 1.15, 5.38);
+  group.add(entry);
+  const magazine = mesh(new THREE.BoxGeometry(5.8, 2.2, 3.4), material(0x87634b, .9));
+  magazine.position.set(2.5, 1.1, -.8);
+  const magazineRoof = mesh(new THREE.ConeGeometry(4.2, 1.45, 4), material(0x4e4942, .94));
+  magazineRoof.position.set(2.5, 2.65, -.8);
+  magazineRoof.rotation.y = Math.PI / 4;
+  group.add(magazine, magazineRoof);
+  const cannonMat = material(0x20272a, .5, .58);
+  [-6,0,6].forEach((x,index) => {
+    const barrel = mesh(new THREE.CylinderGeometry(.18,.28,2.5,12), cannonMat);
+    barrel.rotation.x = Math.PI / 2;
+    barrel.position.set(x,4.05,-6.55);
+    barrel.rotation.z = (index - 1) * .08;
+    group.add(barrel);
+  });
+  group.position.set(-21 * WORLD_SCALE, 0, -8.5 * WORLD_SCALE);
+  group.rotation.y = -.04;
   scene.add(group);
-  addCollider(group.position.x, group.position.z, 6);
+  addCollider(group.position.x, group.position.z, 12.5);
 }
 
 function addIceCreamStore(){
@@ -454,8 +592,8 @@ function addIceCreamStore(){
   const counter = mesh(new THREE.BoxGeometry(4.8, 1.45, .72), material(0xfff4df));
   counter.position.set(0, 1.45, 2.95);
   group.add(counter);
-  const signTexture = makeCanvasTexture('ICE CREAM', '#3f5b57', '#fff4df');
-  const sign = mesh(new THREE.PlaneGeometry(4.7, 1.45), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
+  const signTexture = makeCanvasTexture('Ice Cream Shop', '#3f5b57', '#fff4df');
+  const sign = mesh(new THREE.PlaneGeometry(5.7, 1.45), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
   sign.position.set(0, 4.12, 2.815);
   group.add(sign);
   const serviceWindow = mesh(new THREE.BoxGeometry(5.05, 1.35, .16), material(0x67bed0, .2, .02, { emissive:0x153a45, emissiveIntensity:.12 }), false);
@@ -471,6 +609,7 @@ function addIceCreamStore(){
   coneSign.rotation.z = -.12;
   group.add(coneSign);
   group.position.set(STORE_POSITION.x, 0, STORE_POSITION.z);
+  group.rotation.y = -Math.PI / 2;
   scene.add(group);
   addCollider(STORE_POSITION.x, STORE_POSITION.z, 4.25);
 
@@ -569,22 +708,13 @@ function addRoads(){
 }
 
 function addLandscapeDetails(){
-  const duneMat = material(0xe6c27b, .96);
-  for(let i = 0; i < 26; i++){
-    const x = -158 + i * 12.4;
-    const side = i % 2 ? 1 : -1;
-    const z = side * (islandHalfWidth(x, 1) - 4.1 - (i % 3));
-    const dune = mesh(new THREE.SphereGeometry(2.4 + (i % 4) * .45, 16, 9), duneMat, false, true);
-    dune.scale.set(1.9, .22 + (i % 3) * .035, .82);
-    dune.position.set(x, .38, z);
-    scene.add(dune);
-  }
-
   const bladeMats = [material(0x557b42, .94), material(0x789448, .92), material(0x9b9b4f, .92)];
-  for(let i = 0; i < 150; i++){
-    const x = -158 + ((i * 37) % 316);
-    const half = islandHalfWidth(x, 9);
-    const z = -half + 3 + ((i * 53) % Math.max(6, Math.floor((half - 3) * 2)));
+  const usableLength = Math.floor((ISLAND_HALF_LENGTH - 8) * 2);
+  for(let i = 0; i < 125; i++){
+    const x = -ISLAND_HALF_LENGTH + 8 + ((i * 37) % usableLength);
+    const south = islandEdge(x, -1, 5) + 3;
+    const north = islandEdge(x, 1, 5) - 3;
+    const z = south + ((i * 53) % Math.max(6, Math.floor(north - south)));
     if(Math.abs(z) < 4) continue;
     const tuft = new THREE.Group();
     for(let bladeIndex = 0; bladeIndex < 3; bladeIndex++){
@@ -599,7 +729,7 @@ function addLandscapeDetails(){
   }
 
   const cloudMat = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.68, depthWrite:false });
-  [[-95,31,-70],[5,37,-82],[110,29,-68]].forEach(([x,y,z], cloudIndex) => {
+  [[-52,31,-48],[4,37,-56],[58,29,-46]].forEach(([x,y,z], cloudIndex) => {
     const cloud = new THREE.Group();
     for(let i = 0; i < 6; i++){
       const puff = mesh(new THREE.SphereGeometry(3.2 + (i % 3), 16, 10), cloudMat, false, false);
@@ -612,11 +742,30 @@ function addLandscapeDetails(){
   });
 }
 
+function addShorelineWaves(){
+  shorelineWaves.length = 0;
+  for(const side of [-1, 1]){
+    for(let i = 0; i < 38; i++){
+      const x = -ISLAND_HALF_LENGTH + 5 + i * ((ISLAND_HALF_LENGTH * 2 - 10) / 37);
+      const z = islandEdge(x, side, 0) + side * 1.05;
+      const foamMaterial = new THREE.MeshBasicMaterial({ color:0xe9ffff, transparent:true, opacity:.48, depthWrite:false, side:THREE.DoubleSide });
+      const foam = mesh(new THREE.PlaneGeometry(3.8 + (i % 4) * .45, .32), foamMaterial, false, false);
+      foam.rotation.x = -Math.PI / 2;
+      foam.rotation.z = Math.sin(x * .08) * .12;
+      foam.position.set(x, -.01, z);
+      foam.userData = { baseZ:z, side, phase:i * .67 + (side > 0 ? 0 : 1.4) };
+      shorelineWaves.push(foam);
+      scene.add(foam);
+    }
+  }
+}
+
 function buildWorld(){
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x8fdbea);
-  scene.fog = new THREE.Fog(0xb7e3e8, 150, 310);
+  scene.fog = new THREE.Fog(0xb7e3e8, 125, 230);
   colliders.length = 0;
+  shorelineWaves.length = 0;
 
   const hemisphere = new THREE.HemisphereLight(0xdaf8ff, 0x526542, 2.05);
   scene.add(hemisphere);
@@ -637,22 +786,25 @@ function buildWorld(){
   scene.add(sunlightTarget);
   scene.add(sunlight);
 
-  const water = mesh(new THREE.PlaneGeometry(520, 190, 1, 1), material(0x58bed0, .24, .08, { transparent:true, opacity:.96 }), false, true);
-  water.rotation.x = -Math.PI / 2;
-  water.position.y = -.42;
-  scene.add(water);
-  const waterGlow = mesh(new THREE.PlaneGeometry(520, 190), new THREE.MeshBasicMaterial({ color:0x8de1e6, transparent:true, opacity:.15, depthWrite:false }), false, false);
+  waterTexture = makeWaterTexture();
+  const waterGeometry = new THREE.PlaneGeometry(290, 130, 90, 34);
+  waterBasePositions = new Float32Array(waterGeometry.attributes.position.array);
+  waterSurface = mesh(waterGeometry, material(0x9be1e3, .28, .08, { map:waterTexture, bumpMap:waterTexture, bumpScale:.11, transparent:true, opacity:.96 }), false, true);
+  waterSurface.rotation.x = -Math.PI / 2;
+  waterSurface.position.y = -.42;
+  scene.add(waterSurface);
+  const waterGlow = mesh(new THREE.PlaneGeometry(290, 130), new THREE.MeshBasicMaterial({ color:0x8de1e6, transparent:true, opacity:.12, depthWrite:false }), false, false);
   waterGlow.rotation.x = -Math.PI / 2;
   waterGlow.position.y = -.37;
   scene.add(waterGlow);
 
   const sandTexture = makeGroundTexture('#edcf8d', ['#fff1bd','#c79e5c','#f7dc9b']);
   const grassTexture = makeGroundTexture('#6fa85a', ['#456f3f','#9abd68','#5a8d4c']);
-  const sand = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 96), material(0xffffff, .98, 0, { map:sandTexture }), false, true);
+  const sand = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 96), material(0xffffff, .98, 0, { map:sandTexture, bumpMap:sandTexture, bumpScale:.075 }), false, true);
   sand.rotation.x = -Math.PI / 2;
   sand.position.y = -.05;
   scene.add(sand);
-  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(8.2), 96), material(0xffffff, .94, 0, { map:grassTexture }), false, true);
+  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(4.1), 96), material(0xffffff, .94, 0, { map:grassTexture, bumpMap:grassTexture, bumpScale:.045 }), false, true);
   grass.rotation.x = -Math.PI / 2;
   grass.position.y = 0;
   scene.add(grass);
@@ -664,6 +816,7 @@ function buildWorld(){
   addIceCreamStore();
   addBeachDetails();
   addLandscapeDetails();
+  addShorelineWaves();
 
   [
     [-20,-2.4,0xf4c889,1.05,.06],[-16,3.4,0xc1d9e8,.98,-.08],[-10,-3.2,0xf4ad87,1.02,.05],
@@ -677,8 +830,8 @@ function buildWorld(){
     [19,6.7,.86],[24,-6.4,.9],[29,6.3,.95],[33,-5.2,1],[38,4.4,.84],[40,-2.7,.78]
   ].forEach(([x,z,scale]) => addPalm(x * WORLD_SCALE, z * WORLD_SCALE, scale));
   [
-    [-29,0,.92],[-24,-2,.95],[-18,1.2,1.05],[-12,-.2,1],[-7,2.4,1.04],[-2,-2.2,.92],
-    [4,2.1,.9],[10,-1.8,1],[16,1.8,.96],[22,-1.5,.98],[30,2.3,.9],[35,-.5,.86]
+    [-29,3.8,.92],[-24,-3.6,.95],[-18,3.7,1.05],[-12,-3.5,1],[-7,3.8,1.04],[-2,-3.8,.92],
+    [4,3.7,.9],[10,-3.5,1],[16,3.8,.96],[22,-3.6,.98],[30,3.7,.9],[35,-3.4,.86]
   ].forEach(([x,z,scale]) => addLiveOak(x * WORLD_SCALE, z * WORLD_SCALE, scale));
 
   createPlayer();
@@ -688,11 +841,14 @@ function buildWorld(){
 function createPlayer(){
   player = new THREE.Group();
   const skin = material(0xe7ad80, .72);
-  const shirt = material(0x327dc2, .66);
-  const shorts = material(0x284e80, .76);
+  const shirt = material(0x4a9ed0, .62);
+  const shorts = material(0xde4f8c, .68);
   const shoe = material(0xf4f0e8, .52);
   const sole = material(0x34404a, .82);
   const dark = material(0x2a302f, .84);
+  const hairMaterial = material(0x7b4c37, .86);
+  const capMaterial = material(0xf17cb2, .58);
+  const backpackMaterial = material(0x2f7db8, .62);
   const body = mesh(new THREE.CapsuleGeometry(.43, .72, 8, 14), shirt);
   body.scale.set(1, 1, .76);
   body.position.y = 1.54;
@@ -706,9 +862,21 @@ function createPlayer(){
   const head = mesh(new THREE.SphereGeometry(.51, 24, 18), skin);
   head.scale.set(.94, 1.08, .92);
   head.position.y = 2.61;
-  const hair = mesh(new THREE.SphereGeometry(.525, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), dark);
+  const hair = mesh(new THREE.SphereGeometry(.525, 20, 12, 0, Math.PI * 2, 0, Math.PI / 1.55), hairMaterial);
   hair.scale.set(.96, 1.04, .94);
   hair.position.y = 2.76;
+  const ponytail = mesh(new THREE.CapsuleGeometry(.16, .72, 7, 12), hairMaterial);
+  ponytail.position.set(0, 2.2, -.43);
+  ponytail.rotation.x = -.08;
+  const capCrown = mesh(new THREE.SphereGeometry(.54, 22, 14, 0, Math.PI * 2, 0, Math.PI / 2), capMaterial);
+  capCrown.scale.set(1.03,.58,1.03);
+  capCrown.position.y = 2.97;
+  const capBand = mesh(new THREE.TorusGeometry(.47, .055, 8, 22), material(0xffd9e8, .6), false);
+  capBand.rotation.x = Math.PI / 2;
+  capBand.position.y = 2.94;
+  const capBrim = mesh(new THREE.BoxGeometry(.52, .07, .31), capMaterial);
+  capBrim.position.set(0,2.93,.49);
+  capBrim.rotation.x = -.08;
   const earLeft = mesh(new THREE.SphereGeometry(.09, 10, 8), skin, false);
   const earRight = earLeft.clone();
   earLeft.position.set(-.49, 2.6, 0);
@@ -722,6 +890,20 @@ function createPlayer(){
   nose.position.set(0, 2.54, .5);
   const mouth = mesh(new THREE.BoxGeometry(.19, .025, .025), material(0x8f4e47), false);
   mouth.position.set(0, 2.4, .49);
+  const backpack = mesh(new THREE.CapsuleGeometry(.38, .55, 8, 14), backpackMaterial);
+  backpack.scale.set(.9,1,.42);
+  backpack.position.set(0,1.55,-.43);
+  const backpackPocket = mesh(new THREE.CapsuleGeometry(.25,.18,6,12), material(0x69acd1,.66));
+  backpackPocket.scale.set(1,.8,.28);
+  backpackPocket.position.set(0,1.37,-.61);
+  const backpackTrim = mesh(new THREE.TorusGeometry(.28,.035,7,18,Math.PI), material(0xf1d18e,.65),false);
+  backpackTrim.position.set(0,1.62,-.63);
+  backpackTrim.rotation.z = Math.PI;
+  [-.34,.34].forEach(x => {
+    const strap = mesh(new THREE.CapsuleGeometry(.035,.58,4,7), material(0x276a9b,.72),false);
+    strap.position.set(x,1.58,.31);
+    player.add(strap);
+  });
 
   const armLeftPivot = new THREE.Group();
   const armRightPivot = new THREE.Group();
@@ -745,15 +927,17 @@ function createPlayer(){
   [legLeftPivot, legRightPivot].forEach(pivot => {
     const thigh = mesh(new THREE.CapsuleGeometry(.17, .28, 6, 10), shorts);
     thigh.position.y = -.22;
-    const shin = mesh(new THREE.CapsuleGeometry(.135, .38, 6, 10), skin);
+    const shin = mesh(new THREE.CapsuleGeometry(.135, .38, 6, 10), shorts);
     shin.position.y = -.62;
     const sneaker = mesh(new THREE.BoxGeometry(.34, .22, .58), shoe);
     sneaker.position.set(0, -.92, .13);
     const sneakerSole = mesh(new THREE.BoxGeometry(.36, .07, .62), sole);
     sneakerSole.position.set(0, -1.045, .13);
-    pivot.add(thigh, shin, sneaker, sneakerSole);
+    const sneakerAccent = mesh(new THREE.BoxGeometry(.2,.07,.12),capMaterial,false);
+    sneakerAccent.position.set(0,-.9,.44);
+    pivot.add(thigh, shin, sneaker, sneakerSole, sneakerAccent);
   });
-  player.add(body, collar, shortsWaist, neck, head, hair, earLeft, earRight, eyeLeft, eyeRight, nose, mouth, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
+  player.add(body, collar, shortsWaist, neck, head, hair, ponytail, capCrown, capBand, capBrim, earLeft, earRight, eyeLeft, eyeRight, nose, mouth, backpack, backpackPocket, backpackTrim, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
   playerParts = { body, head, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
   player.position.set(session?.player?.x ?? START_POSITION.x, .04, session?.player?.z ?? START_POSITION.z);
   player.rotation.y = session?.player?.heading ?? Math.PI / 2;
@@ -851,7 +1035,7 @@ function showStoreHint(message){
 
 function isInsideIsland(x, z){
   if(Math.abs(x) > ISLAND_HALF_LENGTH - 2.6) return false;
-  return Math.abs(z) < islandHalfWidth(x, 2.6);
+  return z < islandEdge(x, 1, 2.6) && z > islandEdge(x, -1, 2.6);
 }
 
 function collides(x, z){
@@ -876,6 +1060,14 @@ function movementInput(){
   return { x, z, moving:length > .08 };
 }
 
+function cameraRelativeMovement(x, z, heading){
+  const forward = -z;
+  return {
+    x:-x * Math.cos(heading) + forward * Math.sin(heading),
+    z:x * Math.sin(heading) + forward * Math.cos(heading)
+  };
+}
+
 function updatePlayer(delta, elapsed){
   if(!player || !session || !refs.overlay.hidden || !refs.challenge.hidden || !['exploring','storeUnlocked'].includes(session.phase)){
     animatePlayer(false, elapsed);
@@ -883,10 +1075,10 @@ function updatePlayer(delta, elapsed){
   }
   const input = movementInput();
   if(input.moving){
-    const speed = 14.5;
-    const forward = -input.z;
-    const worldX = input.x * Math.cos(cameraHeading) + forward * Math.sin(cameraHeading);
-    const worldZ = -input.x * Math.sin(cameraHeading) + forward * Math.cos(cameraHeading);
+    const speed = 11.5;
+    const movement = cameraRelativeMovement(input.x, input.z, cameraHeading);
+    const worldX = movement.x;
+    const worldZ = movement.z;
     const dx = worldX * speed * delta;
     const dz = worldZ * speed * delta;
     const nextX = player.position.x + dx;
@@ -929,13 +1121,14 @@ function checkTriggers(){
   if(!session || !player) return;
   for(let i = 0; i < TOTAL_COINS; i++){
     if(session.collected[i] || coins[i]?.userData.collecting) continue;
+    if(i === exitedCoinIndex && performance.now() < challengeCooldownUntil) continue;
     const location = COIN_LOCATIONS[i];
     if(Math.hypot(player.position.x - location.x, player.position.z - location.z) < 2.45){
       openChallenge(i);
       return;
     }
   }
-  const storeDistance = Math.hypot(player.position.x - STORE_POSITION.x, player.position.z - (STORE_POSITION.z + 7));
+  const storeDistance = Math.hypot(player.position.x - STORE_ENTRY_POSITION.x, player.position.z - STORE_ENTRY_POSITION.z);
   if(storeDistance < 3.1){
     if(session.phase === 'storeUnlocked') beginReward();
     else if(session.phase === 'exploring' && performance.now() - lastStoreHint > 2200){
@@ -966,6 +1159,19 @@ function openChallenge(index){
   setTimeout(() => refs.answer.focus(), 140);
 }
 
+function exitChallenge(){
+  if(!session || session.phase !== 'challenge') return;
+  exitedCoinIndex = currentCoinIndex;
+  challengeCooldownUntil = performance.now() + 2600;
+  currentCoinIndex = -1;
+  session.phase = 'exploring';
+  refs.challenge.hidden = true;
+  keys.clear();
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  persistSession();
+  showStoreHint('Challenge exited — the gold coin is still waiting for you.');
+}
+
 function submitChallenge(){
   if(!session || currentCoinIndex < 0 || session.phase !== 'challenge') return;
   const word = session.words[currentCoinIndex];
@@ -992,6 +1198,7 @@ function submitChallenge(){
   if(!(session.attempts[word] > 0)) session.firstTry++;
   services.record(wordObject, true, 15);
   const coinIndex = currentCoinIndex;
+  exitedCoinIndex = -1;
   session.collected[coinIndex] = true;
   session.phase = collectedCount() === TOTAL_COINS ? 'storeUnlocked' : 'exploring';
   const coin = coins[coinIndex];
@@ -1035,12 +1242,35 @@ function animateCoins(now){
   }
 }
 
+function animateWater(now){
+  if(!waterSurface || !waterBasePositions) return;
+  const time = reducedMotion.matches ? 0 : now * .001;
+  const positions = waterSurface.geometry.attributes.position;
+  for(let i = 0; i < positions.array.length; i += 3){
+    const x = waterBasePositions[i];
+    const y = waterBasePositions[i + 1];
+    positions.array[i + 2] = Math.sin(x * .075 + time * 1.35) * .13 + Math.sin(y * .18 - time * 1.05 + x * .025) * .075;
+  }
+  positions.needsUpdate = !reducedMotion.matches;
+  if(waterTexture && !reducedMotion.matches){
+    waterTexture.offset.x = (time * .012) % 1;
+    waterTexture.offset.y = (time * -.007) % 1;
+  }
+  shorelineWaves.forEach(foam => {
+    const pulse = Math.sin(time * 1.65 + foam.userData.phase);
+    foam.position.z = foam.userData.baseZ + foam.userData.side * (.38 + pulse * .32);
+    foam.position.y = -.04 + (pulse + 1) * .035;
+    foam.scale.x = .82 + (pulse + 1) * .18;
+    foam.material.opacity = .3 + (pulse + 1) * .15;
+  });
+}
+
 function beginReward(){
   if(!session || session.phase !== 'storeUnlocked') return;
   session.phase = 'reward';
   rewardStartedAt = performance.now();
-  player.position.set(STORE_POSITION.x, .04, STORE_POSITION.z + 7);
-  player.rotation.y = Math.PI;
+  player.position.set(STORE_ENTRY_POSITION.x, .04, STORE_ENTRY_POSITION.z);
+  player.rotation.y = Math.PI / 2;
   session.player = { x:player.position.x, z:player.position.z, heading:player.rotation.y };
   storeBeacon.visible = false;
   rewardCone.visible = true;
@@ -1134,6 +1364,7 @@ function renderFrame(now){
   const elapsed = now / 1000;
   updatePlayer(delta, elapsed);
   animateCoins(now);
+  animateWater(now);
   updateReward(now);
   updateCamera(delta);
   renderer.render(scene, camera);
@@ -1246,6 +1477,11 @@ function releaseJoystick(){
 function bindEvents(){
   window.addEventListener('keydown', event => {
     if(!active) return;
+    if(event.key === 'Escape' && !refs.challenge.hidden){
+      event.preventDefault();
+      exitChallenge();
+      return;
+    }
     const textEntry = event.target?.closest?.('input, textarea, select, [contenteditable="true"]');
     if(textEntry || !refs.challenge.hidden || !refs.overlay.hidden) return;
     if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','KeyW','KeyA','KeyS','KeyD'].includes(event.code)){
@@ -1260,6 +1496,7 @@ function bindEvents(){
   refs.home.addEventListener('click', () => services.goHome());
   refs.primary.addEventListener('click', () => overlayPrimaryHandler?.());
   refs.secondary.addEventListener('click', () => overlaySecondaryHandler?.());
+  refs.challengeExit.addEventListener('click', exitChallenge);
   refs.hear.addEventListener('click', () => currentCoinIndex >= 0 && services.speak(session.words[currentCoinIndex]));
   refs.form.addEventListener('submit', event => { event.preventDefault(); submitChallenge(); });
 
@@ -1390,4 +1627,4 @@ function stop(){
 
 window.IslandQuest = { start, stop };
 
-export { TOTAL_COINS, WORLD_SCALE, ISLAND_HALF_LENGTH, COIN_LOCATIONS, normalize, shuffled, islandHalfWidth };
+export { TOTAL_COINS, WORLD_SCALE, ISLAND_HALF_LENGTH, START_POSITION, STORE_POSITION, COIN_LOCATIONS, normalize, shuffled, islandEdge, islandHalfWidth, cameraRelativeMovement };
