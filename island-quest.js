@@ -1,10 +1,11 @@
 import * as THREE from './vendor/three.module.min.js';
 
 const STORAGE_KEY = 'spellingQuestIslandV1';
-const SESSION_VERSION = 3;
+const SESSION_VERSION = 4;
 const TOTAL_COINS = 10;
 const PLAYER_RADIUS = .72;
-const WORLD_SCALE = 2;
+const WORLD_SCALE = 1.5;
+const ISLAND_WIDTH_SCALE = 2;
 const ISLAND_HALF_LENGTH = 43 * WORLD_SCALE;
 const STORE_POSITION = { x: 28 * WORLD_SCALE, z: 0 };
 const STORE_ENTRY_POSITION = { x: STORE_POSITION.x - 7, z:STORE_POSITION.z };
@@ -20,6 +21,11 @@ const COIN_LOCATIONS = [
   { x: 18 * WORLD_SCALE, z: -5.6 * WORLD_SCALE, label: 'palmetto grove' },
   { x: 25 * WORLD_SCALE, z: 6.2 * WORLD_SCALE, label: 'village beach' },
   { x: 36 * WORLD_SCALE, z: 1.8 * WORLD_SCALE, label: 'island point' }
+];
+const HOUSE_LOCATIONS = [
+  { x:22 * WORLD_SCALE, z:-5.5 * WORLD_SCALE, color:0xf0b8a6, scale:1.05, rotation:.04 },
+  { x:23 * WORLD_SCALE, z:4 * WORLD_SCALE, color:0xbccfec, scale:1, rotation:-.06 },
+  { x:28 * WORLD_SCALE, z:-5.5 * WORLD_SCALE, color:0xf2cf8c, scale:1.06, rotation:.05 }
 ];
 
 let services = null;
@@ -138,7 +144,7 @@ function createSession(){
 }
 
 function isValidSavedSession(value){
-  if(!value || ![1, 2, SESSION_VERSION].includes(value.version) || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
+  if(!value || ![1, 2, 3, SESSION_VERSION].includes(value.version) || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
   if(!Array.isArray(value.collected) || value.collected.length !== TOTAL_COINS) return false;
   const available = new Set(services.words.map(item => item.word));
   return value.words.every(word => available.has(word));
@@ -149,7 +155,8 @@ function loadSession(){
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
     if(!isValidSavedSession(saved)) return null;
     if(saved.version !== SESSION_VERSION){
-      const positionScale = saved.version === 1 ? WORLD_SCALE : .5;
+      const sourceScale = ({ 1:1, 2:4, 3:2 })[saved.version] || WORLD_SCALE;
+      const positionScale = WORLD_SCALE / sourceScale;
       saved.version = SESSION_VERSION;
       saved.player = {
         x:(saved.player?.x ?? START_POSITION.x / positionScale) * positionScale,
@@ -181,7 +188,7 @@ function mesh(geometry, mat, cast = true, receive = true){
 
 function baseIslandHalfWidth(x, inset = 0){
   const normalizedX = Math.min(1, Math.abs(x) / (ISLAND_HALF_LENGTH - inset));
-  return Math.max(3.5 * WORLD_SCALE, (5.4 + 6.2 * Math.sqrt(Math.max(0, 1 - normalizedX * normalizedX))) * WORLD_SCALE - inset * .58);
+  return Math.max(3.5 * ISLAND_WIDTH_SCALE, (5.4 + 6.2 * Math.sqrt(Math.max(0, 1 - normalizedX * normalizedX))) * ISLAND_WIDTH_SCALE - inset * .58);
 }
 
 function islandEdge(x, side = 1, inset = 0){
@@ -324,6 +331,48 @@ function makeMasonryTexture(){
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
   texture.repeat.set(4, 2);
   return texture;
+}
+
+function makeFabricTexture(base, thread){
+  const surface = document.createElement('canvas');
+  surface.width = 128;
+  surface.height = 128;
+  const context = surface.getContext('2d');
+  context.fillStyle = base;
+  context.fillRect(0, 0, 128, 128);
+  context.strokeStyle = thread;
+  context.globalAlpha = .22;
+  context.lineWidth = .7;
+  for(let i = 0; i <= 128; i += 4){
+    context.beginPath(); context.moveTo(i,0); context.lineTo(i,128); context.stroke();
+    context.beginPath(); context.moveTo(0,i); context.lineTo(128,i); context.stroke();
+  }
+  for(let i = 0; i < 240; i++){
+    context.globalAlpha = .04 + Math.random() * .09;
+    context.fillStyle = i % 2 ? '#ffffff' : '#172f3a';
+    context.fillRect(Math.random() * 128, Math.random() * 128, 1, 1);
+  }
+  context.globalAlpha = 1;
+  const texture = new THREE.CanvasTexture(surface);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(3, 4);
+  return texture;
+}
+
+function fabricMaterial(base, thread, roughness = .72){
+  const texture = makeFabricTexture(base, thread);
+  return new THREE.MeshPhysicalMaterial({
+    color:0xffffff,
+    map:texture,
+    bumpMap:texture,
+    bumpScale:.018,
+    roughness,
+    metalness:0,
+    sheen:1,
+    sheenColor:new THREE.Color(base),
+    sheenRoughness:.82
+  });
 }
 
 function cylinderBetween(start, end, radius, mat, radialSegments = 10){
@@ -694,9 +743,9 @@ function addBeachDetails(){
 
 function addRoads(){
   const roadMat = material(0xc9b285, .98);
-  const main = mesh(new THREE.PlaneGeometry(63 * WORLD_SCALE, 4.8), roadMat, false, true);
+  const main = mesh(new THREE.PlaneGeometry(72 * WORLD_SCALE, 4.8), roadMat, false, true);
   main.rotation.x = -Math.PI / 2;
-  main.position.set(1 * WORLD_SCALE, .025, 0);
+  main.position.set(-2.5 * WORLD_SCALE, .025, 0);
   scene.add(main);
   [-22,-7,9,23].forEach((x, index) => {
     const cross = mesh(new THREE.PlaneGeometry((index === 3 ? 10 : 13) * WORLD_SCALE, 3.4), roadMat, false, true);
@@ -804,7 +853,7 @@ function buildWorld(){
   sand.rotation.x = -Math.PI / 2;
   sand.position.y = -.05;
   scene.add(sand);
-  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(4.1), 96), material(0xffffff, .94, 0, { map:grassTexture, bumpMap:grassTexture, bumpScale:.045 }), false, true);
+  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(2.05 * WORLD_SCALE), 96), material(0xffffff, .94, 0, { map:grassTexture, bumpMap:grassTexture, bumpScale:.045 }), false, true);
   grass.rotation.x = -Math.PI / 2;
   grass.position.y = 0;
   scene.add(grass);
@@ -818,11 +867,7 @@ function buildWorld(){
   addLandscapeDetails();
   addShorelineWaves();
 
-  [
-    [-20,-2.4,0xf4c889,1.05,.06],[-16,3.4,0xc1d9e8,.98,-.08],[-10,-3.2,0xf4ad87,1.02,.05],
-    [-5,3.1,0xd8c3ef,.96,-.05],[1,-2.9,0xf1df9b,1.04,.06],[7,3.4,0xaed5c4,.98,-.04],
-    [13,-3,0xf0b8a6,1.05,.04],[19,3.1,0xbccfec,1,-.06],[24,-2.5,0xf2cf8c,1.06,.05]
-  ].forEach(([x,z,color,scale,rotation]) => addHouse(x * WORLD_SCALE, z * WORLD_SCALE, color, scale, rotation));
+  HOUSE_LOCATIONS.forEach(({x,z,color,scale,rotation}) => addHouse(x, z, color, scale, rotation));
 
   [
     [-39,2.4,.95],[-36,-5.1,.86],[-32,7.1,.9],[-27,-7.2,.82],[-22,6.8,.9],[-18,-6.6,.84],
@@ -840,18 +885,28 @@ function buildWorld(){
 
 function createPlayer(){
   player = new THREE.Group();
-  const skin = material(0xe7ad80, .72);
-  const shirt = material(0x4a9ed0, .62);
-  const shorts = material(0xde4f8c, .68);
-  const shoe = material(0xf4f0e8, .52);
+  const skin = new THREE.MeshPhysicalMaterial({ color:0xe7ad80, roughness:.58, clearcoat:.08, clearcoatRoughness:.82 });
+  const shirt = fabricMaterial('#4a9ed0', '#d8f2ff', .66);
+  const shorts = fabricMaterial('#de4f8c', '#ffbdd9', .7);
+  const shoe = new THREE.MeshPhysicalMaterial({ color:0xf4f0e8, roughness:.42, clearcoat:.22, clearcoatRoughness:.65 });
   const sole = material(0x34404a, .82);
   const dark = material(0x2a302f, .84);
-  const hairMaterial = material(0x7b4c37, .86);
-  const capMaterial = material(0xf17cb2, .58);
-  const backpackMaterial = material(0x2f7db8, .62);
+  const hairMaterial = new THREE.MeshPhysicalMaterial({ color:0x6e4332, roughness:.72, sheen:.45, sheenColor:new THREE.Color(0xc18a69) });
+  const capMaterial = fabricMaterial('#f17cb2', '#ffd9e9', .62);
+  const backpackMaterial = fabricMaterial('#2f7db8', '#87c6e5', .68);
   const body = mesh(new THREE.CapsuleGeometry(.43, .72, 8, 14), shirt);
   body.scale.set(1, 1, .76);
   body.position.y = 1.54;
+  const chestPanel = mesh(new THREE.CapsuleGeometry(.31,.42,7,12),shirt,false);
+  chestPanel.scale.set(1,.92,.16);
+  chestPanel.position.set(0,1.62,.35);
+  const shirtHem = mesh(new THREE.TorusGeometry(.37,.035,8,20),material(0x27729f,.72),false);
+  shirtHem.rotation.x = Math.PI / 2;
+  shirtHem.position.y = 1.12;
+  const shoulderLeft = mesh(new THREE.SphereGeometry(.2,14,10),shirt);
+  const shoulderRight = shoulderLeft.clone();
+  shoulderLeft.position.set(-.47,1.86,0);
+  shoulderRight.position.set(.47,1.86,0);
   const collar = mesh(new THREE.TorusGeometry(.22, .045, 8, 18, Math.PI), material(0xd8eef8, .7), false);
   collar.position.set(0, 1.99, .25);
   collar.rotation.z = Math.PI;
@@ -890,18 +945,43 @@ function createPlayer(){
   nose.position.set(0, 2.54, .5);
   const mouth = mesh(new THREE.BoxGeometry(.19, .025, .025), material(0x8f4e47), false);
   mouth.position.set(0, 2.4, .49);
-  const backpack = mesh(new THREE.CapsuleGeometry(.38, .55, 8, 14), backpackMaterial);
-  backpack.scale.set(.9,1,.42);
-  backpack.position.set(0,1.55,-.43);
-  const backpackPocket = mesh(new THREE.CapsuleGeometry(.25,.18,6,12), material(0x69acd1,.66));
-  backpackPocket.scale.set(1,.8,.28);
-  backpackPocket.position.set(0,1.37,-.61);
-  const backpackTrim = mesh(new THREE.TorusGeometry(.28,.035,7,18,Math.PI), material(0xf1d18e,.65),false);
-  backpackTrim.position.set(0,1.62,-.63);
+  const eyebrowLeft = mesh(new THREE.BoxGeometry(.15,.025,.025),hairMaterial,false);
+  const eyebrowRight = eyebrowLeft.clone();
+  eyebrowLeft.position.set(-.17,2.76,.48);
+  eyebrowRight.position.set(.17,2.76,.48);
+  eyebrowLeft.rotation.z = -.08;
+  eyebrowRight.rotation.z = .08;
+  const cheekMaterial = new THREE.MeshPhysicalMaterial({color:0xe89c82,roughness:.7,transparent:true,opacity:.56});
+  const cheekLeft = mesh(new THREE.SphereGeometry(.065,10,7),cheekMaterial,false);
+  const cheekRight = cheekLeft.clone();
+  cheekLeft.scale.set(1.25,.55,.35);
+  cheekRight.scale.copy(cheekLeft.scale);
+  cheekLeft.position.set(-.27,2.48,.49);
+  cheekRight.position.set(.27,2.48,.49);
+
+  const backpack = mesh(new THREE.CapsuleGeometry(.5, .78, 9, 16), backpackMaterial);
+  backpack.scale.set(.96,1,.54);
+  backpack.position.set(0,1.5,-.49);
+  const backpackPocket = mesh(new THREE.CapsuleGeometry(.34,.3,7,14),fabricMaterial('#58a4cf','#c0eaff',.7));
+  backpackPocket.scale.set(1,.9,.3);
+  backpackPocket.position.set(0,1.3,-.77);
+  const backpackFlap = mesh(new THREE.BoxGeometry(.76,.28,.13),backpackMaterial);
+  backpackFlap.position.set(0,1.78,-.78);
+  backpackFlap.rotation.x = -.08;
+  const backpackTrim = mesh(new THREE.TorusGeometry(.37,.035,7,22,Math.PI), material(0xf1d18e,.65),false);
+  backpackTrim.position.set(0,1.65,-.8);
   backpackTrim.rotation.z = Math.PI;
+  const backpackBuckle = mesh(new THREE.BoxGeometry(.16,.12,.07),material(0xe7b953,.42,.42),false);
+  backpackBuckle.position.set(0,1.62,-.86);
+  [-.48,.48].forEach(x => {
+    const sidePocket = mesh(new THREE.CapsuleGeometry(.13,.22,5,9),backpackMaterial);
+    sidePocket.scale.set(.7,1,.55);
+    sidePocket.position.set(x,1.34,-.5);
+    player.add(sidePocket);
+  });
   [-.34,.34].forEach(x => {
-    const strap = mesh(new THREE.CapsuleGeometry(.035,.58,4,7), material(0x276a9b,.72),false);
-    strap.position.set(x,1.58,.31);
+    const strap = mesh(new THREE.CapsuleGeometry(.042,.68,5,8), material(0x276a9b,.72),false);
+    strap.position.set(x,1.55,.31);
     player.add(strap);
   });
 
@@ -910,34 +990,40 @@ function createPlayer(){
   armLeftPivot.position.set(-.53, 1.86, 0);
   armRightPivot.position.set(.53, 1.86, 0);
   [armLeftPivot, armRightPivot].forEach(pivot => {
-    const sleeve = mesh(new THREE.CapsuleGeometry(.145, .24, 6, 10), shirt);
+    const sleeve = mesh(new THREE.CylinderGeometry(.125,.16,.36,12), shirt);
     sleeve.position.y = -.19;
-    const forearm = mesh(new THREE.CapsuleGeometry(.115, .37, 6, 10), skin);
-    forearm.position.y = -.59;
+    const elbow = mesh(new THREE.SphereGeometry(.125,12,9),skin);
+    elbow.position.y = -.43;
+    const forearm = mesh(new THREE.CylinderGeometry(.095,.125,.43,12), skin);
+    forearm.position.y = -.64;
     const hand = mesh(new THREE.SphereGeometry(.135, 12, 9), skin);
     hand.scale.y = 1.18;
     hand.position.y = -.88;
-    pivot.add(sleeve, forearm, hand);
+    pivot.add(sleeve, elbow, forearm, hand);
   });
 
   const legLeftPivot = new THREE.Group();
   const legRightPivot = new THREE.Group();
-  legLeftPivot.position.set(-.22, .98, 0);
-  legRightPivot.position.set(.22, .98, 0);
+  legLeftPivot.position.set(-.22, 1.08, 0);
+  legRightPivot.position.set(.22, 1.08, 0);
   [legLeftPivot, legRightPivot].forEach(pivot => {
-    const thigh = mesh(new THREE.CapsuleGeometry(.17, .28, 6, 10), shorts);
-    thigh.position.y = -.22;
-    const shin = mesh(new THREE.CapsuleGeometry(.135, .38, 6, 10), shorts);
-    shin.position.y = -.62;
+    const thigh = mesh(new THREE.CylinderGeometry(.16,.2,.42,12), shorts);
+    thigh.position.y = -.23;
+    const knee = mesh(new THREE.SphereGeometry(.16,12,9),shorts);
+    knee.scale.set(1,.86,.95);
+    knee.position.y = -.49;
+    const shin = mesh(new THREE.CylinderGeometry(.125,.155,.45,12), shorts);
+    shin.position.y = -.7;
     const sneaker = mesh(new THREE.BoxGeometry(.34, .22, .58), shoe);
-    sneaker.position.set(0, -.92, .13);
+    sneaker.geometry.translate(0,0,.06);
+    sneaker.position.set(0, -.98, .13);
     const sneakerSole = mesh(new THREE.BoxGeometry(.36, .07, .62), sole);
-    sneakerSole.position.set(0, -1.045, .13);
+    sneakerSole.position.set(0, -1.105, .13);
     const sneakerAccent = mesh(new THREE.BoxGeometry(.2,.07,.12),capMaterial,false);
-    sneakerAccent.position.set(0,-.9,.44);
-    pivot.add(thigh, shin, sneaker, sneakerSole, sneakerAccent);
+    sneakerAccent.position.set(0,-.96,.47);
+    pivot.add(thigh, knee, shin, sneaker, sneakerSole, sneakerAccent);
   });
-  player.add(body, collar, shortsWaist, neck, head, hair, ponytail, capCrown, capBand, capBrim, earLeft, earRight, eyeLeft, eyeRight, nose, mouth, backpack, backpackPocket, backpackTrim, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
+  player.add(body, chestPanel, shirtHem, shoulderLeft, shoulderRight, collar, shortsWaist, neck, head, hair, ponytail, capCrown, capBand, capBrim, earLeft, earRight, eyeLeft, eyeRight, eyebrowLeft, eyebrowRight, cheekLeft, cheekRight, nose, mouth, backpack, backpackPocket, backpackFlap, backpackTrim, backpackBuckle, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
   playerParts = { body, head, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
   player.position.set(session?.player?.x ?? START_POSITION.x, .04, session?.player?.z ?? START_POSITION.z);
   player.rotation.y = session?.player?.heading ?? Math.PI / 2;
@@ -1034,8 +1120,8 @@ function showStoreHint(message){
 }
 
 function isInsideIsland(x, z){
-  if(Math.abs(x) > ISLAND_HALF_LENGTH - 2.6) return false;
-  return z < islandEdge(x, 1, 2.6) && z > islandEdge(x, -1, 2.6);
+  if(Math.abs(x) > ISLAND_HALF_LENGTH - 1.5) return false;
+  return z < islandEdge(x, 1, 1.5) && z > islandEdge(x, -1, 1.5);
 }
 
 function collides(x, z){
@@ -1627,4 +1713,4 @@ function stop(){
 
 window.IslandQuest = { start, stop };
 
-export { TOTAL_COINS, WORLD_SCALE, ISLAND_HALF_LENGTH, START_POSITION, STORE_POSITION, COIN_LOCATIONS, normalize, shuffled, islandEdge, islandHalfWidth, cameraRelativeMovement };
+export { TOTAL_COINS, WORLD_SCALE, ISLAND_WIDTH_SCALE, ISLAND_HALF_LENGTH, START_POSITION, STORE_POSITION, COIN_LOCATIONS, HOUSE_LOCATIONS, normalize, shuffled, islandEdge, islandHalfWidth, cameraRelativeMovement };

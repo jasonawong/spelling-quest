@@ -422,7 +422,7 @@
       <div class="grid">
         <button class="game-card premier-card island-card" data-action="island">
           <div class="island-card-art" aria-hidden="true">
-            <span class="island-card-ground"></span><span class="island-card-lighthouse"></span><span class="island-card-shop"></span><span class="island-card-coin">★</span>
+            <span class="island-card-ground"></span><span class="island-card-path"></span><span class="island-card-lighthouse"></span><span class="island-card-shop"></span><span class="island-card-avatar"></span><span class="island-card-coin">★</span>
           </div>
           <div class="premier-card-copy"><span class="premier-badge">Premier island adventure</span><strong>Sullivan’s Island Coin Quest</strong><span>Explore the island, collect 10 gold coins, spell each hidden word, and unlock a giant ice cream cone.</span></div>
         </button>
@@ -911,6 +911,7 @@
     </section>
 
     <section id="island" class="screen">
+      <button class="btn ghost back" id="islandHome">← Home</button>
       <div class="island-game-shell" id="islandGameShell" aria-label="Sullivan’s Island spelling coin adventure">
         <div class="island-canvas-wrap"><canvas id="islandCanvas" aria-label="3D island game. Use arrow keys, WASD, click and drag, or the touch joystick to move."></canvas></div>
         <div class="island-vignette" aria-hidden="true"></div>
@@ -921,8 +922,6 @@
         <div class="island-store-status" id="islandStoreStatus" role="status" hidden></div>
         <div class="island-controls-tip">WASD / arrows or click &amp; drag to move</div>
         <div class="island-joystick" id="islandJoystick" aria-label="Movement joystick"><span class="island-joystick-knob" id="islandJoystickKnob"></span></div>
-        <button class="island-home" id="islandHome">← Home</button>
-
         <div class="island-overlay" id="islandOverlay">
           <div class="island-overlay-card">
             <span class="island-eyebrow" id="islandOverlayEyebrow">Sullivan’s Island mission</span>
