@@ -10,6 +10,7 @@ A touch-first, offline-capable spelling practice PWA for one child using one iPa
 - Write the Word with a one-second preview, picture clue, and finger handwriting canvas
 - Word Detective with 20 sentence-matched anime scenes and inline missing-letter clues
 - Sky-High Spelling, a timed balloon flight where correct spellings create altitude boosts
+- Ice Cream Quest, a 3D Sullivan’s Island adventure with 10 randomly selected spelling challenges and an ice cream finale
 - 20-word Practice Test with score shown at the end
 - Stars, streaks, and weekly mastery
 - Local-only progress storage
@@ -36,5 +37,6 @@ The core app will also open from `index.html` directly, but install/offline cach
 
 ## Notes
 - Speech uses the iPad/browser's built-in speech synthesis without assigning a specific voice, allowing the device/browser default voice to be used.
+- Ice Cream Quest supports WASD/arrow keys, click-and-drag movement, and an on-screen touch joystick. An unfinished island session resumes on the same device.
 - Handwriting is intentionally self-checking in V1 rather than using handwriting recognition.
 - No account, cloud service, analytics, or external API is required.
