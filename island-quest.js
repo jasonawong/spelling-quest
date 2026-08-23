@@ -23,9 +23,9 @@ const COIN_LOCATIONS = [
   { x: 36 * WORLD_SCALE, z: 1.8 * WORLD_SCALE, label: 'island point' }
 ];
 const HOUSE_LOCATIONS = [
-  { x:22 * WORLD_SCALE, z:-5.5 * WORLD_SCALE, color:0xf0b8a6, scale:1.05, rotation:.04 },
-  { x:23 * WORLD_SCALE, z:4 * WORLD_SCALE, color:0xbccfec, scale:1, rotation:-.06 },
-  { x:28 * WORLD_SCALE, z:-5.5 * WORLD_SCALE, color:0xf2cf8c, scale:1.06, rotation:.05 }
+  { x:-18 * WORLD_SCALE, z:-11 * WORLD_SCALE, color:0xd7d4b7, scale:1.05, rotation:.16 },
+  { x:2 * WORLD_SCALE, z:12 * WORLD_SCALE, color:0xb9d4c7, scale:1, rotation:-.18 },
+  { x:12 * WORLD_SCALE, z:-14 * WORLD_SCALE, color:0xd7c8bb, scale:1.06, rotation:.11 }
 ];
 const TREE_LOCATIONS = {
   palms:[[-36,-8,.9],[-18,9,.86],[5,-9.5,.94],[24,8.5,.9],[37,-7,.82]],
@@ -179,8 +179,15 @@ function persistSession(){
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(session)); } catch {}
 }
 
+const toonBands = new THREE.DataTexture(new Uint8Array([48, 126, 204, 255]), 4, 1, THREE.RedFormat);
+toonBands.minFilter = THREE.NearestFilter;
+toonBands.magFilter = THREE.NearestFilter;
+toonBands.generateMipmaps = false;
+toonBands.needsUpdate = true;
+const inkMaterial = new THREE.MeshBasicMaterial({ color:0x263737, side:THREE.BackSide, depthWrite:true });
+
 function material(color, roughness = .78, metalness = 0, options = {}){
-  return new THREE.MeshStandardMaterial({ color, roughness, metalness, ...options });
+  return new THREE.MeshToonMaterial({ color, gradientMap:toonBands, ...options });
 }
 
 function mesh(geometry, mat, cast = true, receive = true){
@@ -188,6 +195,27 @@ function mesh(geometry, mat, cast = true, receive = true){
   item.castShadow = cast;
   item.receiveShadow = receive;
   return item;
+}
+
+function addInkOutline(group, thickness = .025, minRadius = .12){
+  const targets = [];
+  group.traverse(item => {
+    if(!item.isMesh || item.userData?.isInkOutline) return;
+    if(['PlaneGeometry','ShapeGeometry'].includes(item.geometry?.type)) return;
+    item.geometry.computeBoundingSphere();
+    if((item.geometry.boundingSphere?.radius || 0) < minRadius) return;
+    if(item.material?.transparent && item.material.opacity < .9) return;
+    targets.push(item);
+  });
+  targets.forEach(item => {
+    const outline = new THREE.Mesh(item.geometry, inkMaterial);
+    outline.userData.isInkOutline = true;
+    outline.scale.setScalar(1 + thickness);
+    outline.castShadow = false;
+    outline.receiveShadow = false;
+    outline.renderOrder = -1;
+    item.add(outline);
+  });
 }
 
 function baseIslandHalfWidth(x, inset = 0){
@@ -241,7 +269,12 @@ function makeCanvasTexture(text, foreground, background){
   context.fillStyle = background;
   context.fillRect(0, 0, surface.width, surface.height);
   context.fillStyle = foreground;
-  context.font = '900 62px ui-rounded, system-ui, sans-serif';
+  let fontSize = 62;
+  context.font = `900 ${fontSize}px ui-rounded, system-ui, sans-serif`;
+  while(context.measureText(text).width > 452 && fontSize > 38){
+    fontSize -= 2;
+    context.font = `900 ${fontSize}px ui-rounded, system-ui, sans-serif`;
+  }
   context.textAlign = 'center';
   context.textBaseline = 'middle';
   context.fillText(text, surface.width / 2, surface.height / 2 + 3);
@@ -266,6 +299,20 @@ function makeGroundTexture(base, flecks){
     wash.addColorStop(1,`${flecks[i % flecks.length]}00`);
     context.fillStyle = wash;
     context.fillRect(x-radius,y-radius,radius*2,radius*2);
+  }
+  for(let i = 0; i < 74; i++){
+    const x = Math.random() * 512;
+    const y = Math.random() * 512;
+    const width = 12 + Math.random() * 46;
+    const height = 4 + Math.random() * 15;
+    context.globalAlpha = .06 + Math.random() * .12;
+    context.fillStyle = flecks[(i + 2) % flecks.length];
+    context.beginPath();
+    context.moveTo(x - width * .55, y);
+    context.quadraticCurveTo(x - width * .2, y - height, x + width * .14, y - height * .25);
+    context.quadraticCurveTo(x + width * .62, y + height * .15, x + width * .4, y + height * .7);
+    context.quadraticCurveTo(x - width * .1, y + height, x - width * .55, y);
+    context.fill();
   }
   for(let i = 0; i < 2600; i++){
     context.globalAlpha = .06 + Math.random() * .2;
@@ -302,15 +349,15 @@ function makeWaterTexture(){
   surface.height = 256;
   const context = surface.getContext('2d');
   const gradient = context.createLinearGradient(0, 0, 0, 256);
-  gradient.addColorStop(0, '#328da8');
-  gradient.addColorStop(.5, '#54b9c8');
-  gradient.addColorStop(1, '#79d1d6');
+  gradient.addColorStop(0, '#5f9fae');
+  gradient.addColorStop(.5, '#78bbc1');
+  gradient.addColorStop(1, '#9ad0ca');
   context.fillStyle = gradient;
   context.fillRect(0, 0, 512, 256);
   for(let row = 0; row < 44; row++){
     const y = 5 + row * 6 + Math.sin(row * 1.7) * 2;
-    context.strokeStyle = row % 3 ? 'rgba(223,250,246,.16)' : 'rgba(16,104,134,.12)';
-    context.lineWidth = row % 3 ? 1 : 2;
+    context.strokeStyle = row % 3 ? 'rgba(244,246,222,.28)' : 'rgba(38,91,102,.17)';
+    context.lineWidth = row % 3 ? 1.4 : 2.4;
     context.beginPath();
     for(let x = -10; x <= 522; x += 12){
       const waveY = y + Math.sin(x * .055 + row * .7) * 2.2;
@@ -388,16 +435,12 @@ function makeFabricTexture(base, thread){
 
 function fabricMaterial(base, thread, roughness = .72){
   const texture = makeFabricTexture(base, thread);
-  return new THREE.MeshPhysicalMaterial({
+  return new THREE.MeshToonMaterial({
     color:0xffffff,
     map:texture,
+    gradientMap:toonBands,
     bumpMap:texture,
-    bumpScale:.018,
-    roughness,
-    metalness:0,
-    sheen:1,
-    sheenColor:new THREE.Color(base),
-    sheenRoughness:.82
+    bumpScale:.018
   });
 }
 
@@ -462,6 +505,7 @@ function addHouse(x, z, color, scale = 1, rotation = 0){
   }
   group.position.set(x, 0, z);
   group.rotation.y = rotation;
+  addInkOutline(group, .028, .14);
   scene.add(group);
   addCollider(x, z, 2.8 * scale);
   return group;
@@ -506,6 +550,7 @@ function addPalm(x, z, scale = 1){
     group.add(coconut);
   }
   group.position.set(x, 0, z);
+  addInkOutline(group, .026, .14);
   scene.add(group);
   addCollider(x, z, .48 * scale);
   return group;
@@ -539,6 +584,7 @@ function addLiveOak(x, z, scale = 1){
     group.add(moss);
   }
   group.position.set(x, 0, z);
+  addInkOutline(group, .026, .16);
   scene.add(group);
   addCollider(x, z, .75 * scale);
   return group;
@@ -649,11 +695,11 @@ function addFort(){
 
 function addIceCreamStore(){
   const group = new THREE.Group();
-  const body = mesh(new THREE.BoxGeometry(7.2, 4.2, 5.6), material(0xf3b7ae, .72));
+  const body = mesh(new THREE.BoxGeometry(7.2, 4.2, 5.6), material(0xdbaea2, .72));
   body.position.y = 2.1;
   group.add(body);
-  const roof = mesh(new THREE.ConeGeometry(5.35, 2.15, 4), material(0x467d68, .82));
-  roof.position.y = 5.17;
+  const roof = mesh(new THREE.ConeGeometry(5.35, 2.15, 4), material(0x426f64, .82));
+  roof.position.y = 5.72;
   roof.rotation.y = Math.PI / 4;
   group.add(roof);
   const awningGroup = new THREE.Group();
@@ -667,10 +713,16 @@ function addIceCreamStore(){
   const counter = mesh(new THREE.BoxGeometry(4.8, 1.45, .72), material(0xfff4df));
   counter.position.set(0, 1.45, 2.95);
   group.add(counter);
-  const signTexture = makeCanvasTexture('Ice Cream Shop', '#3f5b57', '#fff4df');
-  const sign = mesh(new THREE.PlaneGeometry(5.7, 1.45), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
-  sign.position.set(0, 4.12, 2.815);
-  group.add(sign);
+  const signTexture = makeCanvasTexture('Ice Cream Shop', '#263737', '#fff7e8');
+  const signBoard = mesh(new THREE.BoxGeometry(6.05, 1.62, .2), material(0x263737), false);
+  signBoard.position.set(0, 7.65, .3);
+  const sign = mesh(new THREE.PlaneGeometry(5.7, 1.42), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
+  sign.position.set(0, 7.65, .415);
+  const signPostLeft = mesh(new THREE.BoxGeometry(.14, 1.35, .14), material(0x263737), false);
+  const signPostRight = signPostLeft.clone();
+  signPostLeft.position.set(-2.22, 6.5, .3);
+  signPostRight.position.set(2.22, 6.5, .3);
+  group.add(signBoard, sign, signPostLeft, signPostRight);
   const serviceWindow = mesh(new THREE.BoxGeometry(5.05, 1.35, .16), material(0x67bed0, .2, .02, { emissive:0x153a45, emissiveIntensity:.12 }), false);
   serviceWindow.position.set(0, 2.55, 2.84);
   group.add(serviceWindow);
@@ -680,11 +732,12 @@ function addIceCreamStore(){
     group.add(mullion);
   }
   const coneSign = createIceCreamCone(.68);
-  coneSign.position.set(3.1, 5.72, .4);
+  coneSign.position.set(3.1, 6.32, .4);
   coneSign.rotation.z = -.12;
   group.add(coneSign);
   group.position.set(STORE_POSITION.x, 0, STORE_POSITION.z);
   group.rotation.y = -Math.PI / 2;
+  addInkOutline(group, .028, .14);
   scene.add(group);
   addCollider(STORE_POSITION.x, STORE_POSITION.z, 4.25);
 
@@ -837,14 +890,14 @@ function addShorelineWaves(){
 
 function buildWorld(){
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x8fdbea);
-  scene.fog = new THREE.Fog(0xb7e3e8, 125, 230);
+  scene.background = new THREE.Color(0x91ceca);
+  scene.fog = new THREE.Fog(0xc3ded6, 118, 218);
   colliders.length = 0;
   shorelineWaves.length = 0;
 
-  const hemisphere = new THREE.HemisphereLight(0xdaf8ff, 0x526542, 2.05);
+  const hemisphere = new THREE.HemisphereLight(0xdff4e9, 0x536554, 1.48);
   scene.add(hemisphere);
-  sunlight = new THREE.DirectionalLight(0xfff1cf, 3.25);
+  sunlight = new THREE.DirectionalLight(0xfff4d4, 3.55);
   sunlight.position.set(START_POSITION.x - 32, 55, 28);
   sunlight.castShadow = true;
   sunlight.shadow.mapSize.set(1536, 1536);
@@ -864,21 +917,31 @@ function buildWorld(){
   waterTexture = makeWaterTexture();
   const waterGeometry = new THREE.PlaneGeometry(290, 130, 90, 34);
   waterBasePositions = new Float32Array(waterGeometry.attributes.position.array);
-  waterSurface = mesh(waterGeometry, material(0x9be1e3, .28, .08, { map:waterTexture, bumpMap:waterTexture, bumpScale:.11, transparent:true, opacity:.96 }), false, true);
+  waterSurface = mesh(waterGeometry, material(0x91c8c6, .28, .08, { map:waterTexture, bumpMap:waterTexture, bumpScale:.08, transparent:true, opacity:.97 }), false, true);
   waterSurface.rotation.x = -Math.PI / 2;
   waterSurface.position.y = -.42;
   scene.add(waterSurface);
-  const waterGlow = mesh(new THREE.PlaneGeometry(290, 130), new THREE.MeshBasicMaterial({ color:0x8de1e6, transparent:true, opacity:.12, depthWrite:false }), false, false);
+  const waterGlow = mesh(new THREE.PlaneGeometry(290, 130), new THREE.MeshBasicMaterial({ color:0xd8eee3, transparent:true, opacity:.11, depthWrite:false }), false, false);
   waterGlow.rotation.x = -Math.PI / 2;
   waterGlow.position.y = -.37;
   scene.add(waterGlow);
 
-  const sandTexture = makeGroundTexture('#edcf8d', ['#fff1bd','#b58a50','#f7dc9b','#d3ad67']);
-  const grassTexture = makeGroundTexture('#6fa85a', ['#365f36','#a8c979','#507f44','#839f55']);
+  const sandTexture = makeGroundTexture('#e6dfbd', ['#fff7d9','#b9ad85','#efe7c7','#c9bd93']);
+  const grassTexture = makeGroundTexture('#70a477', ['#355f4e','#b5c69b','#4e8062','#93aa78']);
+  const shoreInk = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 96), new THREE.MeshBasicMaterial({ color:0x334746 }), false, true);
+  shoreInk.rotation.x = -Math.PI / 2;
+  shoreInk.position.y = -.085;
+  shoreInk.scale.set(1.008,1.012,1);
+  scene.add(shoreInk);
   const sand = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 96), material(0xffffff, .98, 0, { map:sandTexture, bumpMap:sandTexture, bumpScale:.11 }), false, true);
   sand.rotation.x = -Math.PI / 2;
   sand.position.y = -.05;
   scene.add(sand);
+  const grassInk = mesh(new THREE.ShapeGeometry(buildIslandShape(2.05 * WORLD_SCALE), 96), new THREE.MeshBasicMaterial({ color:0x344b42 }), false, true);
+  grassInk.rotation.x = -Math.PI / 2;
+  grassInk.position.y = -.012;
+  grassInk.scale.set(1.012,1.02,1);
+  scene.add(grassInk);
   const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(2.05 * WORLD_SCALE), 96), material(0xffffff, .94, 0, { map:grassTexture, bumpMap:grassTexture, bumpScale:.075 }), false, true);
   grass.rotation.x = -Math.PI / 2;
   grass.position.y = 0;
@@ -899,6 +962,165 @@ function buildWorld(){
 }
 
 function createPlayer(){
+  player = new THREE.Group();
+  const skin = material(0xe3bda4, .72);
+  const skinShadow = material(0xc58f79, .78);
+  const shirt = fabricMaterial('#252b2d', '#5d6969', .8);
+  const pants = fabricMaterial('#303638', '#687170', .82);
+  const white = material(0xf3f0df, .68);
+  const whiteShadow = material(0xb8c1ba, .76);
+  const sole = material(0x273535, .84);
+  const dark = material(0x202c2e, .82);
+  const hairMaterial = material(0x303741, .86);
+  const hairHighlight = material(0x4d5662, .8);
+  const logoOrange = material(0xd88943, .72);
+  const backpackMaterial = fabricMaterial('#ebe9dc', '#aeb9b3', .78);
+
+  const body = mesh(new THREE.CapsuleGeometry(.39, .82, 7, 14), shirt);
+  body.scale.set(.92, 1, .72);
+  body.position.y = 1.76;
+  const waist = mesh(new THREE.BoxGeometry(.7, .28, .56), pants);
+  waist.position.y = 1.23;
+  const collar = mesh(new THREE.TorusGeometry(.2, .038, 8, 18, Math.PI), white, false);
+  collar.position.set(0, 2.18, .24);
+  collar.rotation.z = Math.PI;
+  const logoPanel = mesh(new THREE.BoxGeometry(.36, .42, .055), logoOrange, false);
+  logoPanel.position.set(0, 1.82, .31);
+  const logoMark = mesh(new THREE.TorusGeometry(.095, .026, 7, 16, Math.PI * 1.65), dark, false);
+  logoMark.position.set(0, 1.83, .35);
+
+  const neck = mesh(new THREE.CylinderGeometry(.145, .17, .25, 12), skin);
+  neck.position.y = 2.28;
+  const head = mesh(new THREE.SphereGeometry(.49, 22, 16), skin);
+  head.scale.set(.92, 1.08, .9);
+  head.position.y = 2.79;
+  const earLeft = mesh(new THREE.SphereGeometry(.09, 10, 8), skinShadow, false);
+  const earRight = earLeft.clone();
+  earLeft.position.set(-.46, 2.79, 0);
+  earRight.position.set(.46, 2.79, 0);
+
+  const hair = mesh(new THREE.SphereGeometry(.515, 18, 12, 0, Math.PI * 2, 0, Math.PI / 1.46), hairMaterial);
+  hair.scale.set(.95, 1.04, .94);
+  hair.position.y = 2.95;
+  const hairSegments = [];
+  const bobHair = new THREE.Group();
+  [-.36,-.24,-.12,0,.12,.24,.36].forEach((x,index) => {
+    const pivot = new THREE.Group();
+    pivot.position.set(x, 2.92, -.37 - Math.abs(x) * .16);
+    const strand = mesh(new THREE.CapsuleGeometry(.085 + (3 - Math.abs(index - 3)) * .008, .43 + (3 - Math.abs(index - 3)) * .04, 6, 10), index % 2 ? hairMaterial : hairHighlight);
+    strand.position.y = -.33;
+    strand.rotation.z = (index - 3) * .035;
+    pivot.add(strand);
+    bobHair.add(pivot);
+    hairSegments.push({ pivot, chainIndex:index % 2, depth:index });
+  });
+  const fringeLeft = mesh(new THREE.CapsuleGeometry(.085,.33,6,10), hairMaterial);
+  const fringeRight = fringeLeft.clone();
+  fringeLeft.position.set(-.26,2.88,.37);
+  fringeRight.position.set(.18,2.91,.4);
+  fringeLeft.rotation.z = -.42;
+  fringeRight.rotation.z = .48;
+
+  const headphoneBand = mesh(new THREE.TorusGeometry(.49,.055,8,24,Math.PI), white, false);
+  headphoneBand.position.y = 2.96;
+  const headphoneLeft = mesh(new THREE.CylinderGeometry(.16,.16,.13,14), white);
+  const headphoneRight = headphoneLeft.clone();
+  headphoneLeft.rotation.z = Math.PI / 2;
+  headphoneRight.rotation.z = Math.PI / 2;
+  headphoneLeft.position.set(-.51,2.78,0);
+  headphoneRight.position.set(.51,2.78,0);
+  const headphonePadLeft = mesh(new THREE.CylinderGeometry(.1,.1,.145,14), dark, false);
+  const headphonePadRight = headphonePadLeft.clone();
+  headphonePadLeft.rotation.z = Math.PI / 2;
+  headphonePadRight.rotation.z = Math.PI / 2;
+  headphonePadLeft.position.set(-.515,2.78,0);
+  headphonePadRight.position.set(.515,2.78,0);
+
+  const eyeLeft = mesh(new THREE.SphereGeometry(.04, 9, 7), dark, false);
+  const eyeRight = eyeLeft.clone();
+  eyeLeft.position.set(-.16, 2.82, .45);
+  eyeRight.position.set(.16, 2.82, .45);
+  const nose = mesh(new THREE.SphereGeometry(.05, 9, 7), skinShadow, false);
+  nose.scale.set(.7, 1, 1.15);
+  nose.position.set(0, 2.7, .48);
+  const mouth = mesh(new THREE.BoxGeometry(.16,.025,.025), material(0x764d48), false);
+  mouth.position.set(0,2.59,.47);
+
+  const backpack = mesh(new THREE.CapsuleGeometry(.47, .72, 8, 14), backpackMaterial);
+  backpack.scale.set(1,.8,.5);
+  backpack.position.set(0,1.93,-.46);
+  const backpackPocket = mesh(new THREE.CapsuleGeometry(.31,.3,7,12), whiteShadow);
+  backpackPocket.scale.set(1,.86,.28);
+  backpackPocket.position.set(0,1.72,-.72);
+  const backpackFlap = mesh(new THREE.BoxGeometry(.7,.26,.1), white);
+  backpackFlap.position.set(0,2.18,-.72);
+  const backpackBuckle = mesh(new THREE.BoxGeometry(.13,.12,.06), dark, false);
+  backpackBuckle.position.set(0,1.99,-.8);
+  [-.3,.3].forEach(x => {
+    const strap = mesh(new THREE.CapsuleGeometry(.045,.72,5,8), whiteShadow, false);
+    strap.position.set(x,1.91,.25);
+    player.add(strap);
+  });
+
+  const armLeftPivot = new THREE.Group();
+  const armRightPivot = new THREE.Group();
+  armLeftPivot.position.set(-.45, 2.04, 0);
+  armRightPivot.position.set(.45, 2.04, 0);
+  [armLeftPivot, armRightPivot].forEach(pivot => {
+    const sleeve = mesh(new THREE.CylinderGeometry(.115,.145,.32,11), shirt);
+    sleeve.position.y = -.17;
+    const upperArm = mesh(new THREE.CylinderGeometry(.09,.115,.35,11), skin);
+    upperArm.position.y = -.48;
+    const elbow = mesh(new THREE.SphereGeometry(.095,10,8), skin);
+    elbow.position.y = -.67;
+    const forearm = mesh(new THREE.CylinderGeometry(.075,.095,.34,11), skin);
+    forearm.position.y = -.84;
+    const hand = mesh(new THREE.SphereGeometry(.105,11,8), skin);
+    hand.scale.y = 1.18;
+    hand.position.y = -1.04;
+    pivot.add(sleeve,upperArm,elbow,forearm,hand);
+  });
+
+  const legLeftPivot = new THREE.Group();
+  const legRightPivot = new THREE.Group();
+  legLeftPivot.position.set(-.2, 1.28, 0);
+  legRightPivot.position.set(.2, 1.28, 0);
+  [legLeftPivot, legRightPivot].forEach(pivot => {
+    const trouser = mesh(new THREE.CylinderGeometry(.16,.2,.56,12), pants);
+    trouser.position.y = -.32;
+    const cuff = mesh(new THREE.CylinderGeometry(.17,.17,.12,12), pants);
+    cuff.position.y = -.62;
+    const calf = mesh(new THREE.CylinderGeometry(.105,.135,.36,11), skin);
+    calf.position.y = -.84;
+    const sock = mesh(new THREE.CylinderGeometry(.12,.13,.22,11), white);
+    sock.position.y = -1.05;
+    const sneaker = mesh(new THREE.BoxGeometry(.32,.22,.56), white);
+    sneaker.geometry.translate(0,0,.07);
+    sneaker.position.set(0,-1.2,.12);
+    const sneakerSole = mesh(new THREE.BoxGeometry(.34,.065,.59), sole);
+    sneakerSole.position.set(0,-1.325,.12);
+    pivot.add(trouser,cuff,calf,sock,sneaker,sneakerSole);
+  });
+
+  player.add(
+    body,waist,collar,logoPanel,logoMark,neck,head,earLeft,earRight,hair,bobHair,fringeLeft,fringeRight,
+    headphoneBand,headphoneLeft,headphoneRight,headphonePadLeft,headphonePadRight,eyeLeft,eyeRight,nose,mouth,
+    backpack,backpackPocket,backpackFlap,backpackBuckle,armLeftPivot,armRightPivot,legLeftPivot,legRightPivot
+  );
+  addInkOutline(player, .035, .1);
+  playerParts = { body, head, hairSegments, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
+  player.position.set(session?.player?.x ?? START_POSITION.x, .08, session?.player?.z ?? START_POSITION.z);
+  player.rotation.y = session?.player?.heading ?? Math.PI / 2;
+  scene.add(player);
+
+  rewardCone = createIceCreamCone(.86);
+  rewardCone.position.set(.75, 1.1, .15);
+  rewardCone.scale.setScalar(.01);
+  rewardCone.visible = false;
+  player.add(rewardCone);
+}
+
+function createLegacyPlayer(){
   player = new THREE.Group();
   const skin = new THREE.MeshPhysicalMaterial({ color:0xe7ad80, roughness:.58, clearcoat:.08, clearcoatRoughness:.82 });
   const shirt = fabricMaterial('#4a9ed0', '#d8f2ff', .66);
@@ -1070,8 +1292,8 @@ function createPlayer(){
 
 function makeCoin(index){
   const group = new THREE.Group();
-  const gold = new THREE.MeshStandardMaterial({ color:0xffcf38, emissive:0xb36a00, emissiveIntensity:.34, roughness:.32, metalness:.62, flatShading:true });
-  const edge = new THREE.MeshStandardMaterial({ color:0xffe979, roughness:.25, metalness:.72 });
+  const gold = new THREE.MeshToonMaterial({ color:0xffcf38, emissive:0x8e5400, emissiveIntensity:.28, gradientMap:toonBands });
+  const edge = new THREE.MeshToonMaterial({ color:0xffe979, gradientMap:toonBands });
   const disc = mesh(new THREE.CylinderGeometry(.7, .7, .2, 36), gold);
   disc.rotation.x = Math.PI / 2;
   const ring = mesh(new THREE.TorusGeometry(.46, .075, 9, 28), edge);
@@ -1081,6 +1303,7 @@ function makeCoin(index){
   group.position.set(location.x, 1.35, location.z);
   group.userData = { index, baseY:1.35, collecting:false, collectStartedAt:0 };
   group.visible = !session?.collected?.[index];
+  addInkOutline(group, .035, .12);
   scene.add(group);
   return group;
 }
@@ -1103,20 +1326,20 @@ function setupRenderer(){
   renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
-  camera = new THREE.PerspectiveCamera(58, 1, .1, 420);
-  camera.position.set(START_POSITION.x - 10.5, 6.4, START_POSITION.z);
+  renderer.toneMappingExposure = .98;
+  camera = new THREE.PerspectiveCamera(50, 1, .1, 420);
+  camera.position.set(START_POSITION.x - 8.8, 5.55, START_POSITION.z);
   buildWorld();
   cameraHeading = player?.rotation?.y ?? Math.PI / 2;
   camera.position.set(
-    player.position.x - Math.sin(cameraHeading) * 10.8,
-    6.4,
-    player.position.z - Math.cos(cameraHeading) * 10.8
+    player.position.x - Math.sin(cameraHeading) * 8.8,
+    5.55,
+    player.position.z - Math.cos(cameraHeading) * 8.8
   );
   cameraLook.set(
-    player.position.x + Math.sin(cameraHeading) * 6.4,
-    1.9,
-    player.position.z + Math.cos(cameraHeading) * 6.4
+    player.position.x + Math.sin(cameraHeading) * 5.2,
+    1.8,
+    player.position.z + Math.cos(cameraHeading) * 5.2
   );
   resizeRenderer();
   resizeObserver = new ResizeObserver(resizeRenderer);
@@ -1239,8 +1462,8 @@ function animatePlayer(moving, elapsed){
     pivot.rotation.z = side * .018 + sway;
     pivot.rotation.x = moving ? -.018 - Math.abs(stride) * (.02 + depth * .008) : -.012;
   });
-  playerParts.body.position.y = 1.54 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .055 : Math.sin(elapsed * 2.2) * .018);
-  if(session?.phase !== 'reward') player.position.y = .04 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .035 : 0);
+  playerParts.body.position.y = 1.76 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .055 : Math.sin(elapsed * 2.2) * .018);
+  if(session?.phase !== 'reward') player.position.y = .08 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .035 : 0);
 }
 
 function checkTriggers(){
@@ -1395,7 +1618,7 @@ function beginReward(){
   if(!session || session.phase !== 'storeUnlocked') return;
   session.phase = 'reward';
   rewardStartedAt = performance.now();
-  player.position.set(STORE_ENTRY_POSITION.x, .04, STORE_ENTRY_POSITION.z);
+  player.position.set(STORE_ENTRY_POSITION.x, .08, STORE_ENTRY_POSITION.z);
   player.rotation.y = Math.PI / 2;
   session.player = { x:player.position.x, z:player.position.z, heading:player.rotation.y };
   storeBeacon.visible = false;
@@ -1436,7 +1659,7 @@ function updateReward(now){
     if(seconds > 4.55){
       rewardCone.visible = false;
       refs.rewardCaption.textContent = 'Every last bite! Sullivan’s Island Coin Quest complete!';
-      player.position.y = .04 + Math.abs(Math.sin(seconds * 7)) * .18;
+      player.position.y = .08 + Math.abs(Math.sin(seconds * 7)) * .18;
     }
   }
   if(elapsed > duration) finishReward();
@@ -1444,7 +1667,7 @@ function updateReward(now){
 
 function finishReward(){
   if(!session || session.phase !== 'reward') return;
-  player.position.y = .04;
+  player.position.y = .08;
   rewardCone.visible = false;
   refs.rewardCaption.hidden = true;
   session.phase = 'complete';
@@ -1460,17 +1683,17 @@ function updateCamera(delta){
   headingDifference = Math.atan2(Math.sin(headingDifference), Math.cos(headingDifference));
   cameraHeading += headingDifference * (1 - Math.exp(-delta * 4.2));
   cameraForward.set(Math.sin(cameraHeading), 0, Math.cos(cameraHeading));
-  const followDistance = session?.phase === 'reward' ? 8.2 : 10.8;
-  const followHeight = session?.phase === 'reward' ? 5.4 : 6.35;
+  const followDistance = session?.phase === 'reward' ? 7.4 : 8.8;
+  const followHeight = session?.phase === 'reward' ? 4.9 : 5.5;
   cameraDesired.set(
     player.position.x - cameraForward.x * followDistance,
     player.position.y + followHeight,
     player.position.z - cameraForward.z * followDistance
   );
   cameraLookDesired.set(
-    player.position.x + cameraForward.x * (session?.phase === 'reward' ? 2.2 : 6.4),
-    player.position.y + 1.85,
-    player.position.z + cameraForward.z * (session?.phase === 'reward' ? 2.2 : 6.4)
+    player.position.x + cameraForward.x * (session?.phase === 'reward' ? 2.2 : 5.2),
+    player.position.y + 1.78,
+    player.position.z + cameraForward.z * (session?.phase === 'reward' ? 2.2 : 5.2)
   );
   const factor = 1 - Math.exp(-delta * 5.2);
   camera.position.lerp(cameraDesired, factor);
@@ -1535,11 +1758,11 @@ function resetQuest(){
     });
     return;
   }
-  player.position.set(START_POSITION.x, .04, START_POSITION.z);
+  player.position.set(START_POSITION.x, .08, START_POSITION.z);
   player.rotation.y = Math.PI / 2;
   cameraHeading = player.rotation.y;
-  camera.position.set(START_POSITION.x - 10.8, 6.4, START_POSITION.z);
-  cameraLook.set(START_POSITION.x + 6, 1.9, START_POSITION.z);
+  camera.position.set(START_POSITION.x - 8.8, 5.55, START_POSITION.z);
+  cameraLook.set(START_POSITION.x + 5.2, 1.8, START_POSITION.z);
   rewardCone.visible = false;
   rebuildCoins();
   persistSession();

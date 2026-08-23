@@ -1,6 +1,6 @@
 .island-card {
   --premier-shadow:#7c5a2d;
-  background:linear-gradient(135deg,#dff8ff 0%,#bfeee7 46%,#fff0b7 100%);
+  background:linear-gradient(135deg,#dcece5 0%,#aed5cf 46%,#eee4bd 100%);
 }
 .island-card::before {
   content:'';
@@ -11,7 +11,7 @@
   height:190px;
   border:4px solid rgba(23,76,85,.22);
   border-radius:58% 42% 51% 49% / 44% 55% 45% 56%;
-  background:linear-gradient(#49aabd 0 40%,#e8c879 41% 55%,#648f4e 56%);
+  background:linear-gradient(#6faeb7 0 40%,#e5ddbb 41% 55%,#729c78 56%);
   clip-path:polygon(1% 48%,7% 27%,21% 12%,43% 5%,68% 9%,89% 24%,99% 45%,94% 67%,79% 85%,54% 96%,29% 90%,9% 74%);
   transform:rotate(-8deg);
 }
@@ -29,7 +29,7 @@
   inset:8px 0 7px;
   border:3px solid #173d42;
   border-radius:19px;
-  background:linear-gradient(180deg,#8fdfeb 0 42%,#43a9bf 43% 100%);
+  background:linear-gradient(180deg,#94cfca 0 42%,#699fad 43% 100%);
   box-shadow:5px 6px 0 rgba(23,61,66,.16);
 }
 .island-card-art::after {
@@ -52,7 +52,7 @@
   height:57px;
   border:3px solid #173d42;
   border-radius:54% 46% 57% 43% / 48% 54% 46% 52%;
-  background:linear-gradient(165deg,#5f914c 0 48%,#e6c575 49% 100%);
+  background:linear-gradient(165deg,#719c78 0 48%,#e5ddbb 49% 100%);
   clip-path:polygon(1% 48%,8% 20%,27% 5%,54% 1%,81% 10%,98% 33%,94% 70%,77% 94%,45% 99%,15% 86%);
   box-shadow:7px 8px 0 rgba(23,61,66,.16);
 }
@@ -104,8 +104,8 @@
   height:27px;
   border:2px solid #173d42;
   border-radius:7px 7px 6px 6px;
-  background:linear-gradient(90deg,#347caa,#63add2 52%,#347caa);
-  box-shadow:-5px 18px 0 -2px #dd4f89,5px 18px 0 -2px #dd4f89;
+  background:linear-gradient(90deg,#20292c,#424b4d 52%,#20292c);
+  box-shadow:-5px 18px 0 -2px #293335,5px 18px 0 -2px #293335;
 }
 .island-card-avatar::before {
   content:'';
@@ -116,7 +116,10 @@
   height:13px;
   border:2px solid #173d42;
   border-radius:50%;
-  background:linear-gradient(#f47db2 0 38%,#e8ae83 39%);
+  background:
+    radial-gradient(circle at 4% 48%,#f6f1df 0 3px,transparent 3.5px),
+    radial-gradient(circle at 96% 48%,#f6f1df 0 3px,transparent 3.5px),
+    linear-gradient(#303944 0 48%,#e3bda4 49%);
 }
 .island-card-avatar::after {
   content:'';
@@ -127,7 +130,7 @@
   height:16px;
   border:2px solid #173d42;
   border-radius:6px 6px 8px 8px;
-  background:linear-gradient(90deg,#245f8c,#3f8ec0 55%,#245f8c);
+  background:linear-gradient(90deg,#b7c0ba,#f2efe1 55%,#b7c0ba);
 }
 .island-card-coin {
   position:absolute;
@@ -159,14 +162,14 @@
   isolation:isolate;
 }
 .island-canvas-wrap { position:absolute; inset:0; }
-.island-canvas-wrap canvas { width:100%; height:100%; display:block; touch-action:none; }
+.island-canvas-wrap canvas { width:100%; height:100%; display:block; touch-action:none; filter:saturate(.9) contrast(1.055); }
 .island-vignette {
   position:absolute;
   z-index:3;
   inset:0;
   pointer-events:none;
-  background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 32%,rgba(17,56,58,.14));
-  box-shadow:inset 0 0 80px rgba(14,61,71,.18);
+  background:linear-gradient(180deg,rgba(255,255,238,.08),transparent 35%,rgba(25,50,49,.13));
+  box-shadow:inset 0 0 68px rgba(29,48,47,.16);
 }
 .island-hud {
   position:absolute;
