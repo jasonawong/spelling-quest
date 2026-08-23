@@ -1,22 +1,24 @@
 import * as THREE from './vendor/three.module.min.js';
 
 const STORAGE_KEY = 'spellingQuestIslandV1';
-const SESSION_VERSION = 1;
+const SESSION_VERSION = 2;
 const TOTAL_COINS = 10;
 const PLAYER_RADIUS = .72;
-const STORE_POSITION = { x: 28, z: -1.4 };
-const START_POSITION = { x: -38, z: 0 };
+const WORLD_SCALE = 4;
+const ISLAND_HALF_LENGTH = 43 * WORLD_SCALE;
+const STORE_POSITION = { x: 28 * WORLD_SCALE, z: -1.4 * WORLD_SCALE };
+const START_POSITION = { x: -38 * WORLD_SCALE, z: 0 };
 const COIN_LOCATIONS = [
-  { x: -35, z: 4.1, label: 'lighthouse dunes' },
-  { x: -28, z: -6.1, label: 'fort path' },
-  { x: -20, z: 7.2, label: 'beach walk' },
-  { x: -13, z: -4.8, label: 'live oak lane' },
-  { x: -5, z: 7.7, label: 'ocean overlook' },
-  { x: 3, z: -7.4, label: 'marsh trail' },
-  { x: 11, z: 5.9, label: 'station path' },
-  { x: 18, z: -5.6, label: 'palmetto grove' },
-  { x: 25, z: 6.2, label: 'village beach' },
-  { x: 36, z: 1.8, label: 'island point' }
+  { x: -35 * WORLD_SCALE, z: 4.1 * WORLD_SCALE, label: 'lighthouse dunes' },
+  { x: -28 * WORLD_SCALE, z: -6.1 * WORLD_SCALE, label: 'fort path' },
+  { x: -20 * WORLD_SCALE, z: 7.2 * WORLD_SCALE, label: 'beach walk' },
+  { x: -13 * WORLD_SCALE, z: -4.8 * WORLD_SCALE, label: 'live oak lane' },
+  { x: -5 * WORLD_SCALE, z: 7.7 * WORLD_SCALE, label: 'ocean overlook' },
+  { x: 3 * WORLD_SCALE, z: -7.4 * WORLD_SCALE, label: 'marsh trail' },
+  { x: 11 * WORLD_SCALE, z: 5.9 * WORLD_SCALE, label: 'station path' },
+  { x: 18 * WORLD_SCALE, z: -5.6 * WORLD_SCALE, label: 'palmetto grove' },
+  { x: 25 * WORLD_SCALE, z: 6.2 * WORLD_SCALE, label: 'village beach' },
+  { x: 36 * WORLD_SCALE, z: 1.8 * WORLD_SCALE, label: 'island point' }
 ];
 
 let services = null;
@@ -25,6 +27,8 @@ let initialized = false;
 let renderer = null;
 let scene = null;
 let camera = null;
+let sunlight = null;
+let sunlightTarget = null;
 let canvasHost = null;
 let player = null;
 let playerParts = null;
@@ -47,8 +51,11 @@ const joystickVector = new THREE.Vector2();
 const pointerVector = new THREE.Vector2();
 const cameraDesired = new THREE.Vector3();
 const cameraLook = new THREE.Vector3();
+const cameraLookDesired = new THREE.Vector3();
+const cameraForward = new THREE.Vector3();
 const moveVector = new THREE.Vector3();
 const clockVector = new THREE.Vector3();
+let cameraHeading = Math.PI / 2;
 const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
 const refs = {};
@@ -116,14 +123,14 @@ function createSession(){
     firstTry: 0,
     wrongAttempts: 0,
     phase: 'exploring',
-    player: { ...START_POSITION },
+    player: { ...START_POSITION, heading:Math.PI / 2 },
     startedAt: Date.now(),
     completedAt: null
   };
 }
 
 function isValidSavedSession(value){
-  if(!value || value.version !== SESSION_VERSION || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
+  if(!value || ![1, SESSION_VERSION].includes(value.version) || !Array.isArray(value.words) || value.words.length !== TOTAL_COINS) return false;
   if(!Array.isArray(value.collected) || value.collected.length !== TOTAL_COINS) return false;
   const available = new Set(services.words.map(item => item.word));
   return value.words.every(word => available.has(word));
@@ -132,7 +139,16 @@ function isValidSavedSession(value){
 function loadSession(){
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-    return isValidSavedSession(saved) ? saved : null;
+    if(!isValidSavedSession(saved)) return null;
+    if(saved.version === 1){
+      saved.version = SESSION_VERSION;
+      saved.player = {
+        x:(saved.player?.x ?? START_POSITION.x / WORLD_SCALE) * WORLD_SCALE,
+        z:(saved.player?.z ?? START_POSITION.z) * WORLD_SCALE,
+        heading:Math.PI / 2
+      };
+    }
+    return saved;
   } catch {
     return null;
   }
@@ -143,8 +159,8 @@ function persistSession(){
   try { localStorage.setItem(STORAGE_KEY, JSON.stringify(session)); } catch {}
 }
 
-function material(color, roughness = .86, metalness = 0){
-  return new THREE.MeshStandardMaterial({ color, roughness, metalness, flatShading:true });
+function material(color, roughness = .78, metalness = 0, options = {}){
+  return new THREE.MeshStandardMaterial({ color, roughness, metalness, ...options });
 }
 
 function mesh(geometry, mat, cast = true, receive = true){
@@ -155,21 +171,21 @@ function mesh(geometry, mat, cast = true, receive = true){
 }
 
 function islandHalfWidth(x, inset = 0){
-  const normalizedX = Math.min(1, Math.abs(x) / (43 - inset));
-  return Math.max(3.5, 5.4 + 6.2 * Math.sqrt(Math.max(0, 1 - normalizedX * normalizedX)) - inset * .58);
+  const normalizedX = Math.min(1, Math.abs(x) / (ISLAND_HALF_LENGTH - inset));
+  return Math.max(3.5 * WORLD_SCALE, (5.4 + 6.2 * Math.sqrt(Math.max(0, 1 - normalizedX * normalizedX))) * WORLD_SCALE - inset * .58);
 }
 
 function buildIslandShape(inset = 0){
   const shape = new THREE.Shape();
-  const minX = -43 + inset;
-  const maxX = 43 - inset;
-  for(let i = 0; i <= 48; i++){
-    const x = minX + (maxX - minX) * (i / 48);
+  const minX = -ISLAND_HALF_LENGTH + inset;
+  const maxX = ISLAND_HALF_LENGTH - inset;
+  for(let i = 0; i <= 96; i++){
+    const x = minX + (maxX - minX) * (i / 96);
     const z = islandHalfWidth(x, inset);
     if(i === 0) shape.moveTo(x, z); else shape.lineTo(x, z);
   }
-  for(let i = 48; i >= 0; i--){
-    const x = minX + (maxX - minX) * (i / 48);
+  for(let i = 96; i >= 0; i--){
+    const x = minX + (maxX - minX) * (i / 96);
     shape.lineTo(x, -islandHalfWidth(x, inset));
   }
   shape.closePath();
@@ -197,48 +213,132 @@ function makeCanvasTexture(text, foreground, background){
   return texture;
 }
 
+function makeGroundTexture(base, flecks){
+  const surface = document.createElement('canvas');
+  surface.width = 256;
+  surface.height = 256;
+  const context = surface.getContext('2d');
+  context.fillStyle = base;
+  context.fillRect(0, 0, 256, 256);
+  for(let i = 0; i < 950; i++){
+    context.globalAlpha = .08 + Math.random() * .16;
+    context.fillStyle = flecks[i % flecks.length];
+    const size = .5 + Math.random() * 2.2;
+    context.beginPath();
+    context.arc(Math.random() * 256, Math.random() * 256, size, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.globalAlpha = 1;
+  const texture = new THREE.CanvasTexture(surface);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(18, 7);
+  texture.anisotropy = Math.min(8, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
+  return texture;
+}
+
+function cylinderBetween(start, end, radius, mat, radialSegments = 10){
+  const direction = new THREE.Vector3().subVectors(end, start);
+  const branch = mesh(new THREE.CylinderGeometry(radius * .72, radius, direction.length(), radialSegments), mat);
+  branch.position.copy(start).add(end).multiplyScalar(.5);
+  branch.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.clone().normalize());
+  return branch;
+}
+
+function addWindow(group, x, y, z, scale = 1){
+  const frame = mesh(new THREE.BoxGeometry(.86 * scale, .92 * scale, .12), material(0xf6f0df), false);
+  const glass = mesh(new THREE.BoxGeometry(.66 * scale, .72 * scale, .14), material(0x78c7d7, .18, .02, { emissive:0x173a43, emissiveIntensity:.12 }), false);
+  const dividerV = mesh(new THREE.BoxGeometry(.06 * scale, .72 * scale, .17), material(0xf6f0df), false);
+  const dividerH = mesh(new THREE.BoxGeometry(.66 * scale, .06 * scale, .17), material(0xf6f0df), false);
+  [frame, glass, dividerV, dividerH].forEach(item => item.position.set(x, y, z));
+  group.add(frame, glass, dividerV, dividerH);
+}
+
 function addHouse(x, z, color, scale = 1, rotation = 0){
   const group = new THREE.Group();
-  const body = mesh(new THREE.BoxGeometry(3.5 * scale, 2.35 * scale, 3 * scale), material(color));
-  body.position.y = 1.25 * scale;
-  const roof = mesh(new THREE.ConeGeometry(2.8 * scale, 1.35 * scale, 4), material(0x71514a));
-  roof.position.y = 3.05 * scale;
-  roof.rotation.y = Math.PI / 4;
-  const door = mesh(new THREE.BoxGeometry(.7 * scale, 1.35 * scale, .16), material(0xf0d399), false);
-  door.position.set(0, .78 * scale, 1.56 * scale);
-  const windowMat = material(0x7fd6e7, .35, .05);
-  [-1, 1].forEach(side => {
-    const window = mesh(new THREE.BoxGeometry(.62 * scale, .62 * scale, .18), windowMat, false);
-    window.position.set(side * .95 * scale, 1.55 * scale, 1.57 * scale);
-    group.add(window);
+  const wall = material(color, .72);
+  const timber = material(0x7a543b, .88);
+  const trim = material(0xf8f0dd, .76);
+  [-1.35, 1.35].forEach(px => [-1.1, 1.1].forEach(pz => {
+    const stilt = mesh(new THREE.CylinderGeometry(.13 * scale, .17 * scale, .9 * scale, 10), timber);
+    stilt.position.set(px * scale, .45 * scale, pz * scale);
+    group.add(stilt);
+  }));
+  const body = mesh(new THREE.BoxGeometry(4.2 * scale, 2.65 * scale, 3.45 * scale), wall);
+  body.position.y = 2.16 * scale;
+  const floor = mesh(new THREE.BoxGeometry(4.65 * scale, .18 * scale, 4.1 * scale), timber);
+  floor.position.y = .92 * scale;
+  const roofLeft = mesh(new THREE.BoxGeometry(2.9 * scale, .18 * scale, 4.25 * scale), material(0x795044, .9));
+  const roofRight = roofLeft.clone();
+  roofLeft.position.set(-1.08 * scale, 3.72 * scale, 0);
+  roofRight.position.set(1.08 * scale, 3.72 * scale, 0);
+  roofLeft.rotation.z = -.47;
+  roofRight.rotation.z = .47;
+  const porch = mesh(new THREE.BoxGeometry(4.5 * scale, .16 * scale, 1.25 * scale), timber);
+  porch.position.set(0, 1.05 * scale, 2.18 * scale);
+  const door = mesh(new THREE.BoxGeometry(.85 * scale, 1.75 * scale, .16), material(0xa66f45), false);
+  door.position.set(0, 1.92 * scale, 1.79 * scale);
+  const knob = mesh(new THREE.SphereGeometry(.055 * scale, 8, 6), material(0xc99d45, .35, .5), false);
+  knob.position.set(.27 * scale, 1.9 * scale, 1.9 * scale);
+  group.add(body, floor, roofLeft, roofRight, porch, door, knob);
+  addWindow(group, -1.35 * scale, 2.27 * scale, 1.79 * scale, scale);
+  addWindow(group, 1.35 * scale, 2.27 * scale, 1.79 * scale, scale);
+  [-1.9, 1.9].forEach(px => {
+    const post = mesh(new THREE.CylinderGeometry(.055 * scale, .065 * scale, 1.45 * scale, 8), trim);
+    post.position.set(px * scale, 1.75 * scale, 2.65 * scale);
+    group.add(post);
   });
-  group.add(body, roof, door);
+  const rail = mesh(new THREE.BoxGeometry(4 * scale, .08 * scale, .08 * scale), trim);
+  rail.position.set(0, 1.62 * scale, 2.65 * scale);
+  group.add(rail);
+  for(let i = 0; i < 3; i++){
+    const step = mesh(new THREE.BoxGeometry(1.25 * scale, .14 * scale, .42 * scale), timber);
+    step.position.set(0, (.74 - i * .2) * scale, (2.55 + i * .34) * scale);
+    group.add(step);
+  }
   group.position.set(x, 0, z);
   group.rotation.y = rotation;
   scene.add(group);
-  addCollider(x, z, 2.25 * scale);
+  addCollider(x, z, 2.8 * scale);
   return group;
 }
 
 function addPalm(x, z, scale = 1){
   const group = new THREE.Group();
-  const trunk = mesh(new THREE.CylinderGeometry(.2 * scale, .31 * scale, 3.4 * scale, 7), material(0x9d714a));
-  trunk.position.y = 1.7 * scale;
-  trunk.rotation.z = (Math.random() - .5) * .08;
-  group.add(trunk);
+  const trunkMat = material(0x9a6b3f, .92);
+  const height = 4.6 * scale;
   for(let i = 0; i < 7; i++){
-    const leaf = mesh(new THREE.ConeGeometry(.48 * scale, 2.2 * scale, 5), material(i % 2 ? 0x2e8453 : 0x43a55c), false);
-    leaf.position.y = 3.55 * scale;
-    leaf.rotation.z = Math.PI / 2.35;
-    leaf.rotation.y = i / 7 * Math.PI * 2;
-    leaf.position.x = Math.sin(i / 7 * Math.PI * 2) * .65 * scale;
-    leaf.position.z = Math.cos(i / 7 * Math.PI * 2) * .65 * scale;
+    const segment = mesh(new THREE.CylinderGeometry((.22 - i * .012) * scale, (.3 - i * .012) * scale, height / 7 + .04, 10), trunkMat);
+    segment.position.set(Math.sin(i * .22) * .13 * scale, (i + .5) * height / 7, Math.cos(i * .19) * .08 * scale);
+    segment.rotation.z = -.035 * i;
+    group.add(segment);
+    const ring = mesh(new THREE.TorusGeometry((.265 - i * .012) * scale, .025 * scale, 5, 10), material(0x765039, .95), false);
+    ring.rotation.x = Math.PI / 2;
+    ring.position.copy(segment.position);
+    ring.position.y -= height / 14;
+    group.add(ring);
+  }
+  const leafShape = new THREE.Shape();
+  leafShape.moveTo(0, 0);
+  leafShape.bezierCurveTo(.42 * scale, .55 * scale, .34 * scale, 1.8 * scale, 0, 2.45 * scale);
+  leafShape.bezierCurveTo(-.34 * scale, 1.8 * scale, -.42 * scale, .55 * scale, 0, 0);
+  for(let i = 0; i < 10; i++){
+    const leaf = mesh(
+      new THREE.ShapeGeometry(leafShape, 8),
+      material(i % 3 ? 0x2d8853 : 0x55a95f, .84, 0, { side:THREE.DoubleSide }),
+      false,
+      false
+    );
+    leaf.position.set(0, height - .08 * scale, 0);
+    leaf.rotation.x = -Math.PI / 2 + .42 + (i % 2) * .12;
+    leaf.rotation.z = i / 10 * Math.PI * 2;
+    leaf.scale.y = .88 + (i % 3) * .08;
     group.add(leaf);
   }
   const coconuts = material(0x8b5a2b);
-  for(let i = 0; i < 3; i++){
+  for(let i = 0; i < 4; i++){
     const coconut = mesh(new THREE.SphereGeometry(.2 * scale, 8, 6), coconuts, false);
-    coconut.position.set((i - 1) * .23 * scale, 3.32 * scale, (i % 2) * .2 * scale);
+    coconut.position.set(Math.sin(i * 1.7) * .24 * scale, (height - .25 * scale), Math.cos(i * 1.7) * .24 * scale);
     group.add(coconut);
   }
   group.position.set(x, 0, z);
@@ -249,18 +349,31 @@ function addPalm(x, z, scale = 1){
 
 function addLiveOak(x, z, scale = 1){
   const group = new THREE.Group();
-  const trunkMat = material(0x6f553e);
-  const canopyMat = material(0x386f48);
-  const trunk = mesh(new THREE.CylinderGeometry(.36 * scale, .58 * scale, 3 * scale, 7), trunkMat);
-  trunk.position.y = 1.45 * scale;
+  const trunkMat = material(0x68503d, .96);
+  const canopyMats = [material(0x315f3d, .9), material(0x3d7449, .86), material(0x4d8253, .84)];
+  const trunk = mesh(new THREE.CylinderGeometry(.42 * scale, .7 * scale, 3.5 * scale, 12), trunkMat);
+  trunk.position.y = 1.7 * scale;
   group.add(trunk);
-  const canopyPositions = [[0,3.2,0],[-1.1,3,.1],[1.05,3.15,.15],[-.5,3.5,-.55],[.65,3.45,-.45]];
+  [[0,3.1,0,-1.8,4,.25],[0,3.05,0,1.9,4.15,.2],[-.25,3.25,0,-1,4.6,-1],[.3,3.25,0,1.1,4.55,-.85]].forEach(([sx,sy,sz,ex,ey,ez], index) => {
+    group.add(cylinderBetween(
+      new THREE.Vector3(sx * scale, sy * scale, sz * scale),
+      new THREE.Vector3(ex * scale, ey * scale, ez * scale),
+      (.22 - index * .018) * scale,
+      trunkMat
+    ));
+  });
+  const canopyPositions = [[0,4.45,0],[-1.7,4.25,.15],[1.7,4.35,.2],[-.7,4.85,-1],[.8,4.75,-.9],[-2.25,4,.8],[2.25,4.1,.8]];
   canopyPositions.forEach(([px,py,pz], index) => {
-    const crown = mesh(new THREE.IcosahedronGeometry((index ? 1.25 : 1.5) * scale, 1), canopyMat, true);
-    crown.scale.y = .72;
+    const crown = mesh(new THREE.IcosahedronGeometry((index ? 1.4 : 1.75) * scale, 2), canopyMats[index % canopyMats.length], true);
+    crown.scale.set(1.2, .68, .95);
     crown.position.set(px * scale, py * scale, pz * scale);
     group.add(crown);
   });
+  for(let i = 0; i < 8; i++){
+    const moss = mesh(new THREE.CylinderGeometry(.018 * scale, .03 * scale, (1 + i % 3 * .3) * scale, 5), material(0x83936b, .92), false);
+    moss.position.set((-2.1 + i * .6) * scale, (3.7 + (i % 2) * .25) * scale, (.45 - (i % 3) * .4) * scale);
+    group.add(moss);
+  }
   group.position.set(x, 0, z);
   scene.add(group);
   addCollider(x, z, .75 * scale);
@@ -270,74 +383,96 @@ function addLiveOak(x, z, scale = 1){
 function addLighthouse(){
   const group = new THREE.Group();
   const colors = [0xf7f1df, 0xea625d, 0xf7f1df, 0xea625d, 0xf7f1df];
-  for(let i = 0; i < 5; i++){
-    const segment = mesh(new THREE.CylinderGeometry(.6 - i * .055, .69 - i * .055, 1.35, 16), material(colors[i]));
-    segment.position.y = .68 + i * 1.33;
+  for(let i = 0; i < 7; i++){
+    const segment = mesh(new THREE.CylinderGeometry(.8 - i * .055, .88 - i * .055, 1.25, 24), material(colors[i % colors.length], .68));
+    segment.position.y = .63 + i * 1.23;
     group.add(segment);
   }
-  const gallery = mesh(new THREE.CylinderGeometry(.82, .82, .2, 16), material(0x263e43));
-  gallery.position.y = 6.78;
-  const lamp = mesh(new THREE.CylinderGeometry(.48, .53, .8, 12), material(0x89dcdf, .25));
-  lamp.position.y = 7.25;
-  const roof = mesh(new THREE.ConeGeometry(.66, .62, 12), material(0x263e43));
-  roof.position.y = 7.92;
-  group.add(gallery, lamp, roof);
-  group.position.set(-34, 0, -2.1);
+  const gallery = mesh(new THREE.CylinderGeometry(1.05, 1.05, .2, 24), material(0x243c43, .6));
+  gallery.position.y = 8.68;
+  const lamp = mesh(new THREE.CylinderGeometry(.62, .68, 1.05, 18), material(0x9ee7ec, .2, .05, { transparent:true, opacity:.82 }));
+  lamp.position.y = 9.28;
+  const roof = mesh(new THREE.ConeGeometry(.85, .8, 18), material(0x243c43, .7));
+  roof.position.y = 10.16;
+  const railMat = material(0x243c43, .68);
+  for(let i = 0; i < 12; i++){
+    const angle = i / 12 * Math.PI * 2;
+    const post = mesh(new THREE.CylinderGeometry(.025, .025, .65, 6), railMat, false);
+    post.position.set(Math.sin(angle) * .91, 9, Math.cos(angle) * .91);
+    group.add(post);
+  }
+  const door = mesh(new THREE.BoxGeometry(.58, 1.15, .12), material(0x314b52), false);
+  door.position.set(0, .72, .84);
+  group.add(gallery, lamp, roof, door);
+  group.position.set(-34 * WORLD_SCALE, 0, -2.1 * WORLD_SCALE);
   scene.add(group);
-  addCollider(-34, -2.1, 1.15);
+  addCollider(group.position.x, group.position.z, 1.5);
 }
 
 function addFort(){
   const group = new THREE.Group();
   const stone = material(0x8b8173);
-  const wall = mesh(new THREE.BoxGeometry(8, 1.55, 3.4), stone);
-  wall.position.y = .78;
+  const wall = mesh(new THREE.BoxGeometry(11, 2.4, 5.2), stone);
+  wall.position.y = 1.2;
   group.add(wall);
-  for(let i = -3; i <= 3; i += 1.5){
-    const top = mesh(new THREE.BoxGeometry(.85, .65, .75), stone);
-    top.position.set(i, 1.85, 0);
+  for(let i = -4.7; i <= 4.7; i += 1.55){
+    const top = mesh(new THREE.BoxGeometry(.9, .72, 1), stone);
+    top.position.set(i, 2.75, 0);
     group.add(top);
   }
-  const arch = mesh(new THREE.BoxGeometry(1.35, 1.3, .35), material(0x423f3a), false);
-  arch.position.set(0, .72, 1.75);
+  const arch = mesh(new THREE.BoxGeometry(1.7, 1.8, .38), material(0x393936), false);
+  arch.position.set(0, .92, 2.62);
   group.add(arch);
-  group.position.set(-25, 0, 1.2);
+  for(let i = 0; i < 16; i++){
+    const stoneBlock = mesh(new THREE.BoxGeometry(.9 + (i % 3) * .17, .08, .08), material(i % 2 ? 0xa19789 : 0x746d63), false);
+    stoneBlock.position.set(-4.8 + (i % 8) * 1.35, .55 + Math.floor(i / 8) * .7, 2.66);
+    group.add(stoneBlock);
+  }
+  group.position.set(-25 * WORLD_SCALE, 0, 1.2 * WORLD_SCALE);
   group.rotation.y = -.08;
   scene.add(group);
-  addCollider(-25, 1.2, 4.15);
+  addCollider(group.position.x, group.position.z, 6);
 }
 
 function addIceCreamStore(){
   const group = new THREE.Group();
-  const body = mesh(new THREE.BoxGeometry(5.4, 3.1, 4.2), material(0xffb7b1));
-  body.position.y = 1.55;
+  const body = mesh(new THREE.BoxGeometry(7.2, 4.2, 5.6), material(0xf3b7ae, .72));
+  body.position.y = 2.1;
   group.add(body);
-  const roof = mesh(new THREE.ConeGeometry(4.1, 1.7, 4), material(0x5d8f79));
-  roof.position.y = 3.95;
+  const roof = mesh(new THREE.ConeGeometry(5.35, 2.15, 4), material(0x467d68, .82));
+  roof.position.y = 5.17;
   roof.rotation.y = Math.PI / 4;
   group.add(roof);
   const awningGroup = new THREE.Group();
-  for(let i = 0; i < 7; i++){
-    const stripe = mesh(new THREE.BoxGeometry(.78, .24, 1.05), material(i % 2 ? 0xff5f64 : 0xfff4df), false);
-    stripe.position.set(-2.35 + i * .78, 2.48, 2.45);
+  for(let i = 0; i < 9; i++){
+    const stripe = mesh(new THREE.BoxGeometry(.75, .24, 1.3), material(i % 2 ? 0xe95c63 : 0xfff4df), false);
+    stripe.position.set(-3 + i * .75, 3.25, 3.2);
     stripe.rotation.x = -.2;
     awningGroup.add(stripe);
   }
   group.add(awningGroup);
-  const counter = mesh(new THREE.BoxGeometry(3.7, 1.3, .65), material(0xfff4df));
-  counter.position.set(0, 1.2, 2.2);
+  const counter = mesh(new THREE.BoxGeometry(4.8, 1.45, .72), material(0xfff4df));
+  counter.position.set(0, 1.45, 2.95);
   group.add(counter);
   const signTexture = makeCanvasTexture('ICE CREAM', '#3f5b57', '#fff4df');
-  const sign = mesh(new THREE.PlaneGeometry(3.7, 1.15), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
-  sign.position.set(0, 3.05, 2.115);
+  const sign = mesh(new THREE.PlaneGeometry(4.7, 1.45), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
+  sign.position.set(0, 4.12, 2.815);
   group.add(sign);
+  const serviceWindow = mesh(new THREE.BoxGeometry(5.05, 1.35, .16), material(0x67bed0, .2, .02, { emissive:0x153a45, emissiveIntensity:.12 }), false);
+  serviceWindow.position.set(0, 2.55, 2.84);
+  group.add(serviceWindow);
+  for(let i = -2; i <= 2; i++){
+    const mullion = mesh(new THREE.BoxGeometry(.06, 1.35, .19), material(0xfff4df), false);
+    mullion.position.set(i, 2.55, 2.94);
+    group.add(mullion);
+  }
   const coneSign = createIceCreamCone(.68);
-  coneSign.position.set(2.35, 4.35, .4);
+  coneSign.position.set(3.1, 5.72, .4);
   coneSign.rotation.z = -.12;
   group.add(coneSign);
   group.position.set(STORE_POSITION.x, 0, STORE_POSITION.z);
   scene.add(group);
-  addCollider(STORE_POSITION.x, STORE_POSITION.z, 3.2);
+  addCollider(STORE_POSITION.x, STORE_POSITION.z, 4.25);
 
   storeBeacon = new THREE.Group();
   const ringMat = new THREE.MeshStandardMaterial({ color:0xffd34e, emissive:0xf7a500, emissiveIntensity:.7, roughness:.4, transparent:true, opacity:.88 });
@@ -373,15 +508,15 @@ function createIceCreamCone(scale = 1){
 function addDock(){
   const dock = new THREE.Group();
   const wood = material(0x9f724b);
-  for(let i = 0; i < 8; i++){
-    const plank = mesh(new THREE.BoxGeometry(1.05, .18, 3.4), wood);
-    plank.position.set(-46.5 - i * .95, .05, 0);
+  for(let i = 0; i < 18; i++){
+    const plank = mesh(new THREE.BoxGeometry(1.12, .18, 5.4), wood);
+    plank.position.set(-ISLAND_HALF_LENGTH - 2.4 - i * 1.04, .05, 0);
     dock.add(plank);
   }
-  for(let i = 0; i < 5; i++){
-    [-1.45, 1.45].forEach(z => {
-      const post = mesh(new THREE.CylinderGeometry(.16, .2, 1.5, 8), material(0x765238));
-      post.position.set(-46.2 - i * 1.8, -.2, z);
+  for(let i = 0; i < 10; i++){
+    [-2.35, 2.35].forEach(z => {
+      const post = mesh(new THREE.CylinderGeometry(.18, .23, 1.75, 10), material(0x765238));
+      post.position.set(-ISLAND_HALF_LENGTH - 2.2 - i * 2, -.18, z);
       dock.add(post);
     });
   }
@@ -390,7 +525,9 @@ function addDock(){
 
 function addBeachDetails(){
   const shellMat = material(0xf7c2a2);
-  [[-40,6.5],[33,-6.8],[7,9.5],[-12,-9.4]].forEach(([x,z], index) => {
+  [[-40,6.5],[33,-6.8],[7,9.5],[-12,-9.4],[20,9.2],[-29,-8.5]].forEach(([bx,bz], index) => {
+    const x = bx * WORLD_SCALE;
+    const z = bz * WORLD_SCALE;
     const star = new THREE.Group();
     for(let i = 0; i < 5; i++){
       const arm = mesh(new THREE.ConeGeometry(.18, .9, 5), shellMat, false);
@@ -405,7 +542,9 @@ function addBeachDetails(){
   });
 
   const rockMat = material(0x858d83);
-  [[-39,-5.4,1.2],[-18,-9,1],[14,8.6,.8],[39,-4.2,1.1]].forEach(([x,z,s]) => {
+  [[-39,-5.4,1.2],[-18,-9,1],[14,8.6,.8],[39,-4.2,1.1],[30,8.1,.85],[-7,-10.2,.9]].forEach(([bx,bz,s]) => {
+    const x = bx * WORLD_SCALE;
+    const z = bz * WORLD_SCALE;
     const rock = mesh(new THREE.DodecahedronGeometry(s, 0), rockMat);
     rock.scale.y = .6;
     rock.position.set(x, .45 * s, z);
@@ -415,49 +554,105 @@ function addBeachDetails(){
 }
 
 function addRoads(){
-  const roadMat = material(0xd9be86);
-  const main = mesh(new THREE.PlaneGeometry(63, 2.7), roadMat, false, true);
+  const roadMat = material(0xc9b285, .98);
+  const main = mesh(new THREE.PlaneGeometry(63 * WORLD_SCALE, 4.8), roadMat, false, true);
   main.rotation.x = -Math.PI / 2;
-  main.position.set(1, .025, 0);
+  main.position.set(1 * WORLD_SCALE, .025, 0);
   scene.add(main);
   [-22,-7,9,23].forEach((x, index) => {
-    const cross = mesh(new THREE.PlaneGeometry(index === 3 ? 10 : 13, 1.75), roadMat, false, true);
+    const cross = mesh(new THREE.PlaneGeometry((index === 3 ? 10 : 13) * WORLD_SCALE, 3.4), roadMat, false, true);
     cross.rotation.x = -Math.PI / 2;
     cross.rotation.z = Math.PI / 2;
-    cross.position.set(x, .03, index % 2 ? -.4 : .5);
+    cross.position.set(x * WORLD_SCALE, .03, (index % 2 ? -.4 : .5) * WORLD_SCALE);
     scene.add(cross);
+  });
+}
+
+function addLandscapeDetails(){
+  const duneMat = material(0xe6c27b, .96);
+  for(let i = 0; i < 26; i++){
+    const x = -158 + i * 12.4;
+    const side = i % 2 ? 1 : -1;
+    const z = side * (islandHalfWidth(x, 1) - 4.1 - (i % 3));
+    const dune = mesh(new THREE.SphereGeometry(2.4 + (i % 4) * .45, 16, 9), duneMat, false, true);
+    dune.scale.set(1.9, .22 + (i % 3) * .035, .82);
+    dune.position.set(x, .38, z);
+    scene.add(dune);
+  }
+
+  const bladeMats = [material(0x557b42, .94), material(0x789448, .92), material(0x9b9b4f, .92)];
+  for(let i = 0; i < 150; i++){
+    const x = -158 + ((i * 37) % 316);
+    const half = islandHalfWidth(x, 9);
+    const z = -half + 3 + ((i * 53) % Math.max(6, Math.floor((half - 3) * 2)));
+    if(Math.abs(z) < 4) continue;
+    const tuft = new THREE.Group();
+    for(let bladeIndex = 0; bladeIndex < 3; bladeIndex++){
+      const blade = mesh(new THREE.ConeGeometry(.11, .72 + bladeIndex * .13, 4), bladeMats[(i + bladeIndex) % bladeMats.length], false, false);
+      blade.position.set((bladeIndex - 1) * .16, .38, (bladeIndex % 2) * .1);
+      blade.rotation.z = (bladeIndex - 1) * .18;
+      tuft.add(blade);
+    }
+    tuft.position.set(x, 0, z);
+    tuft.rotation.y = i * 1.73;
+    scene.add(tuft);
+  }
+
+  const cloudMat = new THREE.MeshBasicMaterial({ color:0xffffff, transparent:true, opacity:.68, depthWrite:false });
+  [[-95,31,-70],[5,37,-82],[110,29,-68]].forEach(([x,y,z], cloudIndex) => {
+    const cloud = new THREE.Group();
+    for(let i = 0; i < 6; i++){
+      const puff = mesh(new THREE.SphereGeometry(3.2 + (i % 3), 16, 10), cloudMat, false, false);
+      puff.scale.y = .58;
+      puff.position.set((i - 2.5) * 4.2, Math.sin(i * 1.8) * 1.2, (i % 2) * 1.4);
+      cloud.add(puff);
+    }
+    cloud.position.set(x, y, z + cloudIndex * 11);
+    scene.add(cloud);
   });
 }
 
 function buildWorld(){
   scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x92dff0);
-  scene.fog = new THREE.Fog(0xa7e1ec, 55, 105);
+  scene.background = new THREE.Color(0x8fdbea);
+  scene.fog = new THREE.Fog(0xb7e3e8, 150, 310);
   colliders.length = 0;
 
-  const hemisphere = new THREE.HemisphereLight(0xdaf8ff, 0x6e8251, 2.25);
+  const hemisphere = new THREE.HemisphereLight(0xdaf8ff, 0x526542, 2.05);
   scene.add(hemisphere);
-  const sunlight = new THREE.DirectionalLight(0xfff1cf, 3.1);
-  sunlight.position.set(-18, 30, 24);
+  sunlight = new THREE.DirectionalLight(0xfff1cf, 3.25);
+  sunlight.position.set(START_POSITION.x - 32, 55, 28);
   sunlight.castShadow = true;
-  sunlight.shadow.mapSize.set(1024, 1024);
-  sunlight.shadow.camera.left = -52;
-  sunlight.shadow.camera.right = 52;
-  sunlight.shadow.camera.top = 30;
-  sunlight.shadow.camera.bottom = -30;
+  sunlight.shadow.mapSize.set(1536, 1536);
+  sunlight.shadow.camera.left = -40;
+  sunlight.shadow.camera.right = 40;
+  sunlight.shadow.camera.top = 34;
+  sunlight.shadow.camera.bottom = -34;
+  sunlight.shadow.camera.near = 10;
+  sunlight.shadow.camera.far = 110;
   sunlight.shadow.bias = -.0007;
+  sunlightTarget = new THREE.Object3D();
+  sunlightTarget.position.set(START_POSITION.x, 0, START_POSITION.z);
+  sunlight.target = sunlightTarget;
+  scene.add(sunlightTarget);
   scene.add(sunlight);
 
-  const water = mesh(new THREE.PlaneGeometry(150, 90, 1, 1), material(0x58bed0, .28, .04), false, true);
+  const water = mesh(new THREE.PlaneGeometry(520, 190, 1, 1), material(0x58bed0, .24, .08, { transparent:true, opacity:.96 }), false, true);
   water.rotation.x = -Math.PI / 2;
   water.position.y = -.42;
   scene.add(water);
+  const waterGlow = mesh(new THREE.PlaneGeometry(520, 190), new THREE.MeshBasicMaterial({ color:0x8de1e6, transparent:true, opacity:.15, depthWrite:false }), false, false);
+  waterGlow.rotation.x = -Math.PI / 2;
+  waterGlow.position.y = -.37;
+  scene.add(waterGlow);
 
-  const sand = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 48), material(0xf2d28b), false, true);
+  const sandTexture = makeGroundTexture('#edcf8d', ['#fff1bd','#c79e5c','#f7dc9b']);
+  const grassTexture = makeGroundTexture('#6fa85a', ['#456f3f','#9abd68','#5a8d4c']);
+  const sand = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 96), material(0xffffff, .98, 0, { map:sandTexture }), false, true);
   sand.rotation.x = -Math.PI / 2;
   sand.position.y = -.05;
   scene.add(sand);
-  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(2.05), 48), material(0x72b65d), false, true);
+  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(8.2), 96), material(0xffffff, .94, 0, { map:grassTexture }), false, true);
   grass.rotation.x = -Math.PI / 2;
   grass.position.y = 0;
   scene.add(grass);
@@ -468,15 +663,23 @@ function buildWorld(){
   addFort();
   addIceCreamStore();
   addBeachDetails();
+  addLandscapeDetails();
 
-  addHouse(-17, -1.8, 0xf4c889, .9, .06);
-  addHouse(-9.5, 2.8, 0xc1d9e8, .82, -.08);
-  addHouse(2, 2.7, 0xf4ad87, .88, .05);
-  addHouse(9.5, -2.6, 0xd8c3ef, .82, -.05);
-  addHouse(17, 2.2, 0xf1df9b, .9, .06);
+  [
+    [-20,-2.4,0xf4c889,1.05,.06],[-16,3.4,0xc1d9e8,.98,-.08],[-10,-3.2,0xf4ad87,1.02,.05],
+    [-5,3.1,0xd8c3ef,.96,-.05],[1,-2.9,0xf1df9b,1.04,.06],[7,3.4,0xaed5c4,.98,-.04],
+    [13,-3,0xf0b8a6,1.05,.04],[19,3.1,0xbccfec,1,-.06],[24,-2.5,0xf2cf8c,1.06,.05]
+  ].forEach(([x,z,color,scale,rotation]) => addHouse(x * WORLD_SCALE, z * WORLD_SCALE, color, scale, rotation));
 
-  [[-39,2.4,.9],[-31,7.1,.82],[-19,-6.6,.78],[-14,5.4,.9],[-2,-5.8,.82],[5,5.7,.92],[14,-7.2,.84],[21,5.7,.78],[33,-5.2,.95],[38,4.4,.78]].forEach(args => addPalm(...args));
-  [[-12,-.2,.92],[-4,2.4,1],[6,-2.2,.82],[19,-1.8,.92],[34,5.2,.75]].forEach(args => addLiveOak(...args));
+  [
+    [-39,2.4,.95],[-36,-5.1,.86],[-32,7.1,.9],[-27,-7.2,.82],[-22,6.8,.9],[-18,-6.6,.84],
+    [-14,6.4,.95],[-9,-7.4,.82],[-3,6.8,.88],[3,-7.1,.9],[8,6.8,.92],[14,-7.2,.9],
+    [19,6.7,.86],[24,-6.4,.9],[29,6.3,.95],[33,-5.2,1],[38,4.4,.84],[40,-2.7,.78]
+  ].forEach(([x,z,scale]) => addPalm(x * WORLD_SCALE, z * WORLD_SCALE, scale));
+  [
+    [-29,0,.92],[-24,-2,.95],[-18,1.2,1.05],[-12,-.2,1],[-7,2.4,1.04],[-2,-2.2,.92],
+    [4,2.1,.9],[10,-1.8,1],[16,1.8,.96],[22,-1.5,.98],[30,2.3,.9],[35,-.5,.86]
+  ].forEach(([x,z,scale]) => addLiveOak(x * WORLD_SCALE, z * WORLD_SCALE, scale));
 
   createPlayer();
   rebuildCoins();
@@ -484,50 +687,76 @@ function buildWorld(){
 
 function createPlayer(){
   player = new THREE.Group();
-  const skin = material(0xf0b98c);
-  const shirt = material(0x4c91e5);
-  const shorts = material(0x315b9c);
-  const shoe = material(0xffffff);
-  const dark = material(0x26343b);
-  const body = mesh(new THREE.CapsuleGeometry(.48, .7, 5, 9), shirt);
-  body.position.y = 1.45;
-  const head = mesh(new THREE.SphereGeometry(.55, 16, 12), skin);
-  head.position.y = 2.5;
-  const hair = mesh(new THREE.SphereGeometry(.57, 12, 8, 0, Math.PI * 2, 0, Math.PI / 2.2), dark);
-  hair.position.y = 2.63;
-  const eyeLeft = mesh(new THREE.SphereGeometry(.055, 7, 6), dark, false);
+  const skin = material(0xe7ad80, .72);
+  const shirt = material(0x327dc2, .66);
+  const shorts = material(0x284e80, .76);
+  const shoe = material(0xf4f0e8, .52);
+  const sole = material(0x34404a, .82);
+  const dark = material(0x2a302f, .84);
+  const body = mesh(new THREE.CapsuleGeometry(.43, .72, 8, 14), shirt);
+  body.scale.set(1, 1, .76);
+  body.position.y = 1.54;
+  const collar = mesh(new THREE.TorusGeometry(.22, .045, 8, 18, Math.PI), material(0xd8eef8, .7), false);
+  collar.position.set(0, 1.99, .25);
+  collar.rotation.z = Math.PI;
+  const shortsWaist = mesh(new THREE.BoxGeometry(.72, .34, .58), shorts);
+  shortsWaist.position.y = 1.02;
+  const neck = mesh(new THREE.CylinderGeometry(.16, .18, .24, 12), skin);
+  neck.position.y = 2.12;
+  const head = mesh(new THREE.SphereGeometry(.51, 24, 18), skin);
+  head.scale.set(.94, 1.08, .92);
+  head.position.y = 2.61;
+  const hair = mesh(new THREE.SphereGeometry(.525, 20, 12, 0, Math.PI * 2, 0, Math.PI / 2), dark);
+  hair.scale.set(.96, 1.04, .94);
+  hair.position.y = 2.76;
+  const earLeft = mesh(new THREE.SphereGeometry(.09, 10, 8), skin, false);
+  const earRight = earLeft.clone();
+  earLeft.position.set(-.49, 2.6, 0);
+  earRight.position.set(.49, 2.6, 0);
+  const eyeLeft = mesh(new THREE.SphereGeometry(.045, 10, 8), dark, false);
   const eyeRight = eyeLeft.clone();
-  eyeLeft.position.set(-.19, 2.55, .5);
-  eyeRight.position.set(.19, 2.55, .5);
-  const armLeft = mesh(new THREE.CapsuleGeometry(.12, .64, 4, 7), skin);
-  const armRight = armLeft.clone();
+  eyeLeft.position.set(-.17, 2.66, .47);
+  eyeRight.position.set(.17, 2.66, .47);
+  const nose = mesh(new THREE.SphereGeometry(.055, 10, 8), material(0xd79870), false);
+  nose.scale.set(.75, 1, 1.15);
+  nose.position.set(0, 2.54, .5);
+  const mouth = mesh(new THREE.BoxGeometry(.19, .025, .025), material(0x8f4e47), false);
+  mouth.position.set(0, 2.4, .49);
+
   const armLeftPivot = new THREE.Group();
   const armRightPivot = new THREE.Group();
-  armLeftPivot.position.set(-.62, 1.84, 0);
-  armRightPivot.position.set(.62, 1.84, 0);
-  armLeft.position.y = -.38;
-  armRight.position.y = -.38;
-  armLeftPivot.add(armLeft);
-  armRightPivot.add(armRight);
-  const legLeft = mesh(new THREE.CapsuleGeometry(.15, .58, 4, 7), shorts);
-  const legRight = legLeft.clone();
+  armLeftPivot.position.set(-.53, 1.86, 0);
+  armRightPivot.position.set(.53, 1.86, 0);
+  [armLeftPivot, armRightPivot].forEach(pivot => {
+    const sleeve = mesh(new THREE.CapsuleGeometry(.145, .24, 6, 10), shirt);
+    sleeve.position.y = -.19;
+    const forearm = mesh(new THREE.CapsuleGeometry(.115, .37, 6, 10), skin);
+    forearm.position.y = -.59;
+    const hand = mesh(new THREE.SphereGeometry(.135, 12, 9), skin);
+    hand.scale.y = 1.18;
+    hand.position.y = -.88;
+    pivot.add(sleeve, forearm, hand);
+  });
+
   const legLeftPivot = new THREE.Group();
   const legRightPivot = new THREE.Group();
-  legLeftPivot.position.set(-.24, .96, 0);
-  legRightPivot.position.set(.24, .96, 0);
-  legLeft.position.y = -.38;
-  legRight.position.y = -.38;
-  legLeftPivot.add(legLeft);
-  legRightPivot.add(legRight);
-  const shoeLeft = mesh(new THREE.BoxGeometry(.32, .2, .52), shoe);
-  const shoeRight = shoeLeft.clone();
-  shoeLeft.position.set(0, -.82, .13);
-  shoeRight.position.set(0, -.82, .13);
-  legLeftPivot.add(shoeLeft);
-  legRightPivot.add(shoeRight);
-  player.add(body, head, hair, eyeLeft, eyeRight, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
+  legLeftPivot.position.set(-.22, .98, 0);
+  legRightPivot.position.set(.22, .98, 0);
+  [legLeftPivot, legRightPivot].forEach(pivot => {
+    const thigh = mesh(new THREE.CapsuleGeometry(.17, .28, 6, 10), shorts);
+    thigh.position.y = -.22;
+    const shin = mesh(new THREE.CapsuleGeometry(.135, .38, 6, 10), skin);
+    shin.position.y = -.62;
+    const sneaker = mesh(new THREE.BoxGeometry(.34, .22, .58), shoe);
+    sneaker.position.set(0, -.92, .13);
+    const sneakerSole = mesh(new THREE.BoxGeometry(.36, .07, .62), sole);
+    sneakerSole.position.set(0, -1.045, .13);
+    pivot.add(thigh, shin, sneaker, sneakerSole);
+  });
+  player.add(body, collar, shortsWaist, neck, head, hair, earLeft, earRight, eyeLeft, eyeRight, nose, mouth, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
   playerParts = { body, head, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
   player.position.set(session?.player?.x ?? START_POSITION.x, .04, session?.player?.z ?? START_POSITION.z);
+  player.rotation.y = session?.player?.heading ?? Math.PI / 2;
   scene.add(player);
 
   rewardCone = createIceCreamCone(.86);
@@ -541,14 +770,14 @@ function makeCoin(index){
   const group = new THREE.Group();
   const gold = new THREE.MeshStandardMaterial({ color:0xffcf38, emissive:0xb36a00, emissiveIntensity:.34, roughness:.32, metalness:.62, flatShading:true });
   const edge = new THREE.MeshStandardMaterial({ color:0xffe979, roughness:.25, metalness:.72 });
-  const disc = mesh(new THREE.CylinderGeometry(.56, .56, .18, 28), gold);
+  const disc = mesh(new THREE.CylinderGeometry(.7, .7, .2, 36), gold);
   disc.rotation.x = Math.PI / 2;
-  const ring = mesh(new THREE.TorusGeometry(.37, .07, 7, 22), edge);
-  ring.position.z = .1;
+  const ring = mesh(new THREE.TorusGeometry(.46, .075, 9, 28), edge);
+  ring.position.z = .11;
   group.add(disc, ring);
   const location = COIN_LOCATIONS[index];
-  group.position.set(location.x, 1.15, location.z);
-  group.userData = { index, baseY:1.15, collecting:false, collectStartedAt:0 };
+  group.position.set(location.x, 1.35, location.z);
+  group.userData = { index, baseY:1.35, collecting:false, collectStartedAt:0 };
   group.visible = !session?.collected?.[index];
   scene.add(group);
   return group;
@@ -573,9 +802,20 @@ function setupRenderer(){
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
-  camera = new THREE.PerspectiveCamera(52, 1, .1, 180);
-  camera.position.set(START_POSITION.x + 11, 12, START_POSITION.z + 16);
+  camera = new THREE.PerspectiveCamera(58, 1, .1, 420);
+  camera.position.set(START_POSITION.x - 10.5, 6.4, START_POSITION.z);
   buildWorld();
+  cameraHeading = player?.rotation?.y ?? Math.PI / 2;
+  camera.position.set(
+    player.position.x - Math.sin(cameraHeading) * 10.8,
+    6.4,
+    player.position.z - Math.cos(cameraHeading) * 10.8
+  );
+  cameraLook.set(
+    player.position.x + Math.sin(cameraHeading) * 6.4,
+    1.9,
+    player.position.z + Math.cos(cameraHeading) * 6.4
+  );
   resizeRenderer();
   resizeObserver = new ResizeObserver(resizeRenderer);
   resizeObserver.observe(refs.shell);
@@ -610,8 +850,8 @@ function showStoreHint(message){
 }
 
 function isInsideIsland(x, z){
-  if(Math.abs(x) > 42.1) return false;
-  return Math.abs(z) < islandHalfWidth(x, .65);
+  if(Math.abs(x) > ISLAND_HALF_LENGTH - 2.6) return false;
+  return Math.abs(z) < islandHalfWidth(x, 2.6);
 }
 
 function collides(x, z){
@@ -643,18 +883,25 @@ function updatePlayer(delta, elapsed){
   }
   const input = movementInput();
   if(input.moving){
-    const speed = 7.2;
-    const dx = input.x * speed * delta;
-    const dz = input.z * speed * delta;
+    const speed = 14.5;
+    const forward = -input.z;
+    const worldX = input.x * Math.cos(cameraHeading) + forward * Math.sin(cameraHeading);
+    const worldZ = -input.x * Math.sin(cameraHeading) + forward * Math.cos(cameraHeading);
+    const dx = worldX * speed * delta;
+    const dz = worldZ * speed * delta;
     const nextX = player.position.x + dx;
     const nextZ = player.position.z + dz;
     if(canStandAt(nextX, player.position.z)) player.position.x = nextX;
     if(canStandAt(player.position.x, nextZ)) player.position.z = nextZ;
-    const targetRotation = Math.atan2(input.x, input.z);
+    const targetRotation = Math.atan2(worldX, worldZ);
     let difference = targetRotation - player.rotation.y;
     difference = Math.atan2(Math.sin(difference), Math.cos(difference));
     player.rotation.y += difference * Math.min(1, delta * 12);
-    session.player = { x:Number(player.position.x.toFixed(2)), z:Number(player.position.z.toFixed(2)) };
+    session.player = {
+      x:Number(player.position.x.toFixed(2)),
+      z:Number(player.position.z.toFixed(2)),
+      heading:Number(player.rotation.y.toFixed(4))
+    };
     if(performance.now() - lastPositionSave > 800){ persistSession(); lastPositionSave = performance.now(); }
   }
   animatePlayer(input.moving, elapsed);
@@ -674,7 +921,7 @@ function animatePlayer(moving, elapsed){
   playerParts.armRight.rotation.z = moving ? -.035 : -.06;
   playerParts.body.rotation.z = moving ? -stride * .025 : 0;
   playerParts.head.rotation.z = moving ? stride * .018 : 0;
-  playerParts.body.position.y = 1.45 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .055 : Math.sin(elapsed * 2.2) * .018);
+  playerParts.body.position.y = 1.54 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .055 : Math.sin(elapsed * 2.2) * .018);
   if(session?.phase !== 'reward') player.position.y = .04 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .035 : 0);
 }
 
@@ -683,13 +930,13 @@ function checkTriggers(){
   for(let i = 0; i < TOTAL_COINS; i++){
     if(session.collected[i] || coins[i]?.userData.collecting) continue;
     const location = COIN_LOCATIONS[i];
-    if(Math.hypot(player.position.x - location.x, player.position.z - location.z) < 1.55){
+    if(Math.hypot(player.position.x - location.x, player.position.z - location.z) < 2.45){
       openChallenge(i);
       return;
     }
   }
-  const storeDistance = Math.hypot(player.position.x - STORE_POSITION.x, player.position.z - (STORE_POSITION.z + 4.1));
-  if(storeDistance < 2.15){
+  const storeDistance = Math.hypot(player.position.x - STORE_POSITION.x, player.position.z - (STORE_POSITION.z + 7));
+  if(storeDistance < 3.1){
     if(session.phase === 'storeUnlocked') beginReward();
     else if(session.phase === 'exploring' && performance.now() - lastStoreHint > 2200){
       const remaining = TOTAL_COINS - collectedCount();
@@ -792,9 +1039,9 @@ function beginReward(){
   if(!session || session.phase !== 'storeUnlocked') return;
   session.phase = 'reward';
   rewardStartedAt = performance.now();
-  player.position.set(STORE_POSITION.x, .04, STORE_POSITION.z + 4.15);
+  player.position.set(STORE_POSITION.x, .04, STORE_POSITION.z + 7);
   player.rotation.y = Math.PI;
-  session.player = { x:player.position.x, z:player.position.z };
+  session.player = { x:player.position.x, z:player.position.z, heading:player.rotation.y };
   storeBeacon.visible = false;
   rewardCone.visible = true;
   rewardCone.scale.setScalar(.01);
@@ -853,12 +1100,31 @@ function finishReward(){
 
 function updateCamera(delta){
   if(!camera || !player) return;
-  if(session?.phase === 'reward') cameraDesired.set(player.position.x + 7.2, 7.8, player.position.z + 10.2);
-  else cameraDesired.set(player.position.x + 10.5, 11.8, player.position.z + 15.5);
-  const factor = 1 - Math.exp(-delta * 4.6);
+  let headingDifference = player.rotation.y - cameraHeading;
+  headingDifference = Math.atan2(Math.sin(headingDifference), Math.cos(headingDifference));
+  cameraHeading += headingDifference * (1 - Math.exp(-delta * 4.2));
+  cameraForward.set(Math.sin(cameraHeading), 0, Math.cos(cameraHeading));
+  const followDistance = session?.phase === 'reward' ? 8.2 : 10.8;
+  const followHeight = session?.phase === 'reward' ? 5.4 : 6.35;
+  cameraDesired.set(
+    player.position.x - cameraForward.x * followDistance,
+    player.position.y + followHeight,
+    player.position.z - cameraForward.z * followDistance
+  );
+  cameraLookDesired.set(
+    player.position.x + cameraForward.x * (session?.phase === 'reward' ? 2.2 : 6.4),
+    player.position.y + 1.85,
+    player.position.z + cameraForward.z * (session?.phase === 'reward' ? 2.2 : 6.4)
+  );
+  const factor = 1 - Math.exp(-delta * 5.2);
   camera.position.lerp(cameraDesired, factor);
-  cameraLook.set(player.position.x, 1.2, player.position.z);
+  cameraLook.lerp(cameraLookDesired, 1 - Math.exp(-delta * 7.2));
   camera.lookAt(cameraLook);
+  if(sunlight && sunlightTarget){
+    sunlight.position.set(player.position.x - 32, 55, player.position.z + 28);
+    sunlightTarget.position.set(player.position.x, 0, player.position.z);
+    sunlightTarget.updateMatrixWorld();
+  }
 }
 
 function renderFrame(now){
@@ -914,6 +1180,9 @@ function resetQuest(){
   }
   player.position.set(START_POSITION.x, .04, START_POSITION.z);
   player.rotation.y = Math.PI / 2;
+  cameraHeading = player.rotation.y;
+  camera.position.set(START_POSITION.x - 10.8, 6.4, START_POSITION.z);
+  cameraLook.set(START_POSITION.x + 6, 1.9, START_POSITION.z);
   rewardCone.visible = false;
   rebuildCoins();
   persistSession();
@@ -1062,6 +1331,18 @@ function start(api){
   } else {
     if(!session) session = createSession();
     player.position.set(session?.player?.x ?? START_POSITION.x, .04, session?.player?.z ?? START_POSITION.z);
+    player.rotation.y = session?.player?.heading ?? Math.PI / 2;
+    cameraHeading = player.rotation.y;
+    camera.position.set(
+      player.position.x - Math.sin(cameraHeading) * 10.8,
+      6.4,
+      player.position.z - Math.cos(cameraHeading) * 10.8
+    );
+    cameraLook.set(
+      player.position.x + Math.sin(cameraHeading) * 6.4,
+      1.9,
+      player.position.z + Math.cos(cameraHeading) * 6.4
+    );
     player.position.y = .04;
     if(rewardCone) rewardCone.visible = false;
     rebuildCoins();
@@ -1109,4 +1390,4 @@ function stop(){
 
 window.IslandQuest = { start, stop };
 
-export { TOTAL_COINS, COIN_LOCATIONS, normalize, shuffled, islandHalfWidth };
+export { TOTAL_COINS, WORLD_SCALE, ISLAND_HALF_LENGTH, COIN_LOCATIONS, normalize, shuffled, islandHalfWidth };
