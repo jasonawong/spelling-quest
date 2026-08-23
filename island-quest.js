@@ -28,9 +28,9 @@ const COIN_LOCATIONS = [
   { x: 36 * ISLAND_X_SCALE, z: 1.8 * WORLD_SCALE, label: 'island point' }
 ];
 const HOUSE_LOCATIONS = [
-  { x:-18 * ISLAND_X_SCALE, z:-11 * WORLD_SCALE, color:0xd7d4b7, scale:1.05, rotation:.16 },
-  { x:2 * ISLAND_X_SCALE, z:12 * WORLD_SCALE, color:0xb9d4c7, scale:1, rotation:-.18 },
-  { x:8 * ISLAND_X_SCALE, z:-14 * WORLD_SCALE, color:0xd7c8bb, scale:1.06, rotation:.11 }
+  { x:-18 * ISLAND_X_SCALE, z:-11 * WORLD_SCALE, color:0xe4dfcb, scale:1.05, rotation:.16 },
+  { x:2 * ISLAND_X_SCALE, z:12 * WORLD_SCALE, color:0xddd8c6, scale:1, rotation:-.18 },
+  { x:8 * ISLAND_X_SCALE, z:-14 * WORLD_SCALE, color:0xe9e3d1, scale:1.06, rotation:.11 }
 ];
 const TREE_LOCATIONS = {
   palms:[[-36,-8,.9],[-18,9,.86],[5,-9.5,.94],[24,8.5,.9],[37,-7,.82]],
@@ -506,51 +506,156 @@ function addWindow(group, x, y, z, scale = 1){
 
 function addHouse(x, z, color, scale = 1, rotation = 0){
   const group = new THREE.Group();
-  const wall = material(color, .72);
-  const timber = material(0x7a543b, .88);
-  const trim = material(0xf8f0dd, .76);
-  [-1.35, 1.35].forEach(px => [-1.1, 1.1].forEach(pz => {
-    const stilt = mesh(new THREE.CylinderGeometry(.13 * scale, .17 * scale, .9 * scale, 10), timber);
-    stilt.position.set(px * scale, .45 * scale, pz * scale);
-    group.add(stilt);
-  }));
-  const body = mesh(new THREE.BoxGeometry(4.2 * scale, 2.65 * scale, 3.45 * scale), wall);
-  body.position.y = 2.16 * scale;
-  const floor = mesh(new THREE.BoxGeometry(4.65 * scale, .18 * scale, 4.1 * scale), timber);
-  floor.position.y = .92 * scale;
-  const roofLeft = mesh(new THREE.BoxGeometry(2.9 * scale, .18 * scale, 4.25 * scale), material(0x795044, .9));
-  const roofRight = roofLeft.clone();
-  roofLeft.position.set(-1.08 * scale, 3.72 * scale, 0);
-  roofRight.position.set(1.08 * scale, 3.72 * scale, 0);
-  roofLeft.rotation.z = -.47;
-  roofRight.rotation.z = .47;
-  const porch = mesh(new THREE.BoxGeometry(4.5 * scale, .16 * scale, 1.25 * scale), timber);
-  porch.position.set(0, 1.05 * scale, 2.18 * scale);
-  const door = mesh(new THREE.BoxGeometry(.85 * scale, 1.75 * scale, .16), material(0xa66f45), false);
-  door.position.set(0, 1.92 * scale, 1.79 * scale);
-  const knob = mesh(new THREE.SphereGeometry(.055 * scale, 8, 6), material(0xc99d45, .35, .5), false);
-  knob.position.set(.27 * scale, 1.9 * scale, 1.9 * scale);
-  group.add(body, floor, roofLeft, roofRight, porch, door, knob);
-  addWindow(group, -1.35 * scale, 2.27 * scale, 1.79 * scale, scale);
-  addWindow(group, 1.35 * scale, 2.27 * scale, 1.79 * scale, scale);
-  [-1.9, 1.9].forEach(px => {
-    const post = mesh(new THREE.CylinderGeometry(.055 * scale, .065 * scale, 1.45 * scale, 8), trim);
-    post.position.set(px * scale, 1.75 * scale, 2.65 * scale);
+  const wall = material(color, .82);
+  const sidingLight = material(0xf3eedc, .86);
+  const foundationMat = material(0x66706b, .94);
+  const foundationShade = material(0x333f3d, .96);
+  const trim = material(0xf8f1df, .78);
+  const roofMat = material(0x707b77, .88, .06);
+  const roofEdgeMat = material(0x4f5c59, .92, .04);
+  const porchMat = material(0xaab8b0, .9);
+  const teal = material(0x3b8990, .76);
+  const tealShade = material(0x286970, .82);
+  const railMat = material(0x283938, .88);
+  const glassMat = material(0x86bcc1, .2, .03, { emissive:0x294c4f, emissiveIntensity:.1 });
+
+  const foundation = mesh(new THREE.BoxGeometry(5.55 * scale,.68 * scale,3.48 * scale),foundationMat);
+  foundation.position.y = .34 * scale;
+  const body = mesh(new THREE.BoxGeometry(5.5 * scale,2.38 * scale,3.45 * scale),wall);
+  body.position.y = 1.86 * scale;
+  group.add(foundation,body);
+
+  for(let index = 0; index < 10; index++){
+    const siding = mesh(new THREE.BoxGeometry(5.42 * scale,.035 * scale,.055 * scale),sidingLight,false,false);
+    siding.position.set(0,(.78 + index * .225) * scale,1.752 * scale);
+    siding.userData.isInkOutline = true;
+    group.add(siding);
+  }
+
+  [-1.7,1.72].forEach(px => {
+    const vent = mesh(new THREE.BoxGeometry(.72 * scale,.25 * scale,.06 * scale),foundationShade,false);
+    vent.position.set(px * scale,.34 * scale,1.78 * scale);
+    group.add(vent);
+    for(let slot = -2; slot <= 2; slot++){
+      const louver = mesh(new THREE.BoxGeometry(.075 * scale,.16 * scale,.025 * scale),railMat,false,false);
+      louver.position.set((px + slot * .12) * scale,.34 * scale,1.82 * scale);
+      louver.userData.isInkOutline = true;
+      group.add(louver);
+    }
+  });
+
+  const roof = mesh(new THREE.CylinderGeometry(.58,1,.72,4,1,false),roofMat);
+  roof.position.y = 3.38 * scale;
+  roof.rotation.y = Math.PI / 4;
+  roof.scale.set(3.62 * scale,scale,2.55 * scale);
+  const frontEave = mesh(new THREE.BoxGeometry(6.35 * scale,.14 * scale,.34 * scale),roofEdgeMat);
+  frontEave.position.set(0,3.08 * scale,1.92 * scale);
+  const sideEaveLeft = mesh(new THREE.BoxGeometry(.28 * scale,.14 * scale,4.12 * scale),roofEdgeMat);
+  const sideEaveRight = sideEaveLeft.clone();
+  sideEaveLeft.position.set(-2.98 * scale,3.08 * scale,0);
+  sideEaveRight.position.set(2.98 * scale,3.08 * scale,0);
+  group.add(roof,frontEave,sideEaveLeft,sideEaveRight);
+
+  const porch = mesh(new THREE.BoxGeometry(2.85 * scale,.18 * scale,1.4 * scale),porchMat);
+  porch.position.set(1.26 * scale,.76 * scale,2.2 * scale);
+  group.add(porch);
+
+  const door = mesh(new THREE.BoxGeometry(.9 * scale,1.88 * scale,.14 * scale),teal,false);
+  door.position.set(.72 * scale,1.69 * scale,1.79 * scale);
+  const doorInset = mesh(new THREE.BoxGeometry(.62 * scale,.74 * scale,.035 * scale),glassMat,false);
+  doorInset.position.set(.72 * scale,2.03 * scale,1.875 * scale);
+  const doorDivider = mesh(new THREE.BoxGeometry(.045 * scale,.74 * scale,.04 * scale),trim,false);
+  doorDivider.position.set(.72 * scale,2.03 * scale,1.9 * scale);
+  const transom = mesh(new THREE.BoxGeometry(1.02 * scale,.3 * scale,.13 * scale),glassMat,false);
+  transom.position.set(.72 * scale,2.82 * scale,1.79 * scale);
+  const knob = mesh(new THREE.SphereGeometry(.052 * scale,8,6),material(0xc9a35c,.35,.45),false);
+  knob.position.set(1.02 * scale,1.68 * scale,1.9 * scale);
+  group.add(door,doorInset,doorDivider,transom,knob);
+
+  function addCottageWindow(px){
+    const frame = mesh(new THREE.BoxGeometry(1.1 * scale,1.34 * scale,.13 * scale),trim,false);
+    const glass = mesh(new THREE.BoxGeometry(.86 * scale,1.08 * scale,.16 * scale),glassMat,false);
+    const dividerH = mesh(new THREE.BoxGeometry(.86 * scale,.055 * scale,.18 * scale),trim,false);
+    const dividerV = mesh(new THREE.BoxGeometry(.055 * scale,1.08 * scale,.18 * scale),trim,false);
+    [frame,glass,dividerH,dividerV].forEach(item => item.position.set(px * scale,1.91 * scale,1.79 * scale));
+    group.add(frame,glass,dividerH,dividerV);
+    [-.72,.72].forEach(side => {
+      const shutter = mesh(new THREE.BoxGeometry(.28 * scale,1.28 * scale,.14 * scale),side < 0 ? tealShade : teal,false);
+      shutter.position.set((px + side) * scale,1.91 * scale,1.8 * scale);
+      group.add(shutter);
+      for(let slat = -2; slat <= 2; slat++){
+        const line = mesh(new THREE.BoxGeometry(.22 * scale,.035 * scale,.035 * scale),trim,false,false);
+        line.position.set((px + side) * scale,(1.91 + slat * .2) * scale,1.885 * scale);
+        line.userData.isInkOutline = true;
+        group.add(line);
+      }
+    });
+  }
+  addCottageWindow(-1.35);
+
+  [.04,2.55].forEach(px => {
+    const post = mesh(new THREE.BoxGeometry(.095 * scale,2.28 * scale,.095 * scale),railMat);
+    post.position.set(px * scale,1.91 * scale,2.78 * scale);
     group.add(post);
   });
-  const rail = mesh(new THREE.BoxGeometry(4 * scale, .08 * scale, .08 * scale), trim);
-  rail.position.set(0, 1.62 * scale, 2.65 * scale);
-  group.add(rail);
-  for(let i = 0; i < 3; i++){
-    const step = mesh(new THREE.BoxGeometry(1.25 * scale, .14 * scale, .42 * scale), timber);
-    step.position.set(0, (.74 - i * .2) * scale, (2.55 + i * .34) * scale);
+  const frontRail = mesh(new THREE.BoxGeometry(1.24 * scale,.075 * scale,.075 * scale),railMat);
+  frontRail.position.set(1.92 * scale,1.37 * scale,2.78 * scale);
+  const sideRail = mesh(new THREE.BoxGeometry(.075 * scale,.075 * scale,1.02 * scale),railMat);
+  sideRail.position.set(2.55 * scale,1.37 * scale,2.27 * scale);
+  group.add(frontRail,sideRail);
+  [1.37,1.7,2.03,2.36].forEach(px => {
+    const spindle = mesh(new THREE.BoxGeometry(.035 * scale,.55 * scale,.035 * scale),railMat,false);
+    spindle.position.set(px * scale,1.09 * scale,2.78 * scale);
+    group.add(spindle);
+  });
+  [1.93,2.23,2.52].forEach(pz => {
+    const spindle = mesh(new THREE.BoxGeometry(.035 * scale,.55 * scale,.035 * scale),railMat,false);
+    spindle.position.set(2.55 * scale,1.09 * scale,pz * scale);
+    group.add(spindle);
+  });
+
+  for(let index = 0; index < 3; index++){
+    const step = mesh(new THREE.BoxGeometry(1.08 * scale,.18 * scale,(.45 + index * .06) * scale),porchMat);
+    step.position.set(.72 * scale,(.57 - index * .19) * scale,(2.55 + index * .36) * scale);
     group.add(step);
   }
+  [-.02,1.46].forEach(px => {
+    const stairRail = cylinderBetween(
+      new THREE.Vector3(px * scale,1.1 * scale,2.42 * scale),
+      new THREE.Vector3(px * scale,.56 * scale,3.22 * scale),
+      .035 * scale,
+      railMat,
+      7
+    );
+    group.add(stairRail);
+  });
+
+  [1.62,2.18].forEach((px,index) => {
+    const seat = mesh(new THREE.BoxGeometry(.42 * scale,.08 * scale,.42 * scale),railMat,false);
+    seat.position.set(px * scale,1.07 * scale,2.1 * scale);
+    const back = mesh(new THREE.BoxGeometry(.42 * scale,.62 * scale,.07 * scale),railMat,false);
+    back.position.set(px * scale,1.34 * scale,1.91 * scale);
+    back.rotation.x = -.12;
+    group.add(seat,back);
+    [-.16,.16].forEach(dx => {
+      const leg = mesh(new THREE.BoxGeometry(.04 * scale,.35 * scale,.04 * scale),railMat,false);
+      leg.position.set((px + dx) * scale,.87 * scale,(2.1 + (index ? .04 : 0)) * scale);
+      group.add(leg);
+    });
+  });
+
+  const shrubMats = [material(0x416d4e,.92),material(0x5b8159,.9),material(0x789262,.9)];
+  [-2.25,-1.72,-.85].forEach((px,index) => {
+    const shrub = mesh(new THREE.IcosahedronGeometry((.42 + index * .04) * scale,1),shrubMats[index % shrubMats.length]);
+    shrub.scale.set(1.15,.72,.8);
+    shrub.position.set(px * scale,.45 * scale,2.05 * scale);
+    group.add(shrub);
+  });
   group.position.set(x, 0, z);
   group.rotation.y = rotation;
-  addInkOutline(group, .028, .14);
+  addInkOutline(group,.022,.16);
   scene.add(group);
-  addCollider(x, z, 2.8 * scale);
+  addCollider(x,z,3.25 * scale);
   return group;
 }
 
