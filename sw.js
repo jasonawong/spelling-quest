@@ -1,5 +1,5 @@
-const CACHE = 'spelling-quest-v52';
-const APP_VERSION = '52';
+const CACHE = 'spelling-quest-v54';
+const APP_VERSION = '54';
 const DETECTIVE_ART_VERSION = 48;
 const DETECTIVE_WORDS = ['wrench','hello','yellow','bread','kept','better','sentence','eggshell','medal','metal','remember','reading','peaches','peace','piece','east','west','many','special','beanstalk'];
 const PICTURE_OVERRIDES = ['peaches','peace','many','special','beanstalk'];

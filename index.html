@@ -386,7 +386,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=52" />
+  <link rel="stylesheet" href="island-quest.css?v=54" />
 </head>
 <body>
 <div class="app">
@@ -1089,7 +1089,8 @@
     speechSynthesis.speak(u);
   }
   function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),1800); }
-  function show(id){ if(id!=='sky') stopSky(); if(id!=='bridge') stopBridge(); if(id!=='island') window.IslandQuest?.stop(); document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
+  let islandLaunchAttempt=0;
+  function show(id){ if(id!=='sky') stopSky(); if(id!=='bridge') stopBridge(); if(id!=='island'){ islandLaunchAttempt++; window.IslandQuest?.stop(); } document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
   function requireWords(){ if(!state.words || state.words.length<1){ toast('The word list is empty.'); return false; } return true; }
   function showWordPicture(element, word){
     const override=VISUAL_OVERRIDES[word];
@@ -1133,13 +1134,25 @@
   }
   document.getElementById('wordListBtn').onclick=()=>{renderWordList();show('wordList');};
 
-  function startIsland(){
+  function waitForIslandQuest(timeoutMs=12000){
+    return new Promise(resolve=>{
+      const startedAt=performance.now();
+      const check=()=>{
+        if(window.IslandQuest){ resolve(window.IslandQuest); return; }
+        if(performance.now()-startedAt>=timeoutMs){ resolve(null); return; }
+        setTimeout(check,50);
+      };
+      check();
+    });
+  }
+  async function startIsland(){
+    const launchAttempt=++islandLaunchAttempt;
     show('island');
-    const launch=()=>{
-      if(!window.IslandQuest){ toast('The island is still loading. Try again in a moment.'); show('home'); return; }
-      window.IslandQuest.start({words:state.words,speak,showWordPicture,record,goHome:()=>show('home')});
-    };
-    window.IslandQuest ? launch() : setTimeout(launch,120);
+    const quest=await waitForIslandQuest();
+    const islandStillOpen=document.getElementById('island').classList.contains('active');
+    if(launchAttempt!==islandLaunchAttempt || !islandStillOpen) return;
+    if(!quest){ toast('Ice Cream Quest could not finish loading. Please try again.'); show('home'); return; }
+    quest.start({words:state.words,speak,showWordPicture,record,goHome:()=>show('home')});
   }
 
   // Navigation
@@ -1583,18 +1596,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    let refreshingForUpdate = false;
-    navigator.serviceWorker.addEventListener('controllerchange',()=>{
-      if(refreshingForUpdate) return;
-      refreshingForUpdate = true;
-      location.reload();
-    });
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=52',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=54',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=52"></script>
+<script type="module" src="island-quest.js?v=54"></script>
 </body>
 </html>
