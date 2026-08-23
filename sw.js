@@ -1,8 +1,8 @@
-const CACHE = 'spelling-quest-v48';
+const CACHE = 'spelling-quest-v49';
 const DETECTIVE_ART_VERSION = 48;
 const DETECTIVE_WORDS = ['wrench','hello','yellow','bread','kept','better','sentence','eggshell','medal','metal','remember','reading','peaches','peace','piece','east','west','many','special','beanstalk'];
 const PICTURE_OVERRIDES = ['peaches','peace','many','special','beanstalk'];
-const ASSETS = ['./','./index.html','./manifest.webmanifest','./icon-192.png','./icon-512.png','./word-picture-sprite.png','./sound-the-word-capybara.png','./sky-high-balloon.png',...PICTURE_OVERRIDES.map(word=>`./word-pictures/${word}.png`),...DETECTIVE_WORDS.map(word=>`./word-detective/${word}.png?v=${DETECTIVE_ART_VERSION}`)];
+const ASSETS = ['./','./index.html','./island-quest.css','./island-quest.js','./vendor/three.module.min.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./word-picture-sprite.png','./sound-the-word-capybara.png','./sky-high-balloon.png',...PICTURE_OVERRIDES.map(word=>`./word-pictures/${word}.png`),...DETECTIVE_WORDS.map(word=>`./word-detective/${word}.png?v=${DETECTIVE_ART_VERSION}`)];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(ASSETS)).then(()=>self.skipWaiting()));
 });

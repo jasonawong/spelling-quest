@@ -1,0 +1,424 @@
+.island-card {
+  --premier-shadow:#7c5a2d;
+  background:linear-gradient(135deg,#dff8ff 0%,#bfeee7 46%,#fff0b7 100%);
+}
+.island-card::before {
+  content:'';
+  position:absolute;
+  right:-35px;
+  bottom:-90px;
+  width:310px;
+  height:190px;
+  border:4px solid rgba(23,76,85,.22);
+  border-radius:50%;
+  background:linear-gradient(#5fc7d2 0 38%,#f1d58d 39% 54%,#77b85d 55%);
+  transform:rotate(-8deg);
+}
+.island-card .premier-badge { background:#ffd24e; color:#3e3216 !important; }
+.island-card-art {
+  position:relative;
+  z-index:2;
+  width:150px;
+  min-width:150px;
+  height:138px;
+}
+.island-card-ground {
+  position:absolute;
+  left:4px;
+  right:4px;
+  bottom:12px;
+  height:65px;
+  border:3px solid #173d42;
+  border-radius:52% 48% 44% 56%;
+  background:linear-gradient(#72be62 0 55%,#f3d887 56%);
+  box-shadow:7px 8px 0 rgba(23,61,66,.16);
+  transform:rotate(-3deg);
+}
+.island-card-lighthouse {
+  position:absolute;
+  z-index:2;
+  left:28px;
+  bottom:45px;
+  width:26px;
+  height:75px;
+  border:3px solid #173d42;
+  background:repeating-linear-gradient(to bottom,#f6f0dd 0 13px,#ed5d57 13px 26px);
+  clip-path:polygon(20% 0,80% 0,100% 100%,0 100%);
+}
+.island-card-lighthouse::before {
+  content:'';
+  position:absolute;
+  left:-8px;
+  top:-17px;
+  width:36px;
+  height:15px;
+  border:3px solid #173d42;
+  border-radius:50% 50% 15% 15%;
+  background:#243d43;
+}
+.island-card-shop {
+  position:absolute;
+  z-index:2;
+  right:19px;
+  bottom:39px;
+  width:55px;
+  height:45px;
+  border:3px solid #173d42;
+  border-radius:6px;
+  background:#ffb5b3;
+  box-shadow:5px 5px 0 rgba(23,61,66,.14);
+}
+.island-card-shop::before {
+  content:'';
+  position:absolute;
+  left:-5px;
+  right:-5px;
+  top:-13px;
+  height:15px;
+  border:3px solid #173d42;
+  border-radius:5px 5px 2px 2px;
+  background:repeating-linear-gradient(90deg,#fff3df 0 10px,#ef625e 10px 20px);
+}
+.island-card-coin {
+  position:absolute;
+  z-index:3;
+  left:75px;
+  top:18px;
+  width:33px;
+  height:33px;
+  display:grid;
+  place-items:center;
+  border:3px solid #6d4f19;
+  border-radius:50%;
+  background:#ffd247;
+  color:#7d5817;
+  box-shadow:4px 5px 0 rgba(109,79,25,.23);
+  font-size:1.15rem;
+  font-weight:1000;
+  transform:rotate(7deg);
+}
+
+.island-game-shell {
+  position:relative;
+  min-height:clamp(520px,calc(100svh - 150px),760px);
+  overflow:hidden;
+  border:3px solid #163d42;
+  border-radius:28px;
+  background:#77d6e8;
+  box-shadow:0 12px 0 #7c5a2d,0 18px 32px rgba(28,64,81,.2);
+  isolation:isolate;
+}
+.island-canvas-wrap { position:absolute; inset:0; }
+.island-canvas-wrap canvas { width:100%; height:100%; display:block; touch-action:none; }
+.island-vignette {
+  position:absolute;
+  z-index:3;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.12),transparent 32%,rgba(17,56,58,.14));
+  box-shadow:inset 0 0 80px rgba(14,61,71,.18);
+}
+.island-hud {
+  position:absolute;
+  z-index:8;
+  top:14px;
+  left:14px;
+  right:14px;
+  display:flex;
+  align-items:flex-start;
+  gap:9px;
+  pointer-events:none;
+}
+.island-hud-card {
+  min-height:46px;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:8px 13px;
+  border:3px solid #163d42;
+  border-radius:16px;
+  background:rgba(255,250,229,.94);
+  color:#163d42;
+  box-shadow:0 5px 0 rgba(22,61,66,.24);
+  font-size:.84rem;
+  font-weight:1000;
+  backdrop-filter:blur(4px);
+}
+.island-counter { white-space:nowrap; }
+.island-objective { flex:1; line-height:1.25; }
+.island-home {
+  position:absolute;
+  z-index:12;
+  right:14px;
+  bottom:14px;
+  min-height:46px;
+  padding:0 14px;
+  border:3px solid #163d42;
+  border-radius:14px;
+  background:#fff9e7;
+  color:#163d42;
+  box-shadow:0 4px 0 #163d42;
+  font-weight:1000;
+  cursor:pointer;
+}
+.island-home:active { transform:translateY(3px); box-shadow:0 1px 0 #163d42; }
+.island-store-status {
+  position:absolute;
+  z-index:7;
+  top:78px;
+  left:50%;
+  max-width:calc(100% - 32px);
+  padding:7px 12px;
+  border:2px solid #163d42;
+  border-radius:999px;
+  background:#ffefaa;
+  color:#4b3b17;
+  box-shadow:0 4px 0 rgba(22,61,66,.18);
+  font-size:.78rem;
+  font-weight:1000;
+  text-align:center;
+  transform:translateX(-50%);
+  transition:opacity .2s ease,transform .2s ease;
+  pointer-events:none;
+}
+.island-store-status[hidden] { display:block; opacity:0; transform:translate(-50%,-8px); }
+.island-controls-tip {
+  position:absolute;
+  z-index:7;
+  left:14px;
+  bottom:16px;
+  padding:7px 11px;
+  border:2px solid rgba(22,61,66,.86);
+  border-radius:999px;
+  background:rgba(255,250,229,.86);
+  color:#264e50;
+  font-size:.72rem;
+  font-weight:900;
+  pointer-events:none;
+}
+.island-joystick {
+  position:absolute;
+  z-index:11;
+  left:18px;
+  bottom:55px;
+  width:116px;
+  height:116px;
+  display:none;
+  border:3px solid rgba(22,61,66,.72);
+  border-radius:50%;
+  background:rgba(255,250,229,.4);
+  box-shadow:inset 0 0 0 10px rgba(255,255,255,.12);
+  touch-action:none;
+}
+.island-joystick::before,.island-joystick::after {
+  content:'';
+  position:absolute;
+  background:rgba(22,61,66,.22);
+  border-radius:99px;
+}
+.island-joystick::before { left:20px; right:20px; top:56px; height:3px; }
+.island-joystick::after { top:20px; bottom:20px; left:56px; width:3px; }
+.island-joystick-knob {
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:52px;
+  height:52px;
+  border:3px solid #163d42;
+  border-radius:50%;
+  background:#ffd24e;
+  box-shadow:0 5px 0 rgba(22,61,66,.35);
+  transform:translate(-50%,-50%);
+}
+.island-overlay {
+  position:absolute;
+  z-index:20;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:72px 18px 40px;
+  background:rgba(61,150,161,.54);
+  backdrop-filter:blur(4px);
+}
+.island-overlay[hidden],.island-challenge[hidden] { display:none; }
+.island-overlay-card {
+  width:min(510px,96%);
+  padding:24px;
+  border:4px solid #163d42;
+  border-radius:25px;
+  background:#fff9e7;
+  color:#163d42;
+  box-shadow:10px 11px 0 rgba(22,61,66,.3);
+  text-align:center;
+}
+.island-eyebrow {
+  display:inline-block;
+  padding:5px 10px;
+  border:2px solid #163d42;
+  border-radius:999px;
+  background:#ffd24e;
+  color:#4c3a13;
+  font-size:.75rem;
+  font-weight:1000;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.island-overlay-card h2 { margin:8px 0; font-size:clamp(1.8rem,5vw,2.55rem); }
+.island-overlay-card p { margin:0 auto 17px; max-width:42ch; color:#3d6265; font-weight:800; line-height:1.48; }
+.island-start,.island-secondary {
+  min-height:54px;
+  padding:0 21px;
+  border:3px solid #163d42;
+  border-radius:15px;
+  color:#163d42;
+  box-shadow:0 5px 0 #163d42;
+  font-weight:1000;
+  cursor:pointer;
+}
+.island-start { background:#ffd24e; }
+.island-secondary { background:#fff; }
+.island-start:active,.island-secondary:active { transform:translateY(4px); box-shadow:0 1px 0 #163d42; }
+.island-overlay-actions { display:flex; justify-content:center; gap:10px; flex-wrap:wrap; }
+.island-result-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:17px 0; }
+.island-result-card { padding:11px 8px; border:2px solid #c7d9d6; border-radius:15px; background:#f7fff9; }
+.island-result-card strong { display:block; color:#174e53; font-size:1.25rem; }
+.island-result-card span { color:#607676; font-size:.75rem; font-weight:900; }
+
+.island-challenge {
+  position:absolute;
+  z-index:24;
+  inset:0;
+  display:grid;
+  place-items:center;
+  padding:18px;
+  background:rgba(17,56,60,.58);
+  backdrop-filter:blur(4px);
+}
+.island-challenge-card {
+  width:min(580px,97%);
+  max-height:calc(100% - 20px);
+  overflow:auto;
+  padding:19px;
+  border:4px solid #163d42;
+  border-radius:24px;
+  background:#fff9e7;
+  box-shadow:10px 11px 0 rgba(11,42,45,.36);
+}
+.island-challenge-top {
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+  color:#3c6466;
+  font-size:.82rem;
+  font-weight:1000;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+}
+.island-challenge-content { display:grid; grid-template-columns:170px minmax(0,1fr); align-items:center; gap:17px; }
+.island-picture { width:170px; border:3px solid #163d42; border-radius:19px; box-shadow:5px 6px 0 rgba(22,61,66,.18); }
+.island-challenge-copy h2 { margin:0 0 5px; color:#163d42; font-size:1.6rem; }
+.island-challenge-copy p { margin:0 0 11px; color:#526e70; font-weight:800; line-height:1.35; }
+.island-hear {
+  min-height:45px;
+  padding:0 13px;
+  border:3px solid #163d42;
+  border-radius:13px;
+  background:#71d0d8;
+  color:#163d42;
+  box-shadow:0 4px 0 #163d42;
+  font-weight:1000;
+  cursor:pointer;
+}
+.island-answer-row { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:9px; margin-top:12px; }
+.island-answer {
+  min-width:0;
+  height:56px;
+  border:3px solid #163d42;
+  border-radius:14px;
+  padding:0 13px;
+  background:white;
+  color:#163d42;
+  outline:none;
+  font-size:1.5rem;
+  font-weight:1000;
+  letter-spacing:.04em;
+  text-align:center;
+  text-transform:lowercase;
+}
+.island-answer:focus { box-shadow:0 0 0 4px rgba(113,208,216,.46); }
+.island-check {
+  min-width:94px;
+  border:3px solid #163d42;
+  border-radius:14px;
+  background:#ffd24e;
+  color:#163d42;
+  box-shadow:0 4px 0 #163d42;
+  font-weight:1000;
+  cursor:pointer;
+}
+.island-check:disabled { opacity:.6; }
+.island-feedback { min-height:26px; margin-top:9px; color:#4d6c6d; font-size:.94rem; font-weight:1000; }
+.island-feedback.good { color:#18704c; }
+.island-feedback.bad { color:#b8383c; }
+
+.island-reward-caption {
+  position:absolute;
+  z-index:18;
+  left:50%;
+  bottom:88px;
+  width:min(440px,calc(100% - 32px));
+  padding:12px 16px;
+  border:3px solid #163d42;
+  border-radius:17px;
+  background:#fff9e7;
+  color:#163d42;
+  box-shadow:0 5px 0 rgba(22,61,66,.3);
+  font-weight:1000;
+  text-align:center;
+  transform:translateX(-50%);
+}
+.island-reward-caption[hidden] { display:none; }
+
+@media (hover:none),(pointer:coarse) {
+  .island-joystick { display:block; }
+  .island-controls-tip { display:none; }
+}
+@media (max-width:600px) {
+  .island-card-art { width:108px; min-width:108px; height:126px; }
+  .island-card-ground { left:0; right:0; }
+  .island-card-lighthouse { left:16px; }
+  .island-card-shop { right:7px; }
+  .island-card-coin { left:53px; }
+  .island-game-shell { min-height:calc(100svh - 126px); border-radius:22px; }
+  .island-hud { top:9px; left:9px; right:9px; gap:6px; }
+  .island-hud-card { min-height:40px; padding:6px 9px; border-radius:13px; font-size:.73rem; }
+  .island-objective { max-width:55%; }
+  .island-home { right:10px; bottom:10px; min-height:42px; }
+  .island-store-status { top:64px; }
+  .island-challenge { padding:10px; }
+  .island-challenge-card { padding:14px; }
+  .island-challenge-content { grid-template-columns:105px minmax(0,1fr); gap:12px; }
+  .island-picture { width:105px; border-radius:15px; }
+  .island-challenge-copy h2 { font-size:1.28rem; }
+  .island-hear { min-height:40px; }
+  .island-answer-row { grid-template-columns:1fr; }
+  .island-answer { height:52px; }
+  .island-check { min-height:48px; }
+  .island-overlay { padding:56px 12px 24px; }
+  .island-overlay-card { padding:18px; }
+  .island-result-grid { grid-template-columns:1fr 1fr; }
+  .island-result-card:last-child { grid-column:1/-1; }
+}
+@media (max-height:650px) and (orientation:landscape) {
+  .island-game-shell { min-height:460px; height:calc(100svh - 104px); }
+  .island-challenge-content { grid-template-columns:120px minmax(0,1fr); }
+  .island-picture { width:120px; }
+  .island-overlay-card { padding:15px; }
+  .island-overlay-card h2 { font-size:1.65rem; }
+  .island-overlay-card p { margin-bottom:11px; font-size:.88rem; }
+}
+@media (prefers-reduced-motion:reduce) {
+  .island-store-status,.island-home,.island-start,.island-secondary { transition:none !important; }
+}

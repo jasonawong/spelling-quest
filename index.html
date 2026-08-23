@@ -7,8 +7,16 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Spelling Quest" />
+  <meta name="description" content="A touch-friendly spelling practice adventure with pictures, speech, games, and a Sullivan’s Island coin quest." />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Spelling Quest" />
+  <meta property="og:description" content="Practice spelling through playful challenges, including a 3D Sullivan’s Island coin adventure." />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Spelling Quest" />
+  <meta name="twitter:description" content="Practice spelling through playful challenges, including a 3D Sullivan’s Island coin adventure." />
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="apple-touch-icon" href="icon-192.png" />
+  <link rel="stylesheet" href="island-quest.css" />
   <title>Spelling Quest</title>
   <style>
     :root {
@@ -405,6 +413,12 @@
       </div>
 
       <div class="grid">
+        <button class="game-card premier-card island-card" data-action="island">
+          <div class="island-card-art" aria-hidden="true">
+            <span class="island-card-ground"></span><span class="island-card-lighthouse"></span><span class="island-card-shop"></span><span class="island-card-coin">★</span>
+          </div>
+          <div class="premier-card-copy"><span class="premier-badge">Premier island adventure</span><strong>Sullivan’s Island Coin Quest</strong><span>Explore the island, collect 10 gold coins, spell each hidden word, and unlock a giant ice cream cone.</span></div>
+        </button>
         <button class="game-card premier-card sky-card" data-action="sky">
           <div class="sky-card-art" aria-hidden="true"><span class="sky-card-cloud one"></span><span class="sky-card-cloud two"></span><img src="sky-high-balloon.png" alt="" /></div>
           <div class="premier-card-copy"><span class="premier-badge">Premier flight</span><strong>Sky-High Spelling</strong><span>Spell all 20 words to fire the burner, stay in the air, and complete the sky route.</span></div>
@@ -889,6 +903,57 @@
       </div>
     </section>
 
+    <section id="island" class="screen">
+      <div class="island-game-shell" id="islandGameShell" aria-label="Sullivan’s Island spelling coin adventure">
+        <div class="island-canvas-wrap"><canvas id="islandCanvas" aria-label="3D island game. Use arrow keys, WASD, click and drag, or the touch joystick to move."></canvas></div>
+        <div class="island-vignette" aria-hidden="true"></div>
+        <div class="island-hud" aria-live="polite">
+          <div class="island-hud-card island-counter">🪙 <span id="islandCounter">0 / 10 coins</span></div>
+          <div class="island-hud-card island-objective" id="islandObjective">Explore the island and find 10 coins.</div>
+        </div>
+        <div class="island-store-status" id="islandStoreStatus" role="status" hidden></div>
+        <div class="island-controls-tip">WASD / arrows or click &amp; drag to move</div>
+        <div class="island-joystick" id="islandJoystick" aria-label="Movement joystick"><span class="island-joystick-knob" id="islandJoystickKnob"></span></div>
+        <button class="island-home" id="islandHome">← Home</button>
+
+        <div class="island-overlay" id="islandOverlay">
+          <div class="island-overlay-card">
+            <span class="island-eyebrow" id="islandOverlayEyebrow">Sullivan’s Island mission</span>
+            <h2 id="islandOverlayTitle">Island Coin Quest</h2>
+            <p id="islandOverlayText">Explore the island, collect 10 gold coins, and spell every word you hear.</p>
+            <div class="island-result-grid" id="islandOverlayResults" hidden>
+              <div class="island-result-card"><strong id="islandResultFirst">0 / 10</strong><span>First try</span></div>
+              <div class="island-result-card"><strong id="islandResultTries">10</strong><span>Total tries</span></div>
+              <div class="island-result-card"><strong id="islandResultStars">150 ⭐</strong><span>Stars earned</span></div>
+            </div>
+            <div class="island-overlay-actions"><button class="island-start" id="islandOverlayPrimary">Start Exploring →</button><button class="island-secondary" id="islandOverlaySecondary" hidden>New Quest</button></div>
+          </div>
+        </div>
+
+        <div class="island-challenge" id="islandChallenge" role="dialog" aria-modal="true" aria-labelledby="islandChallengeTitle" hidden>
+          <div class="island-challenge-card">
+            <div class="island-challenge-top"><span>🪙 Gold coin challenge</span><span id="islandChallengeStep">Coin 1 of 10</span></div>
+            <div class="island-challenge-content">
+              <div class="word-picture island-picture" id="islandPicture" role="img" aria-label="Picture clue"></div>
+              <div class="island-challenge-copy">
+                <h2 id="islandChallengeTitle">Listen and spell</h2>
+                <p>Look at the picture, hear the word, then type its spelling to collect this coin.</p>
+                <button class="island-hear" id="islandHear" type="button">🔊 Hear word again</button>
+              </div>
+            </div>
+            <form id="islandChallengeForm">
+              <div class="island-answer-row">
+                <input class="island-answer" id="islandAnswer" autocomplete="off" autocapitalize="none" spellcheck="false" enterkeyhint="done" aria-label="Type the spelling word" />
+                <button class="island-check" id="islandCheck" type="submit">Collect ✓</button>
+              </div>
+              <div class="island-feedback" id="islandFeedback" aria-live="polite"></div>
+            </form>
+          </div>
+        </div>
+        <div class="island-reward-caption" id="islandRewardCaption" aria-live="polite" hidden></div>
+      </div>
+    </section>
+
     <section id="test" class="screen">
       <button class="btn ghost back" data-go="home">← Home</button>
       <div class="panel center">
@@ -1015,7 +1080,7 @@
     speechSynthesis.speak(u);
   }
   function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),1800); }
-  function show(id){ if(id!=='sky') stopSky(); if(id!=='bridge') stopBridge(); document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
+  function show(id){ if(id!=='sky') stopSky(); if(id!=='bridge') stopBridge(); if(id!=='island') window.IslandQuest?.stop(); document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
   function requireWords(){ if(!state.words || state.words.length<1){ toast('The word list is empty.'); return false; } return true; }
   function showWordPicture(element, word){
     const override=VISUAL_OVERRIDES[word];
@@ -1059,6 +1124,15 @@
   }
   document.getElementById('wordListBtn').onclick=()=>{renderWordList();show('wordList');};
 
+  function startIsland(){
+    show('island');
+    const launch=()=>{
+      if(!window.IslandQuest){ toast('The island is still loading. Try again in a moment.'); show('home'); return; }
+      window.IslandQuest.start({words:state.words,speak,showWordPicture,record,goHome:()=>show('home')});
+    };
+    window.IslandQuest ? launch() : setTimeout(launch,120);
+  }
+
   // Navigation
   document.querySelectorAll('[data-go]').forEach(b=>b.onclick=()=>show(b.dataset.go));
   document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{
@@ -1069,6 +1143,7 @@
     if(a==='sound') startSound();
     if(a==='write') startWrite();
     if(a==='detective') startDetective();
+    if(a==='island') startIsland();
     if(a==='sky') startSky();
     if(a==='bridge') startBridge();
     if(a==='test') startTest();
@@ -1503,5 +1578,6 @@
   refreshHome();
 })();
 </script>
+<script type="module" src="island-quest.js"></script>
 </body>
 </html>
