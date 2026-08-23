@@ -4,6 +4,9 @@ const STORAGE_KEY = 'spellingQuestIslandV1';
 const SESSION_VERSION = 4;
 const TOTAL_COINS = 10;
 const PLAYER_RADIUS = .72;
+const TURN_INPUT_SCALE = .58;
+const PLAYER_TURN_RESPONSE = 7;
+const CAMERA_TURN_RESPONSE = 2.8;
 const WORLD_SCALE = 1.5;
 const ISLAND_WIDTH_SCALE = 2.65;
 const ISLAND_HALF_LENGTH = 43 * WORLD_SCALE;
@@ -269,15 +272,52 @@ function makeCanvasTexture(text, foreground, background){
   context.fillStyle = background;
   context.fillRect(0, 0, surface.width, surface.height);
   context.fillStyle = foreground;
+  const lines = String(text).split('\n');
   let fontSize = 62;
   context.font = `900 ${fontSize}px ui-rounded, system-ui, sans-serif`;
-  while(context.measureText(text).width > 452 && fontSize > 38){
+  while(Math.max(...lines.map(line => context.measureText(line).width)) > 452 && fontSize > 28){
     fontSize -= 2;
     context.font = `900 ${fontSize}px ui-rounded, system-ui, sans-serif`;
   }
   context.textAlign = 'center';
   context.textBaseline = 'middle';
-  context.fillText(text, surface.width / 2, surface.height / 2 + 3);
+  const lineHeight = Math.min(70, fontSize * 1.04);
+  const startY = surface.height / 2 - ((lines.length - 1) * lineHeight) / 2 + 2;
+  lines.forEach((line,index) => context.fillText(line, surface.width / 2, startY + index * lineHeight));
+  const texture = new THREE.CanvasTexture(surface);
+  texture.colorSpace = THREE.SRGBColorSpace;
+  return texture;
+}
+
+function makePalmettoTexture(){
+  const surface = document.createElement('canvas');
+  surface.width = 160;
+  surface.height = 160;
+  const context = surface.getContext('2d');
+  context.clearRect(0,0,160,160);
+  context.strokeStyle = '#f4dd9a';
+  context.fillStyle = '#f4dd9a';
+  context.lineCap = 'round';
+  context.lineJoin = 'round';
+  context.lineWidth = 10;
+  context.beginPath();
+  context.moveTo(80,136);
+  context.quadraticCurveTo(72,102,82,66);
+  context.stroke();
+  const crownX = 82;
+  const crownY = 62;
+  [-1.4,-1.05,-.7,-.35,0,.35,.7,1.05,1.4].forEach((angle,index) => {
+    const length = 48 - Math.abs(index - 4) * 3;
+    context.lineWidth = 7;
+    context.beginPath();
+    context.moveTo(crownX,crownY);
+    context.quadraticCurveTo(crownX + Math.sin(angle) * length * .55,crownY - Math.cos(angle) * length * .42,crownX + Math.sin(angle) * length,crownY - Math.cos(angle) * length);
+    context.stroke();
+  });
+  context.lineWidth = 6;
+  context.beginPath();
+  context.arc(80,139,42,.15,Math.PI - .15);
+  context.stroke();
   const texture = new THREE.CanvasTexture(surface);
   texture.colorSpace = THREE.SRGBColorSpace;
   return texture;
@@ -513,80 +553,106 @@ function addHouse(x, z, color, scale = 1, rotation = 0){
 
 function addPalm(x, z, scale = 1){
   const group = new THREE.Group();
-  const trunkMat = material(0x9a6b3f, .92);
-  const height = 4.6 * scale;
-  for(let i = 0; i < 7; i++){
-    const segment = mesh(new THREE.CylinderGeometry((.22 - i * .012) * scale, (.3 - i * .012) * scale, height / 7 + .04, 10), trunkMat);
-    segment.position.set(Math.sin(i * .22) * .13 * scale, (i + .5) * height / 7, Math.cos(i * .19) * .08 * scale);
-    segment.rotation.z = -.035 * i;
+  const trunkMat = material(0x81725c, .96);
+  const scarMat = material(0x5f5547, .98);
+  const height = 7.6 * scale;
+  const segments = 12;
+  for(let i = 0; i < segments; i++){
+    const progress = i / (segments - 1);
+    const segmentHeight = height / segments + .05;
+    const topRadius = (.3 - progress * .055) * scale;
+    const bottomRadius = (.38 - progress * .075) * scale;
+    const segment = mesh(new THREE.CylinderGeometry(topRadius, bottomRadius, segmentHeight, 12), trunkMat);
+    segment.position.set(Math.sin(i * .31) * .055 * scale, (i + .5) * height / segments, Math.cos(i * .27) * .035 * scale);
+    segment.rotation.z = -.009 * i;
     group.add(segment);
-    const ring = mesh(new THREE.TorusGeometry((.265 - i * .012) * scale, .025 * scale, 5, 10), material(0x765039, .95), false);
+    const ring = mesh(new THREE.TorusGeometry((.34 - progress * .065) * scale, .026 * scale, 5, 12), scarMat, false);
     ring.rotation.x = Math.PI / 2;
     ring.position.copy(segment.position);
-    ring.position.y -= height / 14;
+    ring.position.y -= segmentHeight * .48;
     group.add(ring);
   }
-  const leafShape = new THREE.Shape();
-  leafShape.moveTo(0, 0);
-  leafShape.bezierCurveTo(.42 * scale, .55 * scale, .34 * scale, 1.8 * scale, 0, 2.45 * scale);
-  leafShape.bezierCurveTo(-.34 * scale, 1.8 * scale, -.42 * scale, .55 * scale, 0, 0);
-  for(let i = 0; i < 10; i++){
+  for(let i = 0; i < 18; i++){
+    const angle = i / 18 * Math.PI * 2;
+    const boot = mesh(new THREE.ConeGeometry(.11 * scale,.42 * scale,5), scarMat,false);
+    boot.position.set(Math.cos(angle) * .31 * scale,(height - .7 * scale) + (i % 3) * .19 * scale,Math.sin(angle) * .31 * scale);
+    boot.rotation.z = Math.PI / 2;
+    boot.rotation.y = -angle;
+    group.add(boot);
+  }
+  const fanShape = new THREE.Shape();
+  fanShape.moveTo(0,0);
+  fanShape.lineTo(-.72 * scale,1.28 * scale);
+  fanShape.bezierCurveTo(-.38 * scale,1.72 * scale,.38 * scale,1.72 * scale,.72 * scale,1.28 * scale);
+  fanShape.lineTo(0,0);
+  for(let i = 0; i < 16; i++){
+    const angle = i / 16 * Math.PI * 2;
     const leaf = mesh(
-      new THREE.ShapeGeometry(leafShape, 8),
-      material(i % 3 ? 0x2d8853 : 0x55a95f, .84, 0, { side:THREE.DoubleSide }),
+      new THREE.ShapeGeometry(fanShape, 10),
+      material(i % 3 ? 0x3f7851 : 0x5b9062, .88, 0, { side:THREE.DoubleSide }),
       false,
       false
     );
-    leaf.position.set(0, height - .08 * scale, 0);
-    leaf.rotation.x = -Math.PI / 2 + .42 + (i % 2) * .12;
-    leaf.rotation.z = i / 10 * Math.PI * 2;
-    leaf.scale.y = .88 + (i % 3) * .08;
+    leaf.position.set(0,height - .08 * scale,0);
+    leaf.rotation.x = -Math.PI / 2 + .28 + (i % 3) * .11;
+    leaf.rotation.z = angle;
+    leaf.scale.y = .95 + (i % 4) * .06;
     group.add(leaf);
+    const ribEnd = new THREE.Vector3(Math.cos(angle) * 1.38 * scale,height + (.18 + (i % 3) * .09) * scale,Math.sin(angle) * 1.38 * scale);
+    group.add(cylinderBetween(new THREE.Vector3(0,height - .05 * scale,0),ribEnd,.035 * scale,material(0x71815a,.9),7));
   }
-  const coconuts = material(0x8b5a2b);
-  for(let i = 0; i < 4; i++){
-    const coconut = mesh(new THREE.SphereGeometry(.2 * scale, 8, 6), coconuts, false);
-    coconut.position.set(Math.sin(i * 1.7) * .24 * scale, (height - .25 * scale), Math.cos(i * 1.7) * .24 * scale);
-    group.add(coconut);
+  const fruitMat = material(0x393c2b,.95);
+  for(let i = 0; i < 9; i++){
+    const fruit = mesh(new THREE.SphereGeometry(.055 * scale,7,5),fruitMat,false);
+    fruit.position.set((i % 3 - 1) * .1 * scale,height - (.48 + Math.floor(i / 3) * .1) * scale,.13 * scale);
+    group.add(fruit);
   }
   group.position.set(x, 0, z);
   addInkOutline(group, .026, .14);
   scene.add(group);
-  addCollider(x, z, .48 * scale);
+  addCollider(x, z, .62 * scale);
   return group;
 }
 
 function addLiveOak(x, z, scale = 1){
   const group = new THREE.Group();
-  const trunkMat = material(0x68503d, .96);
-  const canopyMats = [material(0x315f3d, .9), material(0x3d7449, .86), material(0x4d8253, .84)];
-  const trunk = mesh(new THREE.CylinderGeometry(.42 * scale, .7 * scale, 3.5 * scale, 12), trunkMat);
-  trunk.position.y = 1.7 * scale;
+  const trunkMat = material(0x5e5143, .98);
+  const trunkLight = material(0x766653,.98);
+  const canopyMats = [material(0x355d45, .92), material(0x477555, .9), material(0x5c8561, .88)];
+  const trunk = mesh(new THREE.CylinderGeometry(.5 * scale, .82 * scale, 4.25 * scale, 14), trunkMat);
+  trunk.position.y = 2.05 * scale;
   group.add(trunk);
-  [[0,3.1,0,-1.8,4,.25],[0,3.05,0,1.9,4.15,.2],[-.25,3.25,0,-1,4.6,-1],[.3,3.25,0,1.1,4.55,-.85]].forEach(([sx,sy,sz,ex,ey,ez], index) => {
+  [[0,3.45,0,-3.25,4.05,.3],[0,3.4,0,3.45,4.18,.15],[-.2,3.7,0,-2.1,5.05,-1.2],[.25,3.65,0,2.25,4.95,-1.15],[-2.6,4,.2,-4.1,4.3,1.05],[2.7,4.1,.1,4.25,4.38,.95]].forEach(([sx,sy,sz,ex,ey,ez], index) => {
     group.add(cylinderBetween(
       new THREE.Vector3(sx * scale, sy * scale, sz * scale),
       new THREE.Vector3(ex * scale, ey * scale, ez * scale),
-      (.22 - index * .018) * scale,
-      trunkMat
+      Math.max(.12,.3 - index * .027) * scale,
+      index % 2 ? trunkMat : trunkLight,
+      12
     ));
   });
-  const canopyPositions = [[0,4.45,0],[-1.7,4.25,.15],[1.7,4.35,.2],[-.7,4.85,-1],[.8,4.75,-.9],[-2.25,4,.8],[2.25,4.1,.8]];
+  [[-.45,.05,0],[-.28,.03,.15],[.32,.04,-.12],[.52,.06,.1]].forEach(([rx,ry,rz],index) => {
+    const root = cylinderBetween(new THREE.Vector3(rx * scale,.15 * scale,rz * scale),new THREE.Vector3((rx * 3.4) * scale,.035,(rz * 3.4) * scale),(.16 - index * .015) * scale,trunkMat,10);
+    group.add(root);
+  });
+  const canopyPositions = [[0,5.05,0],[-2.2,4.75,.3],[2.2,4.88,.25],[-1.15,5.55,-1.35],[1.25,5.45,-1.3],[-3.65,4.55,1.05],[3.7,4.62,1],[0,5.25,1.65],[-2.9,4.9,-.7],[2.95,5,-.65]];
   canopyPositions.forEach(([px,py,pz], index) => {
-    const crown = mesh(new THREE.IcosahedronGeometry((index ? 1.4 : 1.75) * scale, 2), canopyMats[index % canopyMats.length], true);
-    crown.scale.set(1.2, .68, .95);
+    const crown = mesh(new THREE.IcosahedronGeometry((index ? 1.7 : 2.15) * scale, 2), canopyMats[index % canopyMats.length], true);
+    crown.scale.set(1.3, .62, 1.02);
     crown.position.set(px * scale, py * scale, pz * scale);
     group.add(crown);
   });
-  for(let i = 0; i < 8; i++){
-    const moss = mesh(new THREE.CylinderGeometry(.018 * scale, .03 * scale, (1 + i % 3 * .3) * scale, 5), material(0x83936b, .92), false);
-    moss.position.set((-2.1 + i * .6) * scale, (3.7 + (i % 2) * .25) * scale, (.45 - (i % 3) * .4) * scale);
+  const mossMat = material(0x8b9676, .96);
+  for(let i = 0; i < 16; i++){
+    const moss = mesh(new THREE.CylinderGeometry(.015 * scale, .027 * scale, (1.25 + i % 4 * .32) * scale, 5), mossMat, false);
+    moss.position.set((-3.5 + i * .47) * scale,(4.25 + (i % 3) * .22) * scale,(.75 - (i % 4) * .5) * scale);
+    moss.rotation.z = Math.sin(i * 1.4) * .08;
     group.add(moss);
   }
   group.position.set(x, 0, z);
   addInkOutline(group, .026, .16);
   scene.add(group);
-  addCollider(x, z, .75 * scale);
+  addCollider(x, z, 1.05 * scale);
   return group;
 }
 
@@ -713,10 +779,10 @@ function addIceCreamStore(){
   const counter = mesh(new THREE.BoxGeometry(4.8, 1.45, .72), material(0xfff4df));
   counter.position.set(0, 1.45, 2.95);
   group.add(counter);
-  const signTexture = makeCanvasTexture('Ice Cream Shop', '#263737', '#fff7e8');
-  const signBoard = mesh(new THREE.BoxGeometry(6.05, 1.62, .2), material(0x263737), false);
+  const signTexture = makeCanvasTexture("Sullivan's Island\nIce Cream", '#263737', '#fff7e8');
+  const signBoard = mesh(new THREE.BoxGeometry(7.35, 1.92, .2), material(0x263737), false);
   signBoard.position.set(0, 7.65, .3);
-  const sign = mesh(new THREE.PlaneGeometry(5.7, 1.42), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
+  const sign = mesh(new THREE.PlaneGeometry(7, 1.68), new THREE.MeshBasicMaterial({ map:signTexture, transparent:false }), false, false);
   sign.position.set(0, 7.65, .415);
   const signPostLeft = mesh(new THREE.BoxGeometry(.14, 1.35, .14), material(0x263737), false);
   const signPostRight = signPostLeft.clone();
@@ -965,16 +1031,15 @@ function createPlayer(){
   player = new THREE.Group();
   const skin = material(0xe3bda4, .72);
   const skinShadow = material(0xc58f79, .78);
-  const shirt = fabricMaterial('#252b2d', '#5d6969', .8);
-  const pants = fabricMaterial('#303638', '#687170', .82);
+  const shirt = fabricMaterial('#b64235', '#ef9a86', .8);
+  const pants = fabricMaterial('#765236', '#bd8d5d', .82);
   const white = material(0xf3f0df, .68);
   const whiteShadow = material(0xb8c1ba, .76);
   const sole = material(0x273535, .84);
   const dark = material(0x202c2e, .82);
-  const hairMaterial = material(0x303741, .86);
-  const hairHighlight = material(0x4d5662, .8);
-  const logoOrange = material(0xd88943, .72);
-  const backpackMaterial = fabricMaterial('#ebe9dc', '#aeb9b3', .78);
+  const hairMaterial = material(0x2d211d, .88);
+  const hairHighlight = material(0x4a3429, .84);
+  const backpackMaterial = fabricMaterial('#355c55', '#86a18a', .8);
 
   const body = mesh(new THREE.CapsuleGeometry(.39, .82, 7, 14), shirt);
   body.scale.set(.92, 1, .72);
@@ -984,10 +1049,6 @@ function createPlayer(){
   const collar = mesh(new THREE.TorusGeometry(.2, .038, 8, 18, Math.PI), white, false);
   collar.position.set(0, 2.18, .24);
   collar.rotation.z = Math.PI;
-  const logoPanel = mesh(new THREE.BoxGeometry(.36, .42, .055), logoOrange, false);
-  logoPanel.position.set(0, 1.82, .31);
-  const logoMark = mesh(new THREE.TorusGeometry(.095, .026, 7, 16, Math.PI * 1.65), dark, false);
-  logoMark.position.set(0, 1.83, .35);
 
   const neck = mesh(new THREE.CylinderGeometry(.145, .17, .25, 12), skin);
   neck.position.y = 2.28;
@@ -1006,35 +1067,29 @@ function createPlayer(){
   const bobHair = new THREE.Group();
   [-.36,-.24,-.12,0,.12,.24,.36].forEach((x,index) => {
     const pivot = new THREE.Group();
-    pivot.position.set(x, 2.92, -.37 - Math.abs(x) * .16);
-    const strand = mesh(new THREE.CapsuleGeometry(.085 + (3 - Math.abs(index - 3)) * .008, .43 + (3 - Math.abs(index - 3)) * .04, 6, 10), index % 2 ? hairMaterial : hairHighlight);
-    strand.position.y = -.33;
-    strand.rotation.z = (index - 3) * .035;
+    pivot.position.set(x, 2.98, -.34 - Math.abs(x) * .12);
+    const strand = mesh(new THREE.CapsuleGeometry(.082 + (3 - Math.abs(index - 3)) * .006, .2 + (index % 3) * .045, 6, 10), index % 2 ? hairMaterial : hairHighlight);
+    strand.position.y = -.2;
+    strand.rotation.z = (index - 3) * .09;
     pivot.add(strand);
     bobHair.add(pivot);
     hairSegments.push({ pivot, chainIndex:index % 2, depth:index });
   });
-  const fringeLeft = mesh(new THREE.CapsuleGeometry(.085,.33,6,10), hairMaterial);
+  const fringeLeft = mesh(new THREE.CapsuleGeometry(.085,.25,6,10), hairMaterial);
   const fringeRight = fringeLeft.clone();
-  fringeLeft.position.set(-.26,2.88,.37);
-  fringeRight.position.set(.18,2.91,.4);
-  fringeLeft.rotation.z = -.42;
-  fringeRight.rotation.z = .48;
-
-  const headphoneBand = mesh(new THREE.TorusGeometry(.49,.055,8,24,Math.PI), white, false);
-  headphoneBand.position.y = 2.96;
-  const headphoneLeft = mesh(new THREE.CylinderGeometry(.16,.16,.13,14), white);
-  const headphoneRight = headphoneLeft.clone();
-  headphoneLeft.rotation.z = Math.PI / 2;
-  headphoneRight.rotation.z = Math.PI / 2;
-  headphoneLeft.position.set(-.51,2.78,0);
-  headphoneRight.position.set(.51,2.78,0);
-  const headphonePadLeft = mesh(new THREE.CylinderGeometry(.1,.1,.145,14), dark, false);
-  const headphonePadRight = headphonePadLeft.clone();
-  headphonePadLeft.rotation.z = Math.PI / 2;
-  headphonePadRight.rotation.z = Math.PI / 2;
-  headphonePadLeft.position.set(-.515,2.78,0);
-  headphonePadRight.position.set(.515,2.78,0);
+  fringeLeft.position.set(-.25,2.95,.38);
+  fringeRight.position.set(.16,2.96,.41);
+  fringeLeft.rotation.z = -.55;
+  fringeRight.rotation.z = .62;
+  const hairTufts = new THREE.Group();
+  for(let i = 0; i < 9; i++){
+    const angle = i / 9 * Math.PI * 2;
+    const tuft = mesh(new THREE.ConeGeometry(.105,.34,5),i % 2 ? hairMaterial : hairHighlight);
+    tuft.position.set(Math.cos(angle) * .32,3.35 + (i % 3) * .025,Math.sin(angle) * .28);
+    tuft.rotation.z = Math.cos(angle) * .36;
+    tuft.rotation.x = -Math.sin(angle) * .32;
+    hairTufts.add(tuft);
+  }
 
   const eyeLeft = mesh(new THREE.SphereGeometry(.04, 9, 7), dark, false);
   const eyeRight = eyeLeft.clone();
@@ -1045,17 +1100,36 @@ function createPlayer(){
   nose.position.set(0, 2.7, .48);
   const mouth = mesh(new THREE.BoxGeometry(.16,.025,.025), material(0x764d48), false);
   mouth.position.set(0,2.59,.47);
+  const glassesLeft = mesh(new THREE.TorusGeometry(.145,.025,8,18), dark, false);
+  const glassesRight = glassesLeft.clone();
+  glassesLeft.position.set(-.18,2.81,.475);
+  glassesRight.position.set(.18,2.81,.475);
+  const glassesBridge = mesh(new THREE.BoxGeometry(.12,.028,.025),dark,false);
+  glassesBridge.position.set(0,2.81,.48);
+  const glassesTempleLeft = mesh(new THREE.BoxGeometry(.19,.025,.025),dark,false);
+  const glassesTempleRight = glassesTempleLeft.clone();
+  glassesTempleLeft.position.set(-.38,2.82,.39);
+  glassesTempleRight.position.set(.38,2.82,.39);
+  glassesTempleLeft.rotation.y = -.65;
+  glassesTempleRight.rotation.y = .65;
 
   const backpack = mesh(new THREE.CapsuleGeometry(.47, .72, 8, 14), backpackMaterial);
   backpack.scale.set(1,.8,.5);
   backpack.position.set(0,1.93,-.46);
-  const backpackPocket = mesh(new THREE.CapsuleGeometry(.31,.3,7,12), whiteShadow);
+  const backpackPocket = mesh(new THREE.CapsuleGeometry(.31,.3,7,12), fabricMaterial('#294941','#6f8c77',.82));
   backpackPocket.scale.set(1,.86,.28);
   backpackPocket.position.set(0,1.72,-.72);
-  const backpackFlap = mesh(new THREE.BoxGeometry(.7,.26,.1), white);
+  const backpackFlap = mesh(new THREE.BoxGeometry(.7,.26,.1), backpackMaterial);
   backpackFlap.position.set(0,2.18,-.72);
   const backpackBuckle = mesh(new THREE.BoxGeometry(.13,.12,.06), dark, false);
   backpackBuckle.position.set(0,1.99,-.8);
+  const palmettoSymbol = mesh(
+    new THREE.PlaneGeometry(.55,.55),
+    new THREE.MeshBasicMaterial({ map:makePalmettoTexture(), transparent:true, side:THREE.DoubleSide, depthWrite:false }),
+    false,
+    false
+  );
+  palmettoSymbol.position.set(0,1.76,-.81);
   [-.3,.3].forEach(x => {
     const strap = mesh(new THREE.CapsuleGeometry(.045,.72,5,8), whiteShadow, false);
     strap.position.set(x,1.91,.25);
@@ -1103,9 +1177,9 @@ function createPlayer(){
   });
 
   player.add(
-    body,waist,collar,logoPanel,logoMark,neck,head,earLeft,earRight,hair,bobHair,fringeLeft,fringeRight,
-    headphoneBand,headphoneLeft,headphoneRight,headphonePadLeft,headphonePadRight,eyeLeft,eyeRight,nose,mouth,
-    backpack,backpackPocket,backpackFlap,backpackBuckle,armLeftPivot,armRightPivot,legLeftPivot,legRightPivot
+    body,waist,collar,neck,head,earLeft,earRight,hair,bobHair,hairTufts,fringeLeft,fringeRight,
+    eyeLeft,eyeRight,nose,mouth,glassesLeft,glassesRight,glassesBridge,glassesTempleLeft,glassesTempleRight,
+    backpack,backpackPocket,backpackFlap,backpackBuckle,palmettoSymbol,armLeftPivot,armRightPivot,legLeftPivot,legRightPivot
   );
   addInkOutline(player, .035, .1);
   playerParts = { body, head, hairSegments, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
@@ -1396,6 +1470,7 @@ function movementInput(){
   if(keys.has('ArrowDown') || keys.has('KeyS')) z += 1;
   x += joystickVector.x + pointerVector.x;
   z += joystickVector.y + pointerVector.y;
+  x *= TURN_INPUT_SCALE;
   const length = Math.hypot(x, z);
   if(length > 1){ x /= length; z /= length; }
   return { x, z, moving:length > .08 };
@@ -1429,7 +1504,7 @@ function updatePlayer(delta, elapsed){
     const targetRotation = Math.atan2(worldX, worldZ);
     let difference = targetRotation - player.rotation.y;
     difference = Math.atan2(Math.sin(difference), Math.cos(difference));
-    player.rotation.y += difference * Math.min(1, delta * 12);
+    player.rotation.y += difference * Math.min(1, delta * PLAYER_TURN_RESPONSE);
     session.player = {
       x:Number(player.position.x.toFixed(2)),
       z:Number(player.position.z.toFixed(2)),
@@ -1681,7 +1756,7 @@ function updateCamera(delta){
   if(!camera || !player) return;
   let headingDifference = player.rotation.y - cameraHeading;
   headingDifference = Math.atan2(Math.sin(headingDifference), Math.cos(headingDifference));
-  cameraHeading += headingDifference * (1 - Math.exp(-delta * 4.2));
+  cameraHeading += headingDifference * (1 - Math.exp(-delta * CAMERA_TURN_RESPONSE));
   cameraForward.set(Math.sin(cameraHeading), 0, Math.cos(cameraHeading));
   const followDistance = session?.phase === 'reward' ? 7.4 : 8.8;
   const followHeight = session?.phase === 'reward' ? 4.9 : 5.5;

@@ -80,7 +80,7 @@
   background:repeating-linear-gradient(90deg,#fff3df 0 9px,#df5a62 9px 18px);
 }
 .island-card-shop::after {
-  content:'ICE CREAM';
+  content:"SULLIVAN'S";
   position:absolute;
   left:5px;
   right:5px;
@@ -90,7 +90,7 @@
   border-radius:3px;
   background:#fff7df;
   color:#315b57;
-  font-size:7px;
+  font-size:5.6px;
   font-weight:1000;
   letter-spacing:.02em;
   text-align:center;
@@ -104,8 +104,8 @@
   height:27px;
   border:2px solid #173d42;
   border-radius:7px 7px 6px 6px;
-  background:linear-gradient(90deg,#20292c,#424b4d 52%,#20292c);
-  box-shadow:-5px 18px 0 -2px #293335,5px 18px 0 -2px #293335;
+  background:linear-gradient(90deg,#99372f,#c84d3f 52%,#99372f);
+  box-shadow:-5px 18px 0 -2px #765236,5px 18px 0 -2px #765236;
 }
 .island-card-avatar::before {
   content:'';
@@ -117,12 +117,12 @@
   border:2px solid #173d42;
   border-radius:50%;
   background:
-    radial-gradient(circle at 4% 48%,#f6f1df 0 3px,transparent 3.5px),
-    radial-gradient(circle at 96% 48%,#f6f1df 0 3px,transparent 3.5px),
-    linear-gradient(#303944 0 48%,#e3bda4 49%);
+    radial-gradient(circle at 31% 66%,transparent 0 1.5px,#263737 1.8px 2.6px,transparent 2.9px),
+    radial-gradient(circle at 69% 66%,transparent 0 1.5px,#263737 1.8px 2.6px,transparent 2.9px),
+    linear-gradient(#35251e 0 48%,#e3bda4 49%);
 }
 .island-card-avatar::after {
-  content:'';
+  content:'♣';
   position:absolute;
   left:-2px;
   top:5px;
@@ -130,7 +130,12 @@
   height:16px;
   border:2px solid #173d42;
   border-radius:6px 6px 8px 8px;
-  background:linear-gradient(90deg,#b7c0ba,#f2efe1 55%,#b7c0ba);
+  display:grid;
+  place-items:center;
+  background:linear-gradient(90deg,#294941,#426960 55%,#294941);
+  color:#f4dd9a;
+  font-size:8px;
+  line-height:1;
 }
 .island-card-coin {
   position:absolute;
