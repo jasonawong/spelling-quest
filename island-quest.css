@@ -56,40 +56,6 @@
   clip-path:polygon(1% 48%,8% 20%,27% 5%,54% 1%,81% 10%,98% 33%,94% 70%,77% 94%,45% 99%,15% 86%);
   box-shadow:7px 8px 0 rgba(23,61,66,.16);
 }
-.island-card-path {
-  position:absolute;
-  z-index:3;
-  left:57px;
-  bottom:26px;
-  width:53px;
-  height:18px;
-  border-radius:60% 15% 50% 20%;
-  background:#c7a66d;
-  transform:rotate(-7deg);
-}
-.island-card-lighthouse {
-  position:absolute;
-  z-index:4;
-  left:24px;
-  bottom:48px;
-  width:29px;
-  height:73px;
-  background:linear-gradient(to bottom,#20292d 0 47%,#eef0eb 48% 100%);
-  clip-path:polygon(33% 0,67% 0,94% 100%,6% 100%);
-  filter:drop-shadow(2px 3px 0 rgba(23,61,66,.35));
-}
-.island-card-lighthouse::before {
-  content:'';
-  position:absolute;
-  left:-4px;
-  top:-14px;
-  width:37px;
-  height:16px;
-  border:2px solid #173d42;
-  border-radius:5px 5px 2px 2px;
-  background:linear-gradient(#b6edf0 0 55%,#20292d 56%);
-  clip-path:polygon(17% 100%,24% 18%,50% 0,76% 18%,83% 100%);
-}
 .island-card-shop {
   position:absolute;
   z-index:4;
@@ -474,7 +440,6 @@
 @media (max-width:600px) {
   .island-card-art { width:108px; min-width:108px; height:126px; }
   .island-card-ground { left:0; right:0; }
-  .island-card-lighthouse { left:16px; }
   .island-card-shop { right:7px; }
   .island-card-coin { left:53px; }
   .island-game-shell { min-height:calc(100svh - 126px); border-radius:22px; }

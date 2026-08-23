@@ -5,15 +5,15 @@ const SESSION_VERSION = 4;
 const TOTAL_COINS = 10;
 const PLAYER_RADIUS = .72;
 const WORLD_SCALE = 1.5;
-const ISLAND_WIDTH_SCALE = 2;
+const ISLAND_WIDTH_SCALE = 2.65;
 const ISLAND_HALF_LENGTH = 43 * WORLD_SCALE;
 const STORE_POSITION = { x: 28 * WORLD_SCALE, z: 0 };
 const STORE_ENTRY_POSITION = { x: STORE_POSITION.x - 7, z:STORE_POSITION.z };
 const START_POSITION = { x: -38 * WORLD_SCALE, z: 0 };
 const COIN_LOCATIONS = [
-  { x: -35 * WORLD_SCALE, z: 4.1 * WORLD_SCALE, label: 'lighthouse dunes' },
-  { x: -28 * WORLD_SCALE, z: -6.1 * WORLD_SCALE, label: 'fort path' },
-  { x: -20 * WORLD_SCALE, z: 7.2 * WORLD_SCALE, label: 'beach walk' },
+  { x: -35 * WORLD_SCALE, z: 4.1 * WORLD_SCALE, label: 'west beach' },
+  { x: -28 * WORLD_SCALE, z: -6.1 * WORLD_SCALE, label: 'sea grass cove' },
+  { x: -20 * WORLD_SCALE, z: 7.2 * WORLD_SCALE, label: 'north shore' },
   { x: -13 * WORLD_SCALE, z: -4.8 * WORLD_SCALE, label: 'live oak lane' },
   { x: -5 * WORLD_SCALE, z: 7.7 * WORLD_SCALE, label: 'ocean overlook' },
   { x: 3 * WORLD_SCALE, z: -7.4 * WORLD_SCALE, label: 'marsh trail' },
@@ -27,6 +27,10 @@ const HOUSE_LOCATIONS = [
   { x:23 * WORLD_SCALE, z:4 * WORLD_SCALE, color:0xbccfec, scale:1, rotation:-.06 },
   { x:28 * WORLD_SCALE, z:-5.5 * WORLD_SCALE, color:0xf2cf8c, scale:1.06, rotation:.05 }
 ];
+const TREE_LOCATIONS = {
+  palms:[[-36,-8,.9],[-18,9,.86],[5,-9.5,.94],[24,8.5,.9],[37,-7,.82]],
+  liveOaks:[[-22,7.5,1],[-3,8.2,.96],[18,-8,1.02]]
+};
 
 let services = null;
 let active = false;
@@ -248,24 +252,46 @@ function makeCanvasTexture(text, foreground, background){
 
 function makeGroundTexture(base, flecks){
   const surface = document.createElement('canvas');
-  surface.width = 256;
-  surface.height = 256;
+  surface.width = 512;
+  surface.height = 512;
   const context = surface.getContext('2d');
   context.fillStyle = base;
-  context.fillRect(0, 0, 256, 256);
-  for(let i = 0; i < 950; i++){
-    context.globalAlpha = .08 + Math.random() * .16;
+  context.fillRect(0, 0, 512, 512);
+  for(let i = 0; i < 48; i++){
+    const x = Math.random() * 512;
+    const y = Math.random() * 512;
+    const radius = 18 + Math.random() * 72;
+    const wash = context.createRadialGradient(x,y,0,x,y,radius);
+    wash.addColorStop(0,`${flecks[i % flecks.length]}35`);
+    wash.addColorStop(1,`${flecks[i % flecks.length]}00`);
+    context.fillStyle = wash;
+    context.fillRect(x-radius,y-radius,radius*2,radius*2);
+  }
+  for(let i = 0; i < 2600; i++){
+    context.globalAlpha = .06 + Math.random() * .2;
     context.fillStyle = flecks[i % flecks.length];
-    const size = .5 + Math.random() * 2.2;
+    const size = .45 + Math.random() * 2.8;
     context.beginPath();
-    context.arc(Math.random() * 256, Math.random() * 256, size, 0, Math.PI * 2);
+    context.arc(Math.random() * 512, Math.random() * 512, size, 0, Math.PI * 2);
     context.fill();
+  }
+  for(let i = 0; i < 360; i++){
+    const x = Math.random() * 512;
+    const y = Math.random() * 512;
+    const length = 3 + Math.random() * 11;
+    context.globalAlpha = .08 + Math.random() * .17;
+    context.strokeStyle = flecks[(i + 1) % flecks.length];
+    context.lineWidth = .6 + Math.random() * 1.4;
+    context.beginPath();
+    context.moveTo(x,y);
+    context.lineTo(x + length,y + (Math.random() - .5) * 4);
+    context.stroke();
   }
   context.globalAlpha = 1;
   const texture = new THREE.CanvasTexture(surface);
   texture.colorSpace = THREE.SRGBColorSpace;
   texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
-  texture.repeat.set(18, 7);
+  texture.repeat.set(24, 11);
   texture.anisotropy = Math.min(8, renderer?.capabilities?.getMaxAnisotropy?.() || 1);
   return texture;
 }
@@ -847,21 +873,17 @@ function buildWorld(){
   waterGlow.position.y = -.37;
   scene.add(waterGlow);
 
-  const sandTexture = makeGroundTexture('#edcf8d', ['#fff1bd','#c79e5c','#f7dc9b']);
-  const grassTexture = makeGroundTexture('#6fa85a', ['#456f3f','#9abd68','#5a8d4c']);
-  const sand = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 96), material(0xffffff, .98, 0, { map:sandTexture, bumpMap:sandTexture, bumpScale:.075 }), false, true);
+  const sandTexture = makeGroundTexture('#edcf8d', ['#fff1bd','#b58a50','#f7dc9b','#d3ad67']);
+  const grassTexture = makeGroundTexture('#6fa85a', ['#365f36','#a8c979','#507f44','#839f55']);
+  const sand = mesh(new THREE.ShapeGeometry(buildIslandShape(0), 96), material(0xffffff, .98, 0, { map:sandTexture, bumpMap:sandTexture, bumpScale:.11 }), false, true);
   sand.rotation.x = -Math.PI / 2;
   sand.position.y = -.05;
   scene.add(sand);
-  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(2.05 * WORLD_SCALE), 96), material(0xffffff, .94, 0, { map:grassTexture, bumpMap:grassTexture, bumpScale:.045 }), false, true);
+  const grass = mesh(new THREE.ShapeGeometry(buildIslandShape(2.05 * WORLD_SCALE), 96), material(0xffffff, .94, 0, { map:grassTexture, bumpMap:grassTexture, bumpScale:.075 }), false, true);
   grass.rotation.x = -Math.PI / 2;
   grass.position.y = 0;
   scene.add(grass);
 
-  addRoads();
-  addDock();
-  addLighthouse();
-  addFort();
   addIceCreamStore();
   addBeachDetails();
   addLandscapeDetails();
@@ -869,15 +891,8 @@ function buildWorld(){
 
   HOUSE_LOCATIONS.forEach(({x,z,color,scale,rotation}) => addHouse(x, z, color, scale, rotation));
 
-  [
-    [-39,2.4,.95],[-36,-5.1,.86],[-32,7.1,.9],[-27,-7.2,.82],[-22,6.8,.9],[-18,-6.6,.84],
-    [-14,6.4,.95],[-9,-7.4,.82],[-3,6.8,.88],[3,-7.1,.9],[8,6.8,.92],[14,-7.2,.9],
-    [19,6.7,.86],[24,-6.4,.9],[29,6.3,.95],[33,-5.2,1],[38,4.4,.84],[40,-2.7,.78]
-  ].forEach(([x,z,scale]) => addPalm(x * WORLD_SCALE, z * WORLD_SCALE, scale));
-  [
-    [-29,3.8,.92],[-24,-3.6,.95],[-18,3.7,1.05],[-12,-3.5,1],[-7,3.8,1.04],[-2,-3.8,.92],
-    [4,3.7,.9],[10,-3.5,1],[16,3.8,.96],[22,-3.6,.98],[30,3.7,.9],[35,-3.4,.86]
-  ].forEach(([x,z,scale]) => addLiveOak(x * WORLD_SCALE, z * WORLD_SCALE, scale));
+  TREE_LOCATIONS.palms.forEach(([x,z,scale]) => addPalm(x * WORLD_SCALE, z * WORLD_SCALE, scale));
+  TREE_LOCATIONS.liveOaks.forEach(([x,z,scale]) => addLiveOak(x * WORLD_SCALE, z * WORLD_SCALE, scale));
 
   createPlayer();
   rebuildCoins();
@@ -920,9 +935,26 @@ function createPlayer(){
   const hair = mesh(new THREE.SphereGeometry(.525, 20, 12, 0, Math.PI * 2, 0, Math.PI / 1.55), hairMaterial);
   hair.scale.set(.96, 1.04, .94);
   hair.position.y = 2.76;
-  const ponytail = mesh(new THREE.CapsuleGeometry(.16, .72, 7, 12), hairMaterial);
-  ponytail.position.set(0, 2.2, -.43);
-  ponytail.rotation.x = -.08;
+  const longHair = new THREE.Group();
+  const hairSegments = [];
+  longHair.position.set(0, 2.58, -.84);
+  [-.15,.15].forEach((rootX, chainIndex) => {
+    const root = new THREE.Group();
+    root.position.x = rootX;
+    longHair.add(root);
+    let parent = root;
+    for(let i = 0; i < 4; i++){
+      const pivot = new THREE.Group();
+      if(i) pivot.position.set(0,-.4,.01);
+      const strand = mesh(new THREE.CapsuleGeometry(.105 - i * .008,.3,7,12),hairMaterial);
+      strand.scale.set(1,1,.72);
+      strand.position.set((chainIndex ? 1 : -1) * i * .012,-.24,0);
+      pivot.add(strand);
+      parent.add(pivot);
+      parent = pivot;
+      hairSegments.push({ pivot, chainIndex, depth:i });
+    }
+  });
   const capCrown = mesh(new THREE.SphereGeometry(.54, 22, 14, 0, Math.PI * 2, 0, Math.PI / 2), capMaterial);
   capCrown.scale.set(1.03,.58,1.03);
   capCrown.position.y = 2.97;
@@ -960,28 +992,28 @@ function createPlayer(){
   cheekRight.position.set(.27,2.48,.49);
 
   const backpack = mesh(new THREE.CapsuleGeometry(.5, .78, 9, 16), backpackMaterial);
-  backpack.scale.set(.96,1,.54);
-  backpack.position.set(0,1.5,-.49);
+  backpack.scale.set(.96,.84,.54);
+  backpack.position.set(0,1.66,-.49);
   const backpackPocket = mesh(new THREE.CapsuleGeometry(.34,.3,7,14),fabricMaterial('#58a4cf','#c0eaff',.7));
   backpackPocket.scale.set(1,.9,.3);
-  backpackPocket.position.set(0,1.3,-.77);
+  backpackPocket.position.set(0,1.51,-.77);
   const backpackFlap = mesh(new THREE.BoxGeometry(.76,.28,.13),backpackMaterial);
-  backpackFlap.position.set(0,1.78,-.78);
+  backpackFlap.position.set(0,1.96,-.78);
   backpackFlap.rotation.x = -.08;
   const backpackTrim = mesh(new THREE.TorusGeometry(.37,.035,7,22,Math.PI), material(0xf1d18e,.65),false);
-  backpackTrim.position.set(0,1.65,-.8);
+  backpackTrim.position.set(0,1.82,-.8);
   backpackTrim.rotation.z = Math.PI;
   const backpackBuckle = mesh(new THREE.BoxGeometry(.16,.12,.07),material(0xe7b953,.42,.42),false);
-  backpackBuckle.position.set(0,1.62,-.86);
+  backpackBuckle.position.set(0,1.79,-.86);
   [-.48,.48].forEach(x => {
     const sidePocket = mesh(new THREE.CapsuleGeometry(.13,.22,5,9),backpackMaterial);
     sidePocket.scale.set(.7,1,.55);
-    sidePocket.position.set(x,1.34,-.5);
+    sidePocket.position.set(x,1.58,-.5);
     player.add(sidePocket);
   });
   [-.34,.34].forEach(x => {
     const strap = mesh(new THREE.CapsuleGeometry(.042,.68,5,8), material(0x276a9b,.72),false);
-    strap.position.set(x,1.55,.31);
+    strap.position.set(x,1.69,.31);
     player.add(strap);
   });
 
@@ -1023,8 +1055,8 @@ function createPlayer(){
     sneakerAccent.position.set(0,-.96,.47);
     pivot.add(thigh, knee, shin, sneaker, sneakerSole, sneakerAccent);
   });
-  player.add(body, chestPanel, shirtHem, shoulderLeft, shoulderRight, collar, shortsWaist, neck, head, hair, ponytail, capCrown, capBand, capBrim, earLeft, earRight, eyeLeft, eyeRight, eyebrowLeft, eyebrowRight, cheekLeft, cheekRight, nose, mouth, backpack, backpackPocket, backpackFlap, backpackTrim, backpackBuckle, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
-  playerParts = { body, head, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
+  player.add(body, chestPanel, shirtHem, shoulderLeft, shoulderRight, collar, shortsWaist, neck, head, hair, longHair, capCrown, capBand, capBrim, earLeft, earRight, eyeLeft, eyeRight, eyebrowLeft, eyebrowRight, cheekLeft, cheekRight, nose, mouth, backpack, backpackPocket, backpackFlap, backpackTrim, backpackBuckle, armLeftPivot, armRightPivot, legLeftPivot, legRightPivot);
+  playerParts = { body, head, hairSegments, armLeft:armLeftPivot, armRight:armRightPivot, legLeft:legLeftPivot, legRight:legRightPivot };
   player.position.set(session?.player?.x ?? START_POSITION.x, .04, session?.player?.z ?? START_POSITION.z);
   player.rotation.y = session?.player?.heading ?? Math.PI / 2;
   scene.add(player);
@@ -1199,6 +1231,14 @@ function animatePlayer(moving, elapsed){
   playerParts.armRight.rotation.z = moving ? -.035 : -.06;
   playerParts.body.rotation.z = moving ? -stride * .025 : 0;
   playerParts.head.rotation.z = moving ? stride * .018 : 0;
+  playerParts.hairSegments?.forEach(({pivot,chainIndex,depth}) => {
+    const side = chainIndex ? 1 : -1;
+    const sway = moving
+      ? Math.sin(elapsed * 8.6 - depth * .52 + chainIndex * .35) * (.035 + depth * .014)
+      : Math.sin(elapsed * 1.7 + depth * .4) * .012;
+    pivot.rotation.z = side * .018 + sway;
+    pivot.rotation.x = moving ? -.018 - Math.abs(stride) * (.02 + depth * .008) : -.012;
+  });
   playerParts.body.position.y = 1.54 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .055 : Math.sin(elapsed * 2.2) * .018);
   if(session?.phase !== 'reward') player.position.y = .04 + (moving ? Math.abs(Math.sin(elapsed * 8.6)) * .035 : 0);
 }
@@ -1713,4 +1753,4 @@ function stop(){
 
 window.IslandQuest = { start, stop };
 
-export { TOTAL_COINS, WORLD_SCALE, ISLAND_WIDTH_SCALE, ISLAND_HALF_LENGTH, START_POSITION, STORE_POSITION, COIN_LOCATIONS, HOUSE_LOCATIONS, normalize, shuffled, islandEdge, islandHalfWidth, cameraRelativeMovement };
+export { TOTAL_COINS, WORLD_SCALE, ISLAND_WIDTH_SCALE, ISLAND_HALF_LENGTH, START_POSITION, STORE_POSITION, COIN_LOCATIONS, HOUSE_LOCATIONS, TREE_LOCATIONS, normalize, shuffled, islandEdge, islandHalfWidth, cameraRelativeMovement };
