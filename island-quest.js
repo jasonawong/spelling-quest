@@ -960,80 +960,145 @@ function addShorelineWaves(){
 function addCharlestonHarborBackdrop(){
   const skyline = new THREE.Group();
   const buildingMats = [
-    new THREE.MeshBasicMaterial({ color:0x8aa6a0, fog:true }),
-    new THREE.MeshBasicMaterial({ color:0x9db3aa, fog:true }),
-    new THREE.MeshBasicMaterial({ color:0x789590, fog:true }),
-    new THREE.MeshBasicMaterial({ color:0xb2baaa, fog:true })
+    new THREE.MeshBasicMaterial({ color:0xe3d6bf, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0xd7e0d8, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0xc78069, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0xd6b87f, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0xbfc8bb, fog:true })
   ];
-  const roofMat = new THREE.MeshBasicMaterial({ color:0x6e8580, fog:true });
+  const roofMats = [
+    new THREE.MeshBasicMaterial({ color:0x8f5c4d, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0x737d78, fog:true }),
+    new THREE.MeshBasicMaterial({ color:0xb06c52, fog:true })
+  ];
   const buildings = [
-    [-43,5.2,5.2],[-37,4.2,4.4],[-31,6.8,5.2],[-24,4.7,6],[-16,5.4,4.6],[-9,7.5,6.2],
-    [-1,5.1,5.4],[7,6.2,6.2],[15,4.4,5.4],[23,7.2,6.4],[31,5.2,5.2],[39,4.2,6]
+    [-7,2.3,7.5,0],[-1,2.9,5.4,1],[5,2.6,5.2,2],[12,3.2,6.4,0],
+    [20,2.7,6.7,3],[27,3.4,5.1,2],[36,2.6,7.2,1],[44,3.1,6.2,4],[52,2.4,7.3,0]
   ];
-  buildings.forEach(([z,height,width],index) => {
-    const building = mesh(new THREE.BoxGeometry(2.1,height,width),buildingMats[index % buildingMats.length],false,false);
-    building.position.set(0,height / 2 - .15,z);
+  buildings.forEach(([z,height,width,materialIndex],index) => {
+    const building = mesh(new THREE.BoxGeometry(2.2,height,width),buildingMats[materialIndex],false,false);
+    building.position.set(0,height / 2 + .2,z);
     skyline.add(building);
-    if(index % 3 === 0){
-      const roof = mesh(new THREE.ConeGeometry(width * .46,1.25,4),roofMat,false,false);
-      roof.position.set(0,height + .45,z);
+    if(index % 2 === 0){
+      const roof = mesh(new THREE.ConeGeometry(width * .48,.82,4),roofMats[index % roofMats.length],false,false);
+      roof.position.set(0,height + .56,z);
       roof.rotation.y = Math.PI / 4;
       skyline.add(roof);
     }
   });
-  [[-28,11.8],[4,14.2],[28,10.6]].forEach(([z,height],index) => {
-    const tower = mesh(new THREE.BoxGeometry(1.4,height * .58,2.2),buildingMats[(index + 1) % buildingMats.length],false,false);
-    tower.position.set(-.2,height * .29,z);
-    const steeple = mesh(new THREE.ConeGeometry(.72,height * .48,6),roofMat,false,false);
-    steeple.position.set(-.2,height * .82,z);
-    skyline.add(tower,steeple);
-  });
-  const waterfront = mesh(new THREE.BoxGeometry(2.4,.65,96),new THREE.MeshBasicMaterial({ color:0x607f7b, fog:true }),false,false);
-  waterfront.position.set(0,.04,0);
+
+  const treeMat = new THREE.MeshBasicMaterial({ color:0x315f4e, fog:true });
+  const treeHighlightMat = new THREE.MeshBasicMaterial({ color:0x4e765c, fog:true });
+  for(let index = 0; index < 24; index++){
+    const crown = mesh(new THREE.IcosahedronGeometry(1.35 + (index % 4) * .12,1),index % 3 === 0 ? treeHighlightMat : treeMat,false,false);
+    crown.scale.set(.7,.58,1.25);
+    crown.position.set(-.65,1.65,-10 + index * 2.8);
+    skyline.add(crown);
+  }
+
+  const classical = mesh(new THREE.BoxGeometry(2.6,2.55,8.5),buildingMats[0],false,false);
+  classical.position.set(-.28,1.58,-9.5);
+  skyline.add(classical);
+  for(let z = -12.5; z <= -6.5; z += 1.5){
+    const column = mesh(new THREE.CylinderGeometry(.13,.15,2.1,8),buildingMats[1],false,false);
+    column.position.set(-1.65,1.42,z);
+    skyline.add(column);
+  }
+
+  function addWaterfrontSteeple(z, height, wallMaterial, spireMaterial){
+    const lowerTower = mesh(new THREE.BoxGeometry(2.25,height * .32,2.65),wallMaterial,false,false);
+    lowerTower.position.set(-.25,height * .16 + 2.15,z);
+    const upperTower = mesh(new THREE.BoxGeometry(1.38,height * .2,1.75),wallMaterial,false,false);
+    upperTower.position.set(-.25,height * .42 + 2.15,z);
+    const cap = mesh(new THREE.ConeGeometry(1.05,height * .42,6),spireMaterial,false,false);
+    cap.position.set(-.25,height * .73 + 2.15,z);
+    const finial = mesh(new THREE.CylinderGeometry(.055,.055,height * .16,5),spireMaterial,false,false);
+    finial.position.set(-.25,height + 1.95,z);
+    skyline.add(lowerTower,upperTower,cap,finial);
+  }
+  addWaterfrontSteeple(4.5,9.3,buildingMats[1],roofMats[1]);
+  addWaterfrontSteeple(53,8.6,buildingMats[3],roofMats[0]);
+
+  const office = mesh(new THREE.BoxGeometry(2.75,8.5,8.2),buildingMats[3],false,false);
+  office.position.set(0,4.48,38.2);
+  skyline.add(office);
+  const windowMat = new THREE.MeshBasicMaterial({ color:0x607a77, fog:true });
+  for(let floor = 0; floor < 6; floor++){
+    const windows = mesh(new THREE.BoxGeometry(.08,.25,7.35),windowMat,false,false);
+    windows.position.set(-1.41,1.65 + floor * 1.05,38.2);
+    skyline.add(windows);
+  }
+  for(let z = 35.3; z <= 41.1; z += 1.45){
+    const divider = mesh(new THREE.BoxGeometry(.09,6.2,.1),buildingMats[0],false,false);
+    divider.position.set(-1.46,4.55,z);
+    skyline.add(divider);
+  }
+
+  const waterfront = mesh(new THREE.BoxGeometry(3,.62,70),new THREE.MeshBasicMaterial({ color:0xa9b5a8, fog:true }),false,false);
+  waterfront.position.set(-.1,.08,23);
   skyline.add(waterfront);
-  skyline.position.set(128,0,-7);
+  const pierMat = new THREE.MeshBasicMaterial({ color:0xe2e3d5, fog:true });
+  for(let z = -11; z <= 57; z += 2.65){
+    const piling = mesh(new THREE.CylinderGeometry(.075,.09,1.35,6),pierMat,false,false);
+    piling.position.set(-1.85,.62,z);
+    skyline.add(piling);
+  }
+  [-2,18,31,48].forEach((z,index) => {
+    const pier = mesh(new THREE.BoxGeometry(4.8,.16,1.15 + index % 2 * .45),pierMat,false,false);
+    pier.position.set(-2.5,.5,z);
+    skyline.add(pier);
+  });
+  skyline.position.set(128,0,0);
   scene.add(skyline);
 
   const bridge = new THREE.Group();
-  const bridgeMat = new THREE.MeshBasicMaterial({ color:0xdde2d5, fog:true });
-  const bridgeShade = new THREE.MeshBasicMaterial({ color:0xaebbb4, fog:true });
-  const deck = mesh(new THREE.BoxGeometry(2.2,.5,72),bridgeMat,false,false);
-  deck.position.y = 4.1;
-  bridge.add(deck);
-  [-15,15].forEach(towerZ => {
-    const leftLeg = cylinderBetween(new THREE.Vector3(-.25,4.25,towerZ - 1.05),new THREE.Vector3(0,18,towerZ),.26,bridgeMat,8);
-    const rightLeg = cylinderBetween(new THREE.Vector3(.25,4.25,towerZ + 1.05),new THREE.Vector3(0,18,towerZ),.26,bridgeMat,8);
-    const crown = mesh(new THREE.BoxGeometry(.8,.45,2.2),bridgeMat,false,false);
-    crown.position.set(0,17.8,towerZ);
-    bridge.add(leftLeg,rightLeg,crown);
-    const cableEnds = towerZ < 0 ? [-34,-30,-26,-22,-8,-4,0,4] : [-4,0,4,8,22,26,30,34];
+  const concreteMat = new THREE.MeshBasicMaterial({ color:0xe6e2d4, fog:true });
+  const concreteShade = new THREE.MeshBasicMaterial({ color:0xa7b2ac, fog:true });
+  const roadwayMat = new THREE.MeshBasicMaterial({ color:0x5b6c6b, fog:true });
+  const cableMat = new THREE.MeshBasicMaterial({ color:0xd3dcd6, fog:true });
+  const deck = mesh(new THREE.BoxGeometry(2.7,.46,54),roadwayMat,false,false);
+  deck.position.y = 4.15;
+  const deckEdge = mesh(new THREE.BoxGeometry(2.95,.21,54.5),concreteMat,false,false);
+  deckEdge.position.y = 4.43;
+  bridge.add(deck,deckEdge);
+  [-10.5,10.5].forEach(towerZ => {
+    const lowerLeft = cylinderBetween(new THREE.Vector3(0,3.05,towerZ - 2.25),new THREE.Vector3(0,10.1,towerZ),.42,concreteMat,10);
+    const lowerRight = cylinderBetween(new THREE.Vector3(0,3.05,towerZ + 2.25),new THREE.Vector3(0,10.1,towerZ),.42,concreteMat,10);
+    const upperLeft = cylinderBetween(new THREE.Vector3(0,10.1,towerZ),new THREE.Vector3(0,20.2,towerZ - 1.18),.34,concreteMat,10);
+    const upperRight = cylinderBetween(new THREE.Vector3(0,10.1,towerZ),new THREE.Vector3(0,20.2,towerZ + 1.18),.34,concreteMat,10);
+    const lowerBeam = mesh(new THREE.BoxGeometry(.95,.42,3.8),concreteMat,false,false);
+    lowerBeam.position.set(0,6.05,towerZ);
+    const crown = mesh(new THREE.BoxGeometry(.95,.5,2.85),concreteMat,false,false);
+    crown.position.set(0,20.05,towerZ);
+    bridge.add(lowerLeft,lowerRight,upperLeft,upperRight,lowerBeam,crown);
+
+    const cableEnds = towerZ < 0 ? [-26,-22.5,-19,-15.5,-6,-2.5,1] : [-1,2.5,6,15.5,19,22.5,26];
     cableEnds.forEach((endZ,index) => {
-      const cable = cylinderBetween(new THREE.Vector3(0,17.25 - (index % 4) * .36,towerZ),new THREE.Vector3(0,4.48,endZ),.035,bridgeShade,5);
+      const direction = endZ < towerZ ? -1 : 1;
+      const anchorHeight = 18.75 - Math.abs(endZ - towerZ) * .24;
+      const cable = cylinderBetween(
+        new THREE.Vector3(0,anchorHeight,towerZ + direction * .72),
+        new THREE.Vector3(0,4.64,endZ),
+        .045,
+        cableMat,
+        6
+      );
       bridge.add(cable);
     });
   });
-  [-32,-24,-6,6,24,32].forEach(z => {
-    const pier = mesh(new THREE.CylinderGeometry(.18,.24,4.3,8),bridgeShade,false,false);
-    pier.position.set(0,1.8,z);
+  [-25,-20,-10.5,0,10.5,20,25].forEach(z => {
+    const pier = mesh(new THREE.CylinderGeometry(.22,.32,4,8),concreteShade,false,false);
+    pier.position.set(0,1.85,z);
     bridge.add(pier);
   });
+  for(let z = -25; z <= 25; z += 3.2){
+    const lampPost = mesh(new THREE.CylinderGeometry(.025,.035,1.15,5),concreteMat,false,false);
+    lampPost.position.set(-1.28,5.02,z);
+    bridge.add(lampPost);
+  }
   bridge.traverse(item => { if(item.isMesh){ item.castShadow = false; item.receiveShadow = false; } });
-  bridge.position.set(110,0,0);
+  bridge.position.set(111,0,-42);
   scene.add(bridge);
-
-  const port = new THREE.Group();
-  const craneMat = new THREE.MeshBasicMaterial({ color:0x748d8a, fog:true });
-  [34,43].forEach((z,index) => {
-    const mast = mesh(new THREE.BoxGeometry(.7,10,.7),craneMat,false,false);
-    mast.position.set(0,5,z);
-    const boom = mesh(new THREE.BoxGeometry(.55,.48,10),craneMat,false,false);
-    boom.position.set(0,9.3,z - 4.3);
-    boom.rotation.x = -.08 - index * .04;
-    const brace = cylinderBetween(new THREE.Vector3(0,8.8,z),new THREE.Vector3(0,6.3,z - 7.5),.11,craneMat,6);
-    port.add(mast,boom,brace);
-  });
-  port.position.x = 121;
-  scene.add(port);
 }
 
 function addContainerShip(x, z, speed, shipScale = 1){
