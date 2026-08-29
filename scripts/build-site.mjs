@@ -14,12 +14,12 @@ const files = [
   'sw.js',
   'icon-192.png',
   'icon-512.png',
-  'word-picture-sprite.png',
+  'word-picture-sprite-v55.png',
   'sound-the-word-capybara.png',
   'sky-high-balloon.png',
   'og.png'
 ];
-const directories = ['vendor', 'word-pictures', 'word-detective'];
+const directories = ['vendor', 'word-detective-sprites'];
 
 await rm(dist, { recursive:true, force:true });
 await mkdir(client, { recursive:true });

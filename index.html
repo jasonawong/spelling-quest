@@ -92,7 +92,7 @@
     .answer-input { font-size:2rem; font-weight:900; text-transform:lowercase; }
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
-    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprite.png'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
+    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprite-v55.png'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
@@ -112,7 +112,7 @@
     .word-list { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:16px; }
     .word-pill { border-radius:14px; padding:13px 15px; background:#f2f4fa; font-weight:850; }
     .detective-scene { position:relative; width:min(720px,100%); aspect-ratio:1; margin:12px auto 18px; overflow:hidden; border-radius:26px; background:#eef0f7; box-shadow:0 12px 28px rgba(46,52,90,.16); }
-    .detective-scene > img { width:100%; height:100%; display:block; object-fit:cover; }
+    .detective-image { position:absolute; inset:0; background-color:#eef0f7; background-repeat:no-repeat; background-size:200% 200%; }
     .detective-bubble { position:absolute; top:4%; right:4%; width:48%; padding:clamp(12px,2.5vw,22px); border:3px solid #30354c; border-radius:28px; background:rgba(255,255,255,.96); box-shadow:0 8px 20px rgba(30,34,53,.16); font-size:clamp(1rem,2.4vw,1.4rem); font-weight:850; line-height:1.55; text-align:left; }
     .detective-bubble::after { content:''; position:absolute; left:12%; bottom:-22px; width:34px; height:34px; background:white; border-right:3px solid #30354c; border-bottom:3px solid #30354c; transform:skew(-24deg) rotate(36deg); }
     .detective-word { display:inline-flex; align-items:baseline; gap:3px; margin:0 .22em; padding:.08em .38em .16em; border-radius:11px; background:#fff0a8; box-shadow:inset 0 -3px 0 #ffd35c, 0 2px 7px rgba(95,72,15,.16); white-space:nowrap; vertical-align:middle; }
@@ -168,7 +168,7 @@
     .detective-card::before { content:''; position:absolute; width:210px; height:210px; right:3%; top:-72px; border:4px dashed rgba(157,86,63,.34); border-radius:999px; transform:rotate(12deg); }
     .detective-card::after { content:'?'; position:absolute; right:9%; bottom:-44px; color:rgba(237,80,87,.14); font-size:10rem; font-weight:1000; line-height:1; transform:rotate(9deg); }
     .detective-card-art { position:relative; z-index:2; width:150px; min-width:150px; height:138px; display:grid; place-items:center; }
-    .detective-card-art img { width:118px; height:118px; object-fit:cover; border:4px solid #17251f; border-radius:24px; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
+    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-detective-sprites/set-1.png?v=56') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
     .detective-card .premier-badge { background:#ed5057; color:white !important; }
     .bridge-card { --premier-shadow:#1f5f78; background:linear-gradient(135deg,#e8f7f7 0%,#d9eff6 58%,#fff2cc 100%); }
     .bridge-card::before { content:''; position:absolute; right:-34px; bottom:-68px; width:285px; height:150px; border:4px solid rgba(31,95,120,.22); border-radius:50%; background:rgba(53,155,181,.14); transform:rotate(-7deg); }
@@ -258,7 +258,7 @@
       .game-card.premier-card { align-items:stretch; gap:12px; padding:15px; }
       .sky-card-art,.detective-card-art { width:108px; min-width:108px; height:126px; }
       .sky-card-art img { width:76px; }
-      .detective-card-art img { width:92px; height:104px; border-radius:19px; }
+      .detective-card-image { width:92px; height:104px; border-radius:19px; }
       .sky-scene { min-height:390px; }
       .sky-hud { gap:6px; }
       .sky-hud-pill { min-height:38px; padding:6px 9px; font-size:.72rem; }
@@ -386,7 +386,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=54" />
+  <link rel="stylesheet" href="island-quest.css?v=56" />
 </head>
 <body>
 <div class="app">
@@ -425,7 +425,7 @@
           <div class="premier-card-copy"><span class="premier-badge">Premier flight</span><strong>Sky-High Spelling</strong><span>Spell all 20 words to fire the burner, stay in the air, and complete the sky route.</span></div>
         </button>
         <button class="game-card premier-card detective-card" data-action="detective">
-          <div class="detective-card-art" aria-hidden="true"><img src="word-detective/wrench.png?v=48" alt="" /></div>
+          <div class="detective-card-art" aria-hidden="true"><div class="detective-card-image"></div></div>
           <div class="premier-card-copy"><span class="premier-badge">Premier mystery</span><strong>Word Detective</strong><span>Investigate illustrated scenes and complete the missing letters in each character's sentence.</span></div>
         </button>
         <button class="game-card premier-card bridge-card" data-action="bridge">
@@ -638,7 +638,7 @@
       <div class="panel center">
         <div class="question-meta"><span id="detectiveCounter">Case 1 of 20</span><span>Word Detective</span></div>
         <div class="detective-scene">
-          <img id="detectiveImage" alt="" />
+          <div id="detectiveImage" class="detective-image" role="img"></div>
           <div id="detectiveBubble" class="detective-bubble" aria-label="Sentence with missing letters"></div>
         </div>
         <p class="sub">Type the missing letters in the speech bubble to complete the sentence.</p>
@@ -992,46 +992,47 @@
 <script>
 (() => {
   const DEFAULT_WORDS = [
-    'wrench','hello','yellow','bread','kept','better','sentence','eggshell','medal','metal',
-    'remember','reading','peaches','peace','piece','east','west','many','special','beanstalk'
+    'pilot','write','inch','reply','lines','bigger','brick','river','given','silent',
+    'fine','whisper','rhyme','iron','height','grade','safety','they','multiply','divide'
   ];
   const SOUND_MAPS = {
-    wrench:['wr','e','n','ch'], hello:['h','e','ll','o'], yellow:['y','e','ll','ow'], bread:['br','ea','d'], kept:['k','e','p','t'],
-    better:['b','e','tt','er'], sentence:['s','e','n','t','e','n','ce'], eggshell:['e','gg','sh','e','ll'], medal:['m','e','d','al'], metal:['m','e','t','al'],
-    remember:['r','e','m','e','m','b','er'], reading:['r','ea','d','ing'], peaches:['p','ea','ch','es'], peace:['p','ea','ce'], piece:['p','ie','ce'],
-    east:['ea','s','t'], west:['w','e','s','t'], many:['m','a','n','y'], special:['sp','e','cial'], beanstalk:['b','ea','n','s','t','al','k']
+    pilot:['p','i','l','o','t'], write:['wr','i','te'], inch:['i','n','ch'], reply:['r','e','pl','y'], lines:['l','i','ne','s'],
+    bigger:['b','i','gg','er'], brick:['br','i','ck'], river:['r','i','v','er'], given:['g','i','v','en'], silent:['s','i','l','en','t'],
+    fine:['f','i','ne'], whisper:['wh','i','sp','er'], rhyme:['rh','y','me'], iron:['i','r','on'], height:['h','eigh','t'],
+    grade:['gr','a','de'], safety:['s','a','fe','ty'], they:['th','ey'], multiply:['m','u','l','t','i','pl','y'], divide:['d','i','v','i','de']
   };
   const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
-  const VISUAL_SPRITE_SIZE = 1254;
-  const VISUAL_COLUMNS = [{x:17,width:288},{x:327,width:289},{x:638,width:288},{x:948,width:289}];
-  const VISUAL_ROWS = [{y:18,height:253},{y:292,height:250},{y:562,height:235},{y:817,height:198},{y:1034,height:202}];
-  const VISUAL_OVERRIDES = {
-    peaches:{width:288,height:198}, peace:{width:289,height:198},
-    many:{width:289,height:202}, special:{width:288,height:202}, beanstalk:{width:289,height:202}
-  };
+  const VISUAL_SPRITE_WIDTH = 1122;
+  const VISUAL_SPRITE_HEIGHT = 1402;
+  const VISUAL_COLUMNS = [
+    {x:13,width:264},{x:290,width:264},{x:568,width:265},{x:846,width:263}
+  ];
+  const VISUAL_ROWS = [
+    {y:12,height:266},{y:291,height:254},{y:557,height:264},{y:833,height:258},{y:1102,height:270}
+  ];
   const DETECTIVE_SENTENCES = {
-    wrench: 'I used a wrench to tighten the loose bolt.',
-    hello: 'I wave and say hello to my friend.',
-    yellow: 'The yellow kite sailed above the trees.',
-    bread: 'Dad sliced the warm bread for lunch.',
-    kept: 'I kept my special shell in a small box.',
-    better: 'I feel better after a good night\'s sleep.',
-    sentence: 'I wrote a complete sentence in my notebook.',
-    eggshell: 'A tiny chick pecked through the eggshell.',
-    medal: 'She won a gold medal at the race.',
-    metal: 'The bridge is made from strong metal.',
-    remember: 'Please remember to bring your library book.',
-    reading: 'We enjoy reading together after dinner.',
-    peaches: 'The basket is full of ripe peaches.',
-    peace: 'The dove is a symbol of peace.',
-    piece: 'I found the missing piece of the puzzle.',
-    east: 'The sun rises in the east each morning.',
-    west: 'The sun sets in the west each evening.',
-    many: 'Many bright stars filled the night sky.',
-    special: 'Grandma made a special cake for my birthday.',
-    beanstalk: 'The giant beanstalk reached above the clouds.'
+    pilot: 'The pilot flies the plane safely above the clouds.',
+    write: 'I write my name at the top of the paper.',
+    inch: 'The tiny caterpillar moved one inch.',
+    reply: 'I will reply to the letter after school.',
+    lines: 'I drew three straight lines with my ruler.',
+    bigger: 'This pumpkin is bigger than the other one.',
+    brick: 'The mason placed one red brick in the wall.',
+    river: 'The wide river flows toward the ocean.',
+    given: 'I have given my friend a birthday gift.',
+    silent: 'The library is silent during reading time.',
+    fine: 'I feel fine after a good night\'s sleep.',
+    whisper: 'Please whisper so you do not wake the baby.',
+    rhyme: 'Cat and hat rhyme with each other.',
+    iron: 'Dad used the iron to smooth his shirt.',
+    height: 'The nurse measured my height at the appointment.',
+    grade: 'I earned a good grade on my science project.',
+    safety: 'I wear a helmet for safety when I ride my bike.',
+    they: 'They are building a sandcastle together.',
+    multiply: 'We multiply to find the total in equal groups.',
+    divide: 'We divide the cookies evenly among friends.'
   };
-  const DETECTIVE_ART_VERSION = 48;
+  const APP_VERSION = 56;
   const STORAGE_KEY = 'spellingQuestV3';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
@@ -1093,23 +1094,14 @@
   function show(id){ if(id!=='sky') stopSky(); if(id!=='bridge') stopBridge(); if(id!=='island'){ islandLaunchAttempt++; window.IslandQuest?.stop(); } document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
   function requireWords(){ if(!state.words || state.words.length<1){ toast('The word list is empty.'); return false; } return true; }
   function showWordPicture(element, word){
-    const override=VISUAL_OVERRIDES[word];
-    if(override){
-      element.classList.remove('fallback'); element.textContent='';
-      element.style.aspectRatio=`${override.width}/${override.height}`;
-      element.style.backgroundImage=`url('word-pictures/${word}.png')`;
-      element.style.backgroundSize='100% 100%'; element.style.backgroundPosition='center';
-      element.setAttribute('aria-label',`Picture clue for ${word}`); return;
-    }
     const index=VISUAL_WORDS.get(word);
     if(index===undefined){ element.classList.add('fallback'); element.textContent='🖼️'; element.style.aspectRatio='5/4'; element.style.backgroundImage='none'; element.style.backgroundSize='auto'; element.style.backgroundPosition='center'; element.setAttribute('aria-label',`Picture clue unavailable for ${word}`); return; }
-    const sourceCol=VISUAL_COLUMNS[index%4], sourceRow=VISUAL_ROWS[Math.floor(index/4)], inset=6;
-    const x=sourceCol.x+inset, y=sourceRow.y+inset, width=sourceCol.width-inset*2, height=sourceRow.height-inset*2;
+    const column=VISUAL_COLUMNS[index%4], row=VISUAL_ROWS[Math.floor(index/4)];
     element.classList.remove('fallback'); element.textContent='';
-    element.style.aspectRatio=`${width}/${height}`;
-    element.style.backgroundImage="url('word-picture-sprite.png')";
-    element.style.backgroundSize=`${VISUAL_SPRITE_SIZE/width*100}% ${VISUAL_SPRITE_SIZE/height*100}%`;
-    element.style.backgroundPosition=`${x/(VISUAL_SPRITE_SIZE-width)*100}% ${y/(VISUAL_SPRITE_SIZE-height)*100}%`;
+    element.style.aspectRatio='1';
+    element.style.backgroundImage="url('word-picture-sprite-v55.png')";
+    element.style.backgroundSize=`${VISUAL_SPRITE_WIDTH/column.width*100}% ${VISUAL_SPRITE_HEIGHT/row.height*100}%`;
+    element.style.backgroundPosition=`${column.x/(VISUAL_SPRITE_WIDTH-column.width)*100}% ${row.y/(VISUAL_SPRITE_HEIGHT-row.height)*100}%`;
     element.setAttribute('aria-label',`Picture clue for ${word}`);
   }
 
@@ -1204,7 +1196,11 @@
     if(!detectiveRemaining.length){ currentWord=null; show('home'); toast(`Word Detective complete — you solved all ${detectiveTotal} cases!`); return; }
     detectiveN++; currentWord=weightedWord(detectiveRemaining); detectiveRemaining=detectiveRemaining.filter(word=>word!==currentWord);
     document.getElementById('detectiveCounter').textContent=`Case ${detectiveN} of ${detectiveTotal}`;
-    const image=document.getElementById('detectiveImage'); image.src=`word-detective/${currentWord.word}.png?v=${DETECTIVE_ART_VERSION}`; image.alt='Anime scene illustrating the sentence clue';
+    const artIndex=DEFAULT_WORDS.indexOf(currentWord.word), artCell=artIndex%4;
+    const image=document.getElementById('detectiveImage');
+    image.style.backgroundImage=`url('word-detective-sprites/set-${Math.floor(artIndex/4)+1}.png?v=${APP_VERSION}')`;
+    image.style.backgroundPosition=`${artCell%2*100}% ${Math.floor(artCell/2)*100}%`;
+    image.setAttribute('aria-label',`Illustrated scene clue for ${currentWord.word}`);
     const feedback=document.getElementById('detectiveFeedback'); feedback.className='feedback'; feedback.textContent='';
     document.getElementById('detectiveCheck').disabled=false; renderDetectiveSentence();
     setTimeout(()=>document.querySelector('#detectiveBubble .detective-letter')?.focus(),80);
@@ -1596,12 +1592,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=54',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=56',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=54"></script>
+<script type="module" src="island-quest.js?v=56"></script>
 </body>
 </html>
