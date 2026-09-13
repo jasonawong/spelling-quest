@@ -1,7 +1,7 @@
-const CACHE = 'spelling-quest-v56';
-const APP_VERSION = '56';
+const CACHE = 'spelling-quest-v57';
+const APP_VERSION = '57';
 const DETECTIVE_SPRITES = [1,2,3,4,5].map(number=>`./word-detective-sprites/set-${number}.png?v=${APP_VERSION}`);
-const ASSETS = ['./','./index.html',`./island-quest.css?v=${APP_VERSION}`,`./island-quest.js?v=${APP_VERSION}`,'./vendor/three.module.min.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./word-picture-sprite-v55.png','./sound-the-word-capybara.png','./sky-high-balloon.png',...DETECTIVE_SPRITES];
+const ASSETS = ['./','./index.html',`./island-quest.css?v=${APP_VERSION}`,`./island-quest.js?v=${APP_VERSION}`,'./vendor/three.module.min.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./word-picture-sprite-v57.png','./sound-the-word-capybara.png','./sky-high-balloon.png',...DETECTIVE_SPRITES];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => Promise.all(ASSETS.map(url => cache.add(new Request(new URL(url,self.location).href,{ cache:'reload' }))))).then(()=>self.skipWaiting()));
 });

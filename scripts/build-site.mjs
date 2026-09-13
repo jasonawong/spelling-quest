@@ -14,7 +14,7 @@ const files = [
   'sw.js',
   'icon-192.png',
   'icon-512.png',
-  'word-picture-sprite-v55.png',
+  'word-picture-sprite-v57.png',
   'sound-the-word-capybara.png',
   'sky-high-balloon.png',
   'og.png'

@@ -92,7 +92,7 @@
     .answer-input { font-size:2rem; font-weight:900; text-transform:lowercase; }
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
-    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprite-v55.png'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
+    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprite-v57.png'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
@@ -386,7 +386,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=56" />
+  <link rel="stylesheet" href="island-quest.css?v=57" />
 </head>
 <body>
 <div class="app">
@@ -992,14 +992,14 @@
 <script>
 (() => {
   const DEFAULT_WORDS = [
-    'pilot','write','inch','reply','lines','bigger','brick','river','given','silent',
-    'fine','whisper','rhyme','iron','height','grade','safety','they','multiply','divide'
+    'fruit','cute','mule','stool','few','rules','new','knew','bedroom','musical',
+    'rescue','spoon','computer','moon','perfume','height','silent','reply','barbecue','suitcase'
   ];
   const SOUND_MAPS = {
-    pilot:['p','i','l','o','t'], write:['wr','i','te'], inch:['i','n','ch'], reply:['r','e','pl','y'], lines:['l','i','ne','s'],
-    bigger:['b','i','gg','er'], brick:['br','i','ck'], river:['r','i','v','er'], given:['g','i','v','en'], silent:['s','i','l','en','t'],
-    fine:['f','i','ne'], whisper:['wh','i','sp','er'], rhyme:['rh','y','me'], iron:['i','r','on'], height:['h','eigh','t'],
-    grade:['gr','a','de'], safety:['s','a','fe','ty'], they:['th','ey'], multiply:['m','u','l','t','i','pl','y'], divide:['d','i','v','i','de']
+    fruit:['fr','ui','t'], cute:['c','u','te'], mule:['m','u','le'], stool:['st','oo','l'], few:['f','ew'],
+    rules:['r','u','le','s'], new:['n','ew'], knew:['kn','ew'], bedroom:['b','e','d','r','oo','m'], musical:['m','u','s','i','c','al'],
+    rescue:['r','e','s','c','ue'], spoon:['sp','oo','n'], computer:['c','o','m','p','u','t','er'], moon:['m','oo','n'], perfume:['p','er','f','u','me'],
+    height:['h','eigh','t'], silent:['s','i','l','en','t'], reply:['r','e','pl','y'], barbecue:['b','ar','b','e','c','ue'], suitcase:['s','ui','t','c','a','se']
   };
   const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
   const VISUAL_SPRITE_WIDTH = 1122;
@@ -1011,29 +1011,29 @@
     {y:12,height:266},{y:291,height:254},{y:557,height:264},{y:833,height:258},{y:1102,height:270}
   ];
   const DETECTIVE_SENTENCES = {
-    pilot: 'The pilot flies the plane safely above the clouds.',
-    write: 'I write my name at the top of the paper.',
-    inch: 'The tiny caterpillar moved one inch.',
-    reply: 'I will reply to the letter after school.',
-    lines: 'I drew three straight lines with my ruler.',
-    bigger: 'This pumpkin is bigger than the other one.',
-    brick: 'The mason placed one red brick in the wall.',
-    river: 'The wide river flows toward the ocean.',
-    given: 'I have given my friend a birthday gift.',
-    silent: 'The library is silent during reading time.',
-    fine: 'I feel fine after a good night\'s sleep.',
-    whisper: 'Please whisper so you do not wake the baby.',
-    rhyme: 'Cat and hat rhyme with each other.',
-    iron: 'Dad used the iron to smooth his shirt.',
+    fruit: 'We sliced fresh fruit for our picnic.',
+    cute: 'The cute puppy wore a tiny red bow.',
+    mule: 'The mule carried supplies up the trail.',
+    stool: 'I sat on a wooden stool at the counter.',
+    few: 'Only a few shells remained in the bucket.',
+    rules: 'We follow the rules when we play the game.',
+    new: 'I wore my new shoes to school.',
+    knew: 'She knew the answer to the tricky question.',
+    bedroom: 'I made my bed and tidied the bedroom.',
+    musical: 'Our class performed a musical on stage.',
+    rescue: 'The firefighters rescue a kitten from the tree.',
+    spoon: 'I stirred my cereal with a spoon.',
+    computer: 'I used the computer to finish my project.',
+    moon: 'The bright moon rose over the ocean.',
+    perfume: 'The perfume smelled like fresh flowers.',
     height: 'The nurse measured my height at the appointment.',
-    grade: 'I earned a good grade on my science project.',
-    safety: 'I wear a helmet for safety when I ride my bike.',
-    they: 'They are building a sandcastle together.',
-    multiply: 'We multiply to find the total in equal groups.',
-    divide: 'We divide the cookies evenly among friends.'
+    silent: 'The library is silent during reading time.',
+    reply: 'I will reply to the letter after school.',
+    barbecue: 'Dad cooked corn on the barbecue.',
+    suitcase: 'I packed my clothes in the suitcase.'
   };
-  const APP_VERSION = 56;
-  const STORAGE_KEY = 'spellingQuestV3';
+  const APP_VERSION = 57;
+  const STORAGE_KEY = 'spellingQuestV4';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
     stars: 0, bestStreak: 0, currentStreak: 0, answers: 0,
@@ -1099,7 +1099,7 @@
     const column=VISUAL_COLUMNS[index%4], row=VISUAL_ROWS[Math.floor(index/4)];
     element.classList.remove('fallback'); element.textContent='';
     element.style.aspectRatio='1';
-    element.style.backgroundImage="url('word-picture-sprite-v55.png')";
+    element.style.backgroundImage="url('word-picture-sprite-v57.png')";
     element.style.backgroundSize=`${VISUAL_SPRITE_WIDTH/column.width*100}% ${VISUAL_SPRITE_HEIGHT/row.height*100}%`;
     element.style.backgroundPosition=`${column.x/(VISUAL_SPRITE_WIDTH-column.width)*100}% ${row.y/(VISUAL_SPRITE_HEIGHT-row.height)*100}%`;
     element.setAttribute('aria-label',`Picture clue for ${word}`);
@@ -1592,12 +1592,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=56',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=57',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=56"></script>
+<script type="module" src="island-quest.js?v=57"></script>
 </body>
 </html>
