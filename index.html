@@ -92,7 +92,7 @@
     .answer-input { font-size:2rem; font-weight:900; text-transform:lowercase; }
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
-    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprite-v57.png'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
+    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1.png?v=58'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
@@ -168,7 +168,7 @@
     .detective-card::before { content:''; position:absolute; width:210px; height:210px; right:3%; top:-72px; border:4px dashed rgba(157,86,63,.34); border-radius:999px; transform:rotate(12deg); }
     .detective-card::after { content:'?'; position:absolute; right:9%; bottom:-44px; color:rgba(237,80,87,.14); font-size:10rem; font-weight:1000; line-height:1; transform:rotate(9deg); }
     .detective-card-art { position:relative; z-index:2; width:150px; min-width:150px; height:138px; display:grid; place-items:center; }
-    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-detective-sprites/set-1.png?v=56') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
+    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-detective-sprites/set-1.png?v=58') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
     .detective-card .premier-badge { background:#ed5057; color:white !important; }
     .bridge-card { --premier-shadow:#1f5f78; background:linear-gradient(135deg,#e8f7f7 0%,#d9eff6 58%,#fff2cc 100%); }
     .bridge-card::before { content:''; position:absolute; right:-34px; bottom:-68px; width:285px; height:150px; border:4px solid rgba(31,95,120,.22); border-radius:50%; background:rgba(53,155,181,.14); transform:rotate(-7deg); }
@@ -386,7 +386,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=57" />
+  <link rel="stylesheet" href="island-quest.css?v=58" />
 </head>
 <body>
 <div class="app">
@@ -992,48 +992,40 @@
 <script>
 (() => {
   const DEFAULT_WORDS = [
-    'fruit','cute','mule','stool','few','rules','new','knew','bedroom','musical',
-    'rescue','spoon','computer','moon','perfume','height','silent','reply','barbecue','suitcase'
+    'smile','note','skate','cube','plate','arrive','globe','stripe','flame','rose',
+    'white','pancake','beware','confuse','become','though','option','lollipop','extreme','escape'
   ];
   const SOUND_MAPS = {
-    fruit:['fr','ui','t'], cute:['c','u','te'], mule:['m','u','le'], stool:['st','oo','l'], few:['f','ew'],
-    rules:['r','u','le','s'], new:['n','ew'], knew:['kn','ew'], bedroom:['b','e','d','r','oo','m'], musical:['m','u','s','i','c','al'],
-    rescue:['r','e','s','c','ue'], spoon:['sp','oo','n'], computer:['c','o','m','p','u','t','er'], moon:['m','oo','n'], perfume:['p','er','f','u','me'],
-    height:['h','eigh','t'], silent:['s','i','l','en','t'], reply:['r','e','pl','y'], barbecue:['b','ar','b','e','c','ue'], suitcase:['s','ui','t','c','a','se']
+    smile:['sm','i','le'], note:['n','o','te'], skate:['sk','a','te'], cube:['c','u','be'], plate:['pl','a','te'],
+    arrive:['a','rr','i','ve'], globe:['gl','o','be'], stripe:['str','i','pe'], flame:['fl','a','me'], rose:['r','o','se'],
+    white:['wh','i','te'], pancake:['pan','cake'], beware:['be','ware'], confuse:['con','fuse'], become:['be','come'],
+    though:['th','ough'], option:['op','tion'], lollipop:['lol','li','pop'], extreme:['ex','treme'], escape:['es','cape']
   };
   const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
-  const VISUAL_SPRITE_WIDTH = 1122;
-  const VISUAL_SPRITE_HEIGHT = 1402;
-  const VISUAL_COLUMNS = [
-    {x:13,width:264},{x:290,width:264},{x:568,width:265},{x:846,width:263}
-  ];
-  const VISUAL_ROWS = [
-    {y:12,height:266},{y:291,height:254},{y:557,height:264},{y:833,height:258},{y:1102,height:270}
-  ];
   const DETECTIVE_SENTENCES = {
-    fruit: 'We sliced fresh fruit for our picnic.',
-    cute: 'The cute puppy wore a tiny red bow.',
-    mule: 'The mule carried supplies up the trail.',
-    stool: 'I sat on a wooden stool at the counter.',
-    few: 'Only a few shells remained in the bucket.',
-    rules: 'We follow the rules when we play the game.',
-    new: 'I wore my new shoes to school.',
-    knew: 'She knew the answer to the tricky question.',
-    bedroom: 'I made my bed and tidied the bedroom.',
-    musical: 'Our class performed a musical on stage.',
-    rescue: 'The firefighters rescue a kitten from the tree.',
-    spoon: 'I stirred my cereal with a spoon.',
-    computer: 'I used the computer to finish my project.',
-    moon: 'The bright moon rose over the ocean.',
-    perfume: 'The perfume smelled like fresh flowers.',
-    height: 'The nurse measured my height at the appointment.',
-    silent: 'The library is silent during reading time.',
-    reply: 'I will reply to the letter after school.',
-    barbecue: 'Dad cooked corn on the barbecue.',
-    suitcase: 'I packed my clothes in the suitcase.'
+    smile: 'Her bright smile made everyone feel welcome.',
+    note: 'I left a note on the table for Mom.',
+    skate: 'We skate across the frozen pond after school.',
+    cube: 'The blue cube has six square faces.',
+    plate: 'Please place the sandwich on the plate.',
+    arrive: 'The school bus will arrive at eight o\'clock.',
+    globe: 'We found Africa on the classroom globe.',
+    stripe: 'The zebra has a black stripe across its side.',
+    flame: 'The candle flame flickered in the breeze.',
+    rose: 'A red rose bloomed beside the garden path.',
+    white: 'The fresh snow made the whole yard white.',
+    pancake: 'I poured syrup over my warm pancake.',
+    beware: 'Beware of the slippery rocks near the waterfall.',
+    confuse: 'The two similar maps confuse me.',
+    become: 'The caterpillar will become a butterfly.',
+    though: 'Though it was raining, we still played outside.',
+    option: 'The blue trail is the safest option.',
+    lollipop: 'She chose a cherry lollipop from the candy jar.',
+    extreme: 'The hikers faced extreme cold near the summit.',
+    escape: 'The rabbit found a way to escape from the garden.'
   };
-  const APP_VERSION = 57;
-  const STORAGE_KEY = 'spellingQuestV4';
+  const APP_VERSION = 58;
+  const STORAGE_KEY = 'spellingQuestV5';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
     stars: 0, bestStreak: 0, currentStreak: 0, answers: 0,
@@ -1096,12 +1088,12 @@
   function showWordPicture(element, word){
     const index=VISUAL_WORDS.get(word);
     if(index===undefined){ element.classList.add('fallback'); element.textContent='🖼️'; element.style.aspectRatio='5/4'; element.style.backgroundImage='none'; element.style.backgroundSize='auto'; element.style.backgroundPosition='center'; element.setAttribute('aria-label',`Picture clue unavailable for ${word}`); return; }
-    const column=VISUAL_COLUMNS[index%4], row=VISUAL_ROWS[Math.floor(index/4)];
+    const artCell=index%4;
     element.classList.remove('fallback'); element.textContent='';
     element.style.aspectRatio='1';
-    element.style.backgroundImage="url('word-picture-sprite-v57.png')";
-    element.style.backgroundSize=`${VISUAL_SPRITE_WIDTH/column.width*100}% ${VISUAL_SPRITE_HEIGHT/row.height*100}%`;
-    element.style.backgroundPosition=`${column.x/(VISUAL_SPRITE_WIDTH-column.width)*100}% ${row.y/(VISUAL_SPRITE_HEIGHT-row.height)*100}%`;
+    element.style.backgroundImage=`url('word-picture-sprites/set-${Math.floor(index/4)+1}.png?v=${APP_VERSION}')`;
+    element.style.backgroundSize='200% 200%';
+    element.style.backgroundPosition=`${artCell%2*100}% ${Math.floor(artCell/2)*100}%`;
     element.setAttribute('aria-label',`Picture clue for ${word}`);
   }
 
@@ -1592,12 +1584,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=57',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=58',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=57"></script>
+<script type="module" src="island-quest.js?v=58"></script>
 </body>
 </html>
