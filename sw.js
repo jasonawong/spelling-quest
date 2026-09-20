@@ -1,5 +1,5 @@
-const CACHE = 'spelling-quest-v58';
-const APP_VERSION = '58';
+const CACHE = 'spelling-quest-v61';
+const APP_VERSION = '61';
 const WORD_PICTURE_SPRITES = [1,2,3,4,5].map(number=>`./word-picture-sprites/set-${number}.png?v=${APP_VERSION}`);
 const DETECTIVE_SPRITES = [1,2,3,4,5].map(number=>`./word-detective-sprites/set-${number}.png?v=${APP_VERSION}`);
 const ASSETS = ['./','./index.html',`./island-quest.css?v=${APP_VERSION}`,`./island-quest.js?v=${APP_VERSION}`,'./vendor/three.module.min.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./sound-the-word-capybara.png','./sky-high-balloon.png',...WORD_PICTURE_SPRITES,...DETECTIVE_SPRITES];

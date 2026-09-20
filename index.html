@@ -64,8 +64,13 @@
     .progress { height:14px; border-radius:99px; background:rgba(255,255,255,.22); overflow:hidden; }
     .progress > span { display:block; height:100%; width:0%; background:white; border-radius:99px; transition:width .25s ease; }
     .grid { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:14px; }
-    .activity-grid-spacer { grid-column:1/-1; height:10px; }
-    @media (max-width:700px){ .grid,.word-list{grid-template-columns:1fr;} }
+    .home-activity-section { margin-top:28px; }
+    .home-section-heading { margin:0 0 12px; }
+    .home-section-heading h2 { margin:0; font-size:clamp(1.35rem,4vw,1.8rem); }
+    .home-section-heading p { margin:4px 0 0; color:var(--muted); font-weight:700; }
+    .warmup-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+    .final-quiz-grid .game-card { grid-column:1/-1; }
+    @media (max-width:700px){ .grid,.warmup-grid,.word-list{grid-template-columns:1fr;} }
     .game-card { border:0; text-align:left; min-height:148px; border-radius:var(--radius); padding:20px; background:var(--card); box-shadow:var(--shadow); cursor:pointer; display:flex; flex-direction:column; justify-content:space-between; color:var(--ink); }
     .game-card .emoji { font-size:34px; }
     .game-card-icon { width:58px; height:58px; object-fit:contain; filter:drop-shadow(0 5px 7px rgba(46,52,90,.16)); }
@@ -92,7 +97,7 @@
     .answer-input { font-size:2rem; font-weight:900; text-transform:lowercase; }
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
-    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1.png?v=58'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
+    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1.png?v=61'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
@@ -106,11 +111,10 @@
     .tile.dragging { opacity:.5; }
     .slot { width:58px; height:58px; border-radius:14px; border:2px dashed #cfd4e3; display:grid; place-items:center; font-size:1.55rem; font-weight:1000; background:white; }
     .word-preview { font-size:clamp(2rem,7vw,3.4rem); font-weight:1000; letter-spacing:.06em; text-align:center; margin:12px 0 18px; }
-    .canvas-wrap { background:#fff; border:2px solid var(--line); border-radius:20px; overflow:hidden; }
-    #writeCanvas { width:100%; height:280px; display:block; touch-action:none; background:repeating-linear-gradient(to bottom,#fff 0,#fff 68px,#e8ebf3 69px,#fff 70px); }
-    .match-word { font-size:clamp(2rem,7vw,3.6rem); font-weight:1000; letter-spacing:.06em; margin:14px 0; }
-    .word-list { display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-top:16px; }
-    .word-pill { border-radius:14px; padding:13px 15px; background:#f2f4fa; font-weight:850; }
+    .word-list { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin-top:16px; }
+    .word-pill { display:flex; align-items:center; gap:14px; min-width:0; border-radius:18px; padding:10px; background:#f2f4fa; font-weight:850; }
+    .word-list-picture { width:82px; min-width:82px; border-radius:13px; box-shadow:0 5px 12px rgba(46,52,90,.12); }
+    .word-pill strong { min-width:0; font-size:1.08rem; overflow-wrap:anywhere; }
     .detective-scene { position:relative; width:min(720px,100%); aspect-ratio:1; margin:12px auto 18px; overflow:hidden; border-radius:26px; background:#eef0f7; box-shadow:0 12px 28px rgba(46,52,90,.16); }
     .detective-image { position:absolute; inset:0; background-color:#eef0f7; background-repeat:no-repeat; background-size:200% 200%; }
     .detective-bubble { position:absolute; top:4%; right:4%; width:48%; padding:clamp(12px,2.5vw,22px); border:3px solid #30354c; border-radius:28px; background:rgba(255,255,255,.96); box-shadow:0 8px 20px rgba(30,34,53,.16); font-size:clamp(1rem,2.4vw,1.4rem); font-weight:850; line-height:1.55; text-align:left; }
@@ -168,7 +172,7 @@
     .detective-card::before { content:''; position:absolute; width:210px; height:210px; right:3%; top:-72px; border:4px dashed rgba(157,86,63,.34); border-radius:999px; transform:rotate(12deg); }
     .detective-card::after { content:'?'; position:absolute; right:9%; bottom:-44px; color:rgba(237,80,87,.14); font-size:10rem; font-weight:1000; line-height:1; transform:rotate(9deg); }
     .detective-card-art { position:relative; z-index:2; width:150px; min-width:150px; height:138px; display:grid; place-items:center; }
-    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-detective-sprites/set-1.png?v=58') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
+    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-detective-sprites/set-1.png?v=61') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
     .detective-card .premier-badge { background:#ed5057; color:white !important; }
     .bridge-card { --premier-shadow:#1f5f78; background:linear-gradient(135deg,#e8f7f7 0%,#d9eff6 58%,#fff2cc 100%); }
     .bridge-card::before { content:''; position:absolute; right:-34px; bottom:-68px; width:285px; height:150px; border:4px solid rgba(31,95,120,.22); border-radius:50%; background:rgba(53,155,181,.14); transform:rotate(-7deg); }
@@ -386,7 +390,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=58" />
+  <link rel="stylesheet" href="island-quest.css?v=61" />
 </head>
 <body>
 <div class="app">
@@ -419,7 +423,24 @@
         <div class="stat"><b id="triesStat">0</b><span>Answers</span></div>
       </div>
 
-      <div class="grid">
+      <section class="home-activity-section" aria-labelledby="warmUpTitle">
+        <div class="home-section-heading">
+          <h2 id="warmUpTitle">Warm-Up</h2>
+          <p>Review the words, pictures, spelling, and sounds before the big adventures.</p>
+        </div>
+        <div class="grid warmup-grid">
+          <button class="game-card" data-action="word-list"><div class="emoji">🖼️</div><div><strong>View the Word List</strong><span>See all 20 words with their related pictures.</span></div></button>
+          <button class="game-card" data-action="listen"><div class="keycap-icon" aria-hidden="true">A</div><div><strong>Type the Word</strong><span>See and hear a word, then type the spelling.</span></div></button>
+          <button class="game-card" data-action="sound"><img class="game-card-icon" src="sound-the-word-capybara.png" alt="" /><div><strong>Sound the Word</strong><span>Map each sound to its spelling chunk.</span></div></button>
+        </div>
+      </section>
+
+      <section class="home-activity-section" aria-labelledby="premierActivitiesTitle">
+        <div class="home-section-heading">
+          <h2 id="premierActivitiesTitle">Premier Activities</h2>
+          <p>Put your spelling skills to work in a full adventure.</p>
+        </div>
+        <div class="grid">
         <button class="game-card premier-card sky-card" data-action="sky">
           <div class="sky-card-art" aria-hidden="true"><span class="sky-card-cloud one"></span><span class="sky-card-cloud two"></span><img src="sky-high-balloon.png" alt="" /></div>
           <div class="premier-card-copy"><span class="premier-badge">Premier flight</span><strong>Sky-High Spelling</strong><span>Spell all 20 words to fire the burner, stay in the air, and complete the sky route.</span></div>
@@ -487,20 +508,25 @@
           </div>
           <div class="premier-card-copy"><span class="premier-badge">Premier island adventure</span><strong>Ice Cream Quest</strong><span>Explore Sullivan’s Island, collect 10 gold coins, spell each hidden word, and unlock a giant ice cream cone.</span></div>
         </button>
-        <div class="activity-grid-spacer" aria-hidden="true"></div>
-        <button class="game-card" data-action="listen"><div class="keycap-icon" aria-hidden="true">A</div><div><strong>Type the Word</strong><span>See and hear a word, then type the spelling.</span></div></button>
-        <button class="game-card" data-action="build"><div class="emoji">🧩</div><div><strong>Build the Word</strong><span>Drag scrambled letters into the correct order.</span></div></button>
-        <button class="game-card" data-action="sound"><img class="game-card-icon" src="sound-the-word-capybara.png" alt="" /><div><strong>Sound the Word</strong><span>Map each sound to its spelling chunk.</span></div></button>
-        <button class="game-card" data-action="write"><div class="emoji">✏️</div><div><strong>Write the Word</strong><span>Use your finger to practice handwriting.</span></div></button>
-        <button class="game-card" data-action="test"><div class="emoji">🏁</div><div><strong>Practice Test</strong><span>All 20 words. No hints. Score at the end.</span></div></button>
-      </div>
+        </div>
+      </section>
+
+      <section class="home-activity-section" aria-labelledby="finalQuizTitle">
+        <div class="home-section-heading">
+          <h2 id="finalQuizTitle">Final Quiz</h2>
+          <p>Finish the quest by testing all 20 words without hints.</p>
+        </div>
+        <div class="grid final-quiz-grid">
+          <button class="game-card" data-action="test"><div class="emoji">🏁</div><div><strong>Practice Test</strong><span>All 20 words. No hints. Score at the end.</span></div></button>
+        </div>
+      </section>
     </section>
 
     <section id="wordList" class="screen">
       <button class="btn ghost back" data-go="home">← Home</button>
       <div class="panel">
         <h2>Word List</h2>
-        <p class="sub">These are the 20 words in this spelling quest.</p>
+        <p class="sub">Review all 20 words and their picture clues.</p>
         <div id="wordListDisplay" class="word-list"></div>
       </div>
     </section>
@@ -609,26 +635,6 @@
             <div class="result-word-list" id="buildPracticeList"></div>
           </div>
           <div class="row" style="justify-content:center"><button class="btn ghost" data-go="home">Home</button><button class="btn primary" id="buildTryAgain">Try Again</button></div>
-        </div>
-      </div>
-    </section>
-
-    <section id="write" class="screen">
-      <button class="btn ghost back" data-go="home">← Home</button>
-      <div class="panel center">
-        <div class="question-meta"><span id="writeCounter">Write it</span><span>Finger handwriting</span></div>
-        <div class="picture-cue">
-          <div id="writePicture" class="word-picture" role="img" aria-label="Picture clue"></div>
-          <button class="speak" id="writeSpeak" aria-label="Hear word">🔊</button>
-        </div>
-        <div id="writePreview" class="word-preview" hidden></div>
-        <p class="sub">Write the word below. Then check your work.</p>
-        <div class="canvas-wrap"><canvas id="writeCanvas"></canvas></div>
-        <div class="row" style="justify-content:center;margin-top:14px"><button class="btn ghost" id="clearCanvas">Clear</button><button class="btn primary" id="revealWord">Check My Word</button></div>
-        <div id="writeReveal" hidden>
-          <div class="match-word" id="writeWord"></div>
-          <p class="sub">Does your spelling match?</p>
-          <div class="row" style="justify-content:center"><button class="btn bad" id="writeNo">↻ Try Again</button><button class="btn good" id="writeYes">✓ I Got It</button></div>
         </div>
       </div>
     </section>
@@ -1024,7 +1030,7 @@
     extreme: 'The hikers faced extreme cold near the summit.',
     escape: 'The rabbit found a way to escape from the garden.'
   };
-  const APP_VERSION = 58;
+  const APP_VERSION = 61;
   const STORAGE_KEY = 'spellingQuestV5';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
@@ -1114,9 +1120,15 @@
 
   function renderWordList(){
     const list=document.getElementById('wordListDisplay'); list.innerHTML='';
-    state.words.forEach((wordObj,index)=>{ const item=document.createElement('div'); item.className='word-pill'; item.textContent=`${index+1}. ${wordObj.word}`; list.appendChild(item); });
+    state.words.forEach(wordObj=>{
+      const item=document.createElement('div'); item.className='word-pill';
+      const picture=document.createElement('div'); picture.className='word-picture word-list-picture'; picture.setAttribute('role','img'); showWordPicture(picture,wordObj.word);
+      const label=document.createElement('strong'); label.textContent=wordObj.word;
+      item.append(picture,label); list.appendChild(item);
+    });
   }
-  document.getElementById('wordListBtn').onclick=()=>{renderWordList();show('wordList');};
+  function openWordList(){ renderWordList(); show('wordList'); }
+  document.getElementById('wordListBtn').onclick=openWordList;
 
   function waitForIslandQuest(timeoutMs=12000){
     return new Promise(resolve=>{
@@ -1144,10 +1156,10 @@
   document.querySelectorAll('[data-action]').forEach(b=>b.onclick=()=>{
     if(!requireWords()) return;
     const a=b.dataset.action;
+    if(a==='word-list') openWordList();
     if(a==='listen') startListen();
     if(a==='build') startBuild();
     if(a==='sound') startSound();
-    if(a==='write') startWrite();
     if(a==='detective') startDetective();
     if(a==='island') startIsland();
     if(a==='sky') startSky();
@@ -1382,29 +1394,6 @@
   };
   document.getElementById('buildTryAgain').onclick=startBuild;
 
-  // Handwriting
-  let writeN=0, writeRemaining=[], writePreviewTimer=null, canvas, ctx, drawing=false;
-  function setupCanvas(){
-    canvas=document.getElementById('writeCanvas'); const rect=canvas.getBoundingClientRect(), dpr=Math.min(window.devicePixelRatio||1,2); canvas.width=Math.floor(rect.width*dpr); canvas.height=Math.floor(rect.height*dpr); ctx=canvas.getContext('2d'); ctx.scale(dpr,dpr); ctx.lineCap='round'; ctx.lineJoin='round'; ctx.lineWidth=6; ctx.strokeStyle='#20243a';
-  }
-  function clearCanvas(){ if(!ctx) setupCanvas(); const rect=canvas.getBoundingClientRect(); ctx.clearRect(0,0,rect.width,rect.height); }
-  function canvasPoint(e){ const r=canvas.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; }
-  document.addEventListener('pointerdown',e=>{ if(e.target===document.getElementById('writeCanvas')){drawing=true;canvas.setPointerCapture(e.pointerId);const p=canvasPoint(e);ctx.beginPath();ctx.moveTo(p.x,p.y);e.preventDefault();} });
-  document.addEventListener('pointermove',e=>{ if(drawing && e.target===canvas){const p=canvasPoint(e);ctx.lineTo(p.x,p.y);ctx.stroke();e.preventDefault();} });
-  document.addEventListener('pointerup',e=>{ if(drawing){drawing=false;try{canvas.releasePointerCapture(e.pointerId);}catch{}} });
-  function startWrite(){ writeN=0; writeRemaining=[...state.words]; show('write'); setTimeout(()=>{setupCanvas();nextWrite();},30); }
-  function nextWrite(){
-    clearTimeout(writePreviewTimer); const preview=document.getElementById('writePreview');
-    if(!writeRemaining.length){ currentWord=null; preview.textContent=''; preview.hidden=true; show('home'); toast(`Write the Word complete — you practiced all ${state.words.length} words!`); return; }
-    writeN++; currentWord=weightedWord(writeRemaining); writeRemaining=writeRemaining.filter(word=>word!==currentWord); const previewWord=currentWord; document.getElementById('writeCounter').textContent=`Word ${writeN} of ${state.words.length}`; document.getElementById('writeReveal').hidden=true; showWordPicture(document.getElementById('writePicture'),currentWord.word); preview.textContent=currentWord.word; preview.hidden=false; clearCanvas(); writePreviewTimer=setTimeout(()=>{if(currentWord===previewWord){preview.textContent='';preview.hidden=true;}},1000); setTimeout(()=>speak(currentWord.word),80);
-  }
-  document.getElementById('writeSpeak').onclick=()=>currentWord&&speak(currentWord.word);
-  document.getElementById('clearCanvas').onclick=clearCanvas;
-  document.getElementById('revealWord').onclick=()=>{document.getElementById('writeWord').textContent=currentWord.word;document.getElementById('writeReveal').hidden=false;};
-  document.getElementById('writeYes').onclick=()=>{record(currentWord,true);toast('⭐ Great handwriting practice!');nextWrite();};
-  document.getElementById('writeNo').onclick=()=>{record(currentWord,false,0);clearCanvas();document.getElementById('writeReveal').hidden=true;speak(currentWord.word);};
-  window.addEventListener('resize',()=>{if(document.getElementById('write').classList.contains('active')) setupCanvas();});
-
   // Sky-High Spelling
   let skyTimer=null, skyNextTimer=null, skyRemaining=[], skyTotal=20, skyCorrect=0, skyAltitude=58, skyRunning=false, skyFinished=false;
   const skyLandscapeTrack=document.querySelector('.sky-landscape-track');
@@ -1584,12 +1573,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=58',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=61',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=58"></script>
+<script type="module" src="island-quest.js?v=61"></script>
 </body>
 </html>
