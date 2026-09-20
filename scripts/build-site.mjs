@@ -15,6 +15,8 @@ const files = [
   'icon-192.png',
   'icon-512.png',
   'sound-the-word-capybara.png',
+  'capybara-yuzu-scramble-onsen.png',
+  'capybara-yuzu-scramble-capybara.png',
   'sky-high-balloon.png',
   'og.png'
 ];

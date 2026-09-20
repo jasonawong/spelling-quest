@@ -97,7 +97,7 @@
     .answer-input { font-size:2rem; font-weight:900; text-transform:lowercase; }
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
-    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1.png?v=61'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
+    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1.png?v=72'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
@@ -172,7 +172,7 @@
     .detective-card::before { content:''; position:absolute; width:210px; height:210px; right:3%; top:-72px; border:4px dashed rgba(157,86,63,.34); border-radius:999px; transform:rotate(12deg); }
     .detective-card::after { content:'?'; position:absolute; right:9%; bottom:-44px; color:rgba(237,80,87,.14); font-size:10rem; font-weight:1000; line-height:1; transform:rotate(9deg); }
     .detective-card-art { position:relative; z-index:2; width:150px; min-width:150px; height:138px; display:grid; place-items:center; }
-    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-detective-sprites/set-1.png?v=61') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
+    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-detective-sprites/set-1.png?v=72') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
     .detective-card .premier-badge { background:#ed5057; color:white !important; }
     .bridge-card { --premier-shadow:#1f5f78; background:linear-gradient(135deg,#e8f7f7 0%,#d9eff6 58%,#fff2cc 100%); }
     .bridge-card::before { content:''; position:absolute; right:-34px; bottom:-68px; width:285px; height:150px; border:4px solid rgba(31,95,120,.22); border-radius:50%; background:rgba(53,155,181,.14); transform:rotate(-7deg); }
@@ -344,6 +344,64 @@
     .bridge-feedback { min-height:24px; margin-top:8px; color:#345867; font-size:.92rem; font-weight:1000; }
     .bridge-feedback.good { color:#17734f; }
     .bridge-feedback.bad { color:#b63537; }
+    /* Capybara Yuzu Scramble — fresh onsen scene and game controls */
+    .yuzu-card { --yuzu-ink:#3d1d13; position:relative; overflow:hidden; padding:0; border:4px solid #6c3b22; border-radius:30px; background:#fff3d8; box-shadow:0 13px 0 #a6592b,0 22px 38px rgba(64,46,36,.22); color:var(--yuzu-ink); }
+    .yuzu-stage { position:relative; height:min(570px,calc(100svh - 140px)); min-height:510px; overflow:hidden; isolation:isolate; background:#54b9ca url('capybara-yuzu-scramble-onsen.png') center/cover no-repeat; }
+    .yuzu-stage::before { content:''; position:absolute; inset:0; z-index:0; pointer-events:none; background:linear-gradient(180deg,rgba(255,255,255,.03),rgba(255,245,208,.12) 62%,rgba(24,94,111,.18)); }
+    .yuzu-stage::after { content:''; position:absolute; inset:0; z-index:1; pointer-events:none; opacity:.18; background-image:radial-gradient(#25526a .6px,transparent .8px); background-size:7px 7px; mix-blend-mode:multiply; }
+    .yuzu-sign { position:relative; z-index:3; width:min(690px,92%); margin:12px auto 5px; padding:10px 28px 13px; border:4px solid #754221; border-radius:30px 30px 35px 35px; background:linear-gradient(180deg,#fff1ce,#eab77a); box-shadow:inset 0 4px 0 rgba(255,255,255,.68),0 7px 0 rgba(81,42,21,.5),0 10px 18px rgba(57,42,30,.27); color:#3a180e; font-size:clamp(1.7rem,5vw,3.4rem); font-weight:1000; letter-spacing:-.055em; line-height:1; text-align:center; text-shadow:0 2px 0 rgba(255,235,195,.6); transform:rotate(-.5deg); }
+    .yuzu-sign::before,.yuzu-sign::after { content:'✿'; position:absolute; top:-16px; color:#fff9e4; font-size:2.1rem; text-shadow:0 2px 0 #d79646; }
+    .yuzu-sign::before { left:22px; } .yuzu-sign::after { right:22px; }
+    .yuzu-hud { position:relative; z-index:3; display:flex; align-items:center; justify-content:space-between; gap:10px; margin:0 16px 10px; color:#402318; font-size:.88rem; font-weight:1000; }
+    .yuzu-hud-pill { padding:7px 11px; border:3px solid #7a4427; border-radius:999px; background:rgba(255,248,222,.94); box-shadow:0 3px 0 rgba(93,52,29,.34); }
+    .yuzu-prompt { position:relative; z-index:3; display:flex; align-items:center; justify-content:center; gap:12px; padding:0 16px; }
+    .yuzu-picture { width:70px; min-width:70px; border:4px solid #6a3c24; border-radius:15px; box-shadow:0 4px 0 rgba(91,49,28,.36); }
+    .yuzu-hear { width:54px; height:54px; border:3px solid #6a3c24; border-radius:999px; background:linear-gradient(#fff8db,#ffc53e); color:#512612; box-shadow:0 4px 0 #9e5924,0 7px 14px rgba(74,45,26,.26); font-size:1.45rem; cursor:pointer; }
+    .yuzu-instruction { max-width:33ch; margin:5px auto 0; padding:5px 13px; border-radius:999px; background:rgba(255,248,224,.9); color:#63351f; font-size:.77rem; font-weight:900; text-align:center; }
+    .yuzu-tray { position:relative; z-index:3; display:flex; flex-wrap:wrap; justify-content:center; gap:clamp(5px,1.3vw,12px); width:min(680px,calc(100% - 28px)); min-height:78px; margin:7px auto 0; padding:9px; border:6px solid #704020; border-radius:20px; background:linear-gradient(90deg,#b86d32,#e9b26b 13%,#c47936 50%,#f0bd73 87%,#a95c29); box-shadow:inset 0 0 0 3px rgba(67,31,14,.65),0 6px 0 rgba(68,35,18,.42),0 8px 17px rgba(44,52,44,.26); }
+    .yuzu-slot { width:clamp(44px,8vw,64px); height:clamp(52px,9vw,70px); padding:0; border:3px solid #8d522c; border-radius:12px; background:linear-gradient(145deg,#fff8e9,#f2d7af); box-shadow:inset 0 2px 0 rgba(255,255,255,.78),0 2px 0 rgba(93,47,24,.5); color:#38180f; cursor:pointer; }
+    .yuzu-slot.empty { border-style:dashed; background:rgba(255,250,235,.78); }
+    .yuzu-slot .slot-fruit { position:relative; width:calc(100% - 6px); height:calc(100% - 6px); display:grid; place-items:center; margin:auto; padding:0; border:3px solid #8e5613; border-radius:47% 52% 49% 54%; background:radial-gradient(circle at 31% 25%,#fffbc1 0 7%,transparent 8%),linear-gradient(145deg,#ffed77,#ffc91d 66%,#eea413); box-shadow:inset -7px -8px 0 rgba(208,134,6,.19),0 3px 0 #b66a18,0 5px 8px rgba(69,58,18,.28); color:#351606; font-size:clamp(1.25rem,4vw,2rem); font-weight:1000; }
+    .yuzu-slot .slot-fruit::before { content:''; position:absolute; top:-13px; left:38%; width:23px; height:12px; border:2px solid #426e27; border-radius:100% 0 100% 0; background:#6fa23b; transform:rotate(-21deg); } .yuzu-slot .slot-fruit::after { content:''; position:absolute; top:-7px; left:48%; width:4px; height:10px; border-radius:999px; background:#70491c; }
+    .yuzu-slot.just-arrived .slot-fruit { animation:yuzuArrive .32s ease-out; }
+    .yuzu-characters { position:relative; z-index:3; display:flex; align-items:flex-end; justify-content:center; gap:clamp(0px,1.1vw,14px); height:218px; min-height:218px; padding:17px 10px 0; overflow:hidden; }
+    .yuzu-character { position:relative; flex:0 1 120px; min-width:67px; height:195px; }
+    .yuzu-character:nth-child(2n) { transform:translateY(12px) scale(.94); } .yuzu-character:nth-child(3n) { transform:translateY(-3px) scale(.98); }
+    .yuzu-capybara { position:absolute; left:50%; bottom:-4px; width:145px; height:160px; transform:translateX(-50%); background:url('capybara-yuzu-scramble-capybara.png') center bottom/contain no-repeat; filter:drop-shadow(0 5px 7px rgba(28,82,92,.24)); }
+    .yuzu-capybara::before,.yuzu-capybara::after { content:none; } .yuzu-muzzle,.yuzu-cheek,.yuzu-waterline { display:none; }
+    .yuzu-fruit { position:absolute; z-index:5; left:50%; top:0; width:68px; height:68px; padding:0; transform:translateX(-50%); border:3px solid #8e5613; border-radius:47% 52% 49% 54%; background:radial-gradient(circle at 31% 25%,#fffbc1 0 7%,transparent 8%),linear-gradient(145deg,#ffed77,#ffc91d 66%,#eea413); box-shadow:inset -7px -8px 0 rgba(208,134,6,.19),0 5px 0 #b66a18,0 9px 13px rgba(69,58,18,.28); color:#351606; font-size:clamp(1.35rem,4.3vw,2rem); font-weight:1000; cursor:grab; user-select:none; touch-action:manipulation; }
+    .yuzu-fruit::before { content:''; position:absolute; top:-13px; left:29px; width:23px; height:12px; border:2px solid #426e27; border-radius:100% 0 100% 0; background:#6fa23b; transform:rotate(-21deg); } .yuzu-fruit::after { content:''; position:absolute; top:-7px; left:36px; width:4px; height:10px; border-radius:999px; background:#70491c; }
+    .yuzu-fruit.selected { outline:4px solid #fff5a6; box-shadow:0 0 0 8px rgba(255,206,46,.5),inset -7px -8px 0 rgba(208,134,6,.19),0 5px 0 #b66a18,0 9px 13px rgba(69,58,18,.28); animation:yuzuFloat .62s ease-in-out infinite alternate; }
+    .yuzu-fruit:disabled { opacity:.18; filter:saturate(.15); cursor:default; } .yuzu-character.used .yuzu-capybara { filter:saturate(.7) brightness(.92); }
+    .yuzu-stage.celebrate .yuzu-capybara { animation:yuzuCheer .55s ease-in-out infinite alternate; } .yuzu-stage.celebrate .yuzu-fruit { animation:yuzuFloat .45s ease-in-out infinite alternate; }
+    .yuzu-stage.shake .yuzu-tray { animation:yuzuShake .38s ease-in-out; }
+    .yuzu-controls { position:relative; z-index:4; display:flex; justify-content:center; gap:10px; padding:2px 14px 7px; }
+    .yuzu-control { min-height:49px; padding:0 17px; border:3px solid #69391f; border-radius:15px; box-shadow:0 4px 0 rgba(75,38,22,.58); font-weight:1000; cursor:pointer; } .yuzu-reset { background:#fff3d3; color:#64351f; } .yuzu-check { background:linear-gradient(#ffdc55,#efa413); color:#3e1d0d; } .yuzu-check:disabled { opacity:.6; cursor:default; }
+    .yuzu-feedback { position:relative; z-index:4; min-height:24px; margin:0; padding:0 14px 6px; color:#4b2918; font-size:.84rem; font-weight:1000; text-align:center; } .yuzu-feedback.good { color:#166448; } .yuzu-feedback.bad { color:#a3332c; }
+    .yuzu-results { position:absolute; z-index:8; inset:0; display:grid; place-items:center; padding:24px; background:rgba(30,86,94,.46); } .yuzu-results[hidden] { display:none; }
+    .yuzu-results-card { width:min(430px,94%); padding:24px; border:4px solid #6c3a20; border-radius:26px; background:#fff3d7; box-shadow:0 10px 0 rgba(87,46,25,.52),0 18px 32px rgba(22,50,54,.25); text-align:center; } .yuzu-results-card h2 { margin:4px 0 8px; color:#4b2114; } .yuzu-results-card p { margin:0 0 16px; color:#704127; font-weight:800; }
+    .yuzu-fruit:focus-visible,.yuzu-slot:focus-visible,.yuzu-control:focus-visible,.yuzu-hear:focus-visible { outline:4px solid #fff; outline-offset:3px; }
+    @keyframes yuzuFloat { from { transform:translateX(-50%) translateY(-2px) rotate(-3deg); } to { transform:translateX(-50%) translateY(-12px) rotate(3deg); } } @keyframes yuzuCheer { from { transform:translateX(-50%) translateY(0) rotate(-2deg); } to { transform:translateX(-50%) translateY(-11px) rotate(2deg); } } @keyframes yuzuShake { 20%,60% { transform:translateX(-8px); } 40%,80% { transform:translateX(8px); } } @keyframes yuzuArrive { from { transform:translateY(-38px) scale(1.16); filter:brightness(1.22); } to { transform:none; } }
+    @media (max-width:600px){ .yuzu-stage { height:auto; min-height:625px; } .yuzu-sign { margin-top:12px; padding:12px 18px 15px; } .yuzu-hud { margin:0 10px 5px; font-size:.75rem; } .yuzu-picture { width:76px; min-width:76px; } .yuzu-hear { width:56px; height:56px; } .yuzu-tray { min-height:76px; padding:9px; border-width:5px; } .yuzu-characters { height:270px; min-height:270px; padding-top:22px; } .yuzu-character { min-width:52px; height:235px; } .yuzu-capybara { width:118px; height:140px; } .yuzu-fruit { width:62px; height:62px; font-size:1.4rem; } .yuzu-fruit::before { left:22px; } .yuzu-fruit::after { left:29px; } }
+    /* Keep the puzzle area calm: one scenic backdrop, one tray, and one water band. */
+    .yuzu-stage { height:min(560px,calc(100svh - 140px)); min-height:500px; }
+    .yuzu-stage::after { display:none; }
+    .yuzu-sign { width:min(550px,88%); margin:8px auto 4px; padding:8px 20px 10px; border-radius:22px; box-shadow:inset 0 3px 0 rgba(255,255,255,.68),0 4px 0 rgba(81,42,21,.5),0 7px 12px rgba(57,42,30,.22); font-size:clamp(1.55rem,4.1vw,2.8rem); transform:none; }
+    .yuzu-sign::before,.yuzu-sign::after { display:none; }
+    .yuzu-hud { justify-content:flex-start; margin:0 14px 4px; } .yuzu-hud-pill { padding:5px 9px; border-width:2px; box-shadow:none; } .yuzu-hud-pill:last-child { display:none; }
+    .yuzu-prompt { gap:9px; } .yuzu-picture { width:58px; min-width:58px; border-width:3px; box-shadow:none; } .yuzu-hear { width:48px; height:48px; box-shadow:0 3px 0 #9e5924; font-size:1.25rem; }
+    .yuzu-instruction { display:none; }
+    .yuzu-tray { min-height:70px; margin:3px auto 0; padding:7px; border-width:5px; border-radius:16px; box-shadow:inset 0 0 0 2px rgba(67,31,14,.65),0 4px 0 rgba(68,35,18,.42); }
+    .yuzu-slot { height:clamp(48px,7.4vw,60px); }
+    .yuzu-characters { height:160px; min-height:160px; margin-top:5px; padding:17px 10px 0; gap:clamp(0px,.7vw,8px); overflow:hidden; background:linear-gradient(180deg,rgba(152,233,239,.88),rgba(74,183,203,.94)); border-top:3px solid rgba(239,255,248,.9); box-shadow:inset 0 10px 16px rgba(255,255,255,.18); }
+    .yuzu-character { flex-basis:108px; min-width:57px; height:140px; } .yuzu-character:nth-child(2n),.yuzu-character:nth-child(3n) { transform:none; }
+    .yuzu-capybara { bottom:-4px; width:124px; height:133px; filter:drop-shadow(0 3px 4px rgba(28,82,92,.2)); }
+    .yuzu-fruit { top:0; width:58px; height:58px; font-size:1.45rem; box-shadow:inset -6px -7px 0 rgba(208,134,6,.19),0 3px 0 #b66a18,0 5px 8px rgba(69,58,18,.24); }
+    .yuzu-fruit::before { left:21px; } .yuzu-fruit::after { left:28px; }
+    .yuzu-controls { min-height:55px; padding:6px 14px 2px; background:rgba(255,244,214,.92); } .yuzu-control { min-height:44px; border-width:2px; border-radius:12px; box-shadow:0 3px 0 rgba(75,38,22,.58); }
+    .yuzu-feedback { min-height:22px; padding:1px 14px 4px; background:rgba(255,244,214,.92); }
+    @media (max-width:600px){ .yuzu-stage { height:auto; min-height:570px; } .yuzu-characters { height:205px; min-height:205px; padding-top:17px; } .yuzu-character { height:175px; } .yuzu-capybara { width:122px; height:135px; } }
+    @media (prefers-reduced-motion:reduce){ .yuzu-fruit.selected,.yuzu-stage.celebrate .yuzu-capybara,.yuzu-stage.celebrate .yuzu-fruit,.yuzu-stage.shake .yuzu-tray { animation:none !important; } }
     @media (max-width:600px){
       .bridge-card-art { width:108px; min-width:108px; height:126px; }
       .bridge-card-art svg { width:108px; height:104px; }
@@ -390,7 +448,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=61" />
+  <link rel="stylesheet" href="island-quest.css?v=72" />
 </head>
 <body>
 <div class="app">
@@ -502,6 +560,12 @@
           </div>
           <div class="premier-card-copy"><span class="premier-badge">Premier construction</span><strong>Bridge Builder</strong><span>Choose every correctly spelled word to build Charleston Harbor's bridge section by section.</span></div>
         </button>
+        <button class="game-card premier-card" data-action="yuzu" style="--premier-shadow:#a45b2b;background:linear-gradient(135deg,#e7f9f5 0%,#bce9ee 58%,#fff1bb 100%)">
+          <div class="yuzu-card-art" aria-hidden="true" style="width:150px;min-width:150px;height:138px;position:relative;overflow:hidden;border:3px solid #6b3b20;border-radius:22px;background:url('capybara-yuzu-scramble-onsen.png') center/cover">
+            <img src="capybara-yuzu-scramble-capybara.png" alt="" style="position:absolute;right:-2px;bottom:-9px;width:112px;filter:drop-shadow(0 4px 4px rgba(30,60,57,.28))"><span style="position:absolute;left:14px;top:38px;width:48px;height:48px;border:3px solid #935810;border-radius:47% 52% 49% 54%;background:radial-gradient(circle at 31% 25%,#fffbc1 0 7%,transparent 8%),linear-gradient(145deg,#ffed77,#ffc91d 66%,#eea413);box-shadow:inset -5px -6px 0 rgba(208,134,6,.19),0 3px 0 #b66a18;color:#3f1c0b;font-size:1.4rem;font-weight:1000;display:grid;place-items:center">S</span>
+          </div>
+          <div class="premier-card-copy"><span class="premier-badge" style="background:#ffc82f">Premier onsen</span><strong>Capybara Yuzu Scramble</strong><span>Listen to the word, then move the lettered yuzu into their spelling tray.</span></div>
+        </button>
         <button class="game-card premier-card island-card" data-action="island">
           <div class="island-card-art" aria-hidden="true">
             <span class="island-card-sun"></span><span class="island-card-water"></span><span class="island-card-ground"></span><span class="island-card-palm"></span><span class="island-card-shop"></span><span class="island-card-avatar"></span><span class="island-card-coin">★</span>
@@ -597,6 +661,7 @@
       </div>
     </section>
 
+
     <section id="build" class="screen">
       <button class="btn ghost back" data-go="home">← Home</button>
       <div class="panel center">
@@ -635,6 +700,23 @@
             <div class="result-word-list" id="buildPracticeList"></div>
           </div>
           <div class="row" style="justify-content:center"><button class="btn ghost" data-go="home">Home</button><button class="btn primary" id="buildTryAgain">Try Again</button></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="yuzu" class="screen">
+      <button class="btn ghost back" data-go="home">← Home</button>
+      <div class="yuzu-card">
+        <div id="yuzuStage" class="yuzu-stage" aria-label="Capybara Yuzu Scramble hot spring scene">
+          <div class="yuzu-sign">Capybara Yuzu Scramble</div>
+          <div class="yuzu-hud"><span class="yuzu-hud-pill" id="yuzuCounter">Word 1 of 20</span><span class="yuzu-hud-pill">🍋 Move the yuzu</span></div>
+          <div class="yuzu-prompt"><div id="yuzuPicture" class="word-picture yuzu-picture" role="img" aria-label="Picture clue"></div><button id="yuzuHear" class="yuzu-hear" type="button" aria-label="Hear the word">🔊</button></div>
+          <p class="yuzu-instruction">Tap a yuzu, then a tray space. Tap a filled space to return it.</p>
+          <div id="yuzuTray" class="yuzu-tray" aria-label="Spelling tray"></div>
+          <div id="yuzuCharacters" class="yuzu-characters" aria-label="Capybaras with available lettered yuzu"></div>
+          <div class="yuzu-controls"><button id="yuzuReset" class="yuzu-control yuzu-reset" type="button">↺ Reset Yuzu</button><button id="yuzuCheck" class="yuzu-control yuzu-check" type="button" disabled>Check Word ✓</button></div>
+          <p id="yuzuFeedback" class="yuzu-feedback" aria-live="polite"></p>
+          <div id="yuzuResults" class="yuzu-results" hidden><div class="yuzu-results-card"><div aria-hidden="true" style="font-size:3rem">🎉</div><h2>Yuzu Onsen Complete!</h2><p id="yuzuResultText"></p><button id="yuzuReplay" class="yuzu-control yuzu-check" type="button">Scramble Again ↻</button></div></div>
         </div>
       </div>
     </section>
@@ -1030,7 +1112,7 @@
     extreme: 'The hikers faced extreme cold near the summit.',
     escape: 'The rabbit found a way to escape from the garden.'
   };
-  const APP_VERSION = 61;
+  const APP_VERSION = 72;
   const STORAGE_KEY = 'spellingQuestV5';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
@@ -1089,7 +1171,7 @@
   }
   function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(t._timer); t._timer=setTimeout(()=>t.classList.remove('show'),1800); }
   let islandLaunchAttempt=0;
-  function show(id){ if(id!=='sky') stopSky(); if(id!=='bridge') stopBridge(); if(id!=='island'){ islandLaunchAttempt++; window.IslandQuest?.stop(); } document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
+  function show(id){ if(id!=='sky') stopSky(); if(id!=='bridge') stopBridge(); if(id!=='yuzu') stopYuzu(); if(id!=='island'){ islandLaunchAttempt++; window.IslandQuest?.stop(); } document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id===id)); window.scrollTo({top:0,behavior:'instant'}); }
   function requireWords(){ if(!state.words || state.words.length<1){ toast('The word list is empty.'); return false; } return true; }
   function showWordPicture(element, word){
     const index=VISUAL_WORDS.get(word);
@@ -1164,6 +1246,7 @@
     if(a==='island') startIsland();
     if(a==='sky') startSky();
     if(a==='bridge') startBridge();
+    if(a==='yuzu') startYuzu();
     if(a==='test') startTest();
   });
 
@@ -1394,6 +1477,104 @@
   };
   document.getElementById('buildTryAgain').onclick=startBuild;
 
+  // Capybara Yuzu Scramble
+  let yuzuSession=null, yuzuRound=null, yuzuAdvanceTimer=null, yuzuArrivalTimer=null;
+  function stopYuzu(){
+    clearTimeout(yuzuAdvanceTimer); clearTimeout(yuzuArrivalTimer); yuzuAdvanceTimer=null; yuzuArrivalTimer=null;
+    document.getElementById('yuzuStage')?.classList.remove('celebrate','shake');
+  }
+  function yuzuSetFeedback(message, type=''){
+    const feedback=document.getElementById('yuzuFeedback'); feedback.className=`yuzu-feedback ${type}`; feedback.textContent=message;
+  }
+  function yuzuMakeScramble(tokens){
+    const ordered=tokens.map(token=>token.letter).join(''); let result=[...tokens];
+    for(let attempt=0;attempt<8;attempt++){
+      result=shuffle([...tokens]);
+      if(result.map(token=>token.letter).join('')!==ordered) break;
+    }
+    return result;
+  }
+  function startYuzu(){
+    stopYuzu();
+    yuzuSession={total:state.words.length,remaining:[...state.words],number:0,correct:0,misses:0,firstTry:0};
+    show('yuzu'); document.getElementById('yuzuResults').hidden=true; nextYuzuRound();
+  }
+  function nextYuzuRound(){
+    stopYuzu();
+    if(!yuzuSession || !yuzuSession.remaining.length){ finishYuzu(); return; }
+    const wordObj=weightedWord(yuzuSession.remaining); yuzuSession.remaining=yuzuSession.remaining.filter(word=>word!==wordObj); yuzuSession.number++;
+    currentWord=wordObj;
+    const tokens=[...wordObj.word].map((letter,index)=>({id:`${yuzuSession.number}-${index}`,letter,home:index}));
+    const initial=yuzuMakeScramble(tokens);
+    yuzuRound={tokens,initialIds:initial.map(token=>token.id),availableIds:initial.map(token=>token.id),slots:Array(tokens.length).fill(null),selectedId:null,misses:0,lastPlacedId:null};
+    document.getElementById('yuzuCounter').textContent=`Word ${yuzuSession.number} of ${yuzuSession.total}`;
+    document.getElementById('yuzuCheck').disabled=true; document.getElementById('yuzuReset').disabled=false;
+    showWordPicture(document.getElementById('yuzuPicture'),wordObj.word); yuzuSetFeedback('Listen, then move each bright yuzu into the tray.'); renderYuzu();
+    const spokenWord=wordObj; setTimeout(()=>{if(yuzuRound && currentWord===spokenWord) speak(spokenWord.word);},100);
+  }
+  function yuzuToken(id){ return yuzuRound?.tokens.find(token=>token.id===id); }
+  function yuzuIsAvailable(id){ return yuzuRound?.availableIds.includes(id); }
+  function renderYuzu(){
+    if(!yuzuRound || !currentWord) return;
+    const tray=document.getElementById('yuzuTray'), characters=document.getElementById('yuzuCharacters'); tray.replaceChildren(); characters.replaceChildren();
+    yuzuRound.slots.forEach((id,index)=>{
+      const slot=document.createElement('button'); slot.type='button'; slot.className=`yuzu-slot ${id?'filled':'empty'}${id===yuzuRound.lastPlacedId?' just-arrived':''}`; slot.dataset.index=index;
+      const token=id&&yuzuToken(id); slot.setAttribute('aria-label',`Letter slot ${index+1} of ${yuzuRound.slots.length}, ${token?token.letter.toUpperCase():'empty'}`);
+      if(token){ const fruit=document.createElement('span'); fruit.className='slot-fruit'; fruit.textContent=token.letter.toUpperCase(); slot.appendChild(fruit); }
+      slot.onclick=()=>yuzuUseSlot(index); slot.addEventListener('dragover',event=>event.preventDefault()); slot.addEventListener('drop',event=>{ event.preventDefault(); yuzuPlace(event.dataTransfer.getData('text/plain'),index); }); tray.appendChild(slot);
+    });
+    yuzuRound.initialIds.forEach((id,homeIndex)=>{
+      const token=yuzuToken(id), available=yuzuIsAvailable(id), character=document.createElement('div'); character.className=`yuzu-character${available?'':' used'}`;
+      const capybara=document.createElement('div'); capybara.className='yuzu-capybara';
+      const muzzle=document.createElement('span'); muzzle.className='yuzu-muzzle'; const cheekLeft=document.createElement('span'); cheekLeft.className='yuzu-cheek left'; const cheekRight=document.createElement('span'); cheekRight.className='yuzu-cheek right'; const water=document.createElement('span'); water.className='yuzu-waterline'; capybara.append(muzzle,cheekLeft,cheekRight,water);
+      const fruit=document.createElement('button'); fruit.type='button'; fruit.className=`yuzu-fruit${id===yuzuRound.selectedId?' selected':''}`; fruit.textContent=token.letter.toUpperCase(); fruit.disabled=!available; fruit.draggable=available;
+      fruit.setAttribute('aria-label',`Letter ${token.letter.toUpperCase()}, ${available?'available on':'used from'} capybara ${homeIndex+1}`);
+      fruit.onclick=()=>yuzuSelect(id); fruit.addEventListener('dragstart',event=>{event.dataTransfer.effectAllowed='move'; event.dataTransfer.setData('text/plain',id);}); character.append(fruit,capybara); characters.appendChild(character);
+    });
+    document.getElementById('yuzuCheck').disabled=yuzuRound.slots.some(slot=>!slot);
+    yuzuArrivalTimer=setTimeout(()=>{if(yuzuRound){yuzuRound.lastPlacedId=null; document.querySelector('.yuzu-slot.just-arrived')?.classList.remove('just-arrived');}},380);
+  }
+  function yuzuSelect(id){
+    if(!yuzuIsAvailable(id)) return;
+    if(yuzuRound.selectedId===id){ yuzuRound.selectedId=null; yuzuSetFeedback('Yuzu selection cleared.'); renderYuzu(); return; }
+    yuzuRound.selectedId=id; const token=yuzuToken(id); yuzuSetFeedback(`${token.letter.toUpperCase()} yuzu selected. Choose a tray space.`); renderYuzu();
+  }
+  function yuzuUseSlot(index){
+    const id=yuzuRound.slots[index];
+    if(yuzuRound.selectedId){ yuzuPlace(yuzuRound.selectedId,index); return; }
+    if(id){ yuzuRound.slots[index]=null; yuzuRound.availableIds.push(id); const token=yuzuToken(id); yuzuSetFeedback(`${token.letter.toUpperCase()} returned to its capybara.`); renderYuzu(); }
+    else yuzuSetFeedback('Choose a yuzu first, then tap this empty tray space.');
+  }
+  function yuzuPlace(id,index){
+    if(!yuzuRound || !yuzuIsAvailable(id) || index<0 || index>=yuzuRound.slots.length) return;
+    const token=yuzuToken(id); yuzuRound.availableIds=yuzuRound.availableIds.filter(availableId=>availableId!==id); yuzuRound.selectedId=null;
+    let carried=id;
+    for(let cursor=index;cursor<yuzuRound.slots.length;cursor++){
+      const displaced=yuzuRound.slots[cursor]; yuzuRound.slots[cursor]=carried; carried=displaced;
+      if(!carried) break;
+    }
+    if(carried) yuzuRound.availableIds.push(carried);
+    yuzuRound.lastPlacedId=id; yuzuSetFeedback(`${token.letter.toUpperCase()} splashed into tray space ${index+1}.`); renderYuzu();
+  }
+  function resetYuzu(){
+    if(!yuzuRound) return; yuzuRound.availableIds=[...yuzuRound.initialIds]; yuzuRound.slots=Array(yuzuRound.tokens.length).fill(null); yuzuRound.selectedId=null; yuzuRound.lastPlacedId=null; yuzuSetFeedback('The original yuzu scramble is back.'); renderYuzu();
+  }
+  function checkYuzu(){
+    if(!currentWord || !yuzuRound || yuzuRound.slots.some(slot=>!slot)) return;
+    const guess=yuzuRound.slots.map(id=>yuzuToken(id).letter).join(''), ok=guess===currentWord.word, stage=document.getElementById('yuzuStage'); record(currentWord,ok);
+    if(ok){
+      yuzuSession.correct++; if(!yuzuRound.misses) yuzuSession.firstTry++; document.getElementById('yuzuCheck').disabled=true; document.getElementById('yuzuReset').disabled=true; stage.classList.add('celebrate'); yuzuSetFeedback(`Wonderful! ${currentWord.word.toUpperCase()} is correct!`, 'good');
+      yuzuAdvanceTimer=setTimeout(()=>{stage.classList.remove('celebrate'); nextYuzuRound();},1150);
+    } else {
+      yuzuRound.misses++; yuzuSession.misses++; stage.classList.remove('shake'); void stage.offsetWidth; stage.classList.add('shake'); yuzuSetFeedback('Almost! Listen again and move the yuzu around.', 'bad'); speak(currentWord.word); setTimeout(()=>stage.classList.remove('shake'),420);
+    }
+  }
+  function finishYuzu(){
+    stopYuzu(); currentWord=null; document.getElementById('yuzuResultText').textContent=`You soaked up all ${yuzuSession.total} words with ${yuzuSession.correct} solved. First-try yuzu: ${yuzuSession.firstTry}.`; document.getElementById('yuzuResults').hidden=false;
+  }
+  document.getElementById('yuzuHear').onclick=()=>currentWord&&speak(currentWord.word);
+  document.getElementById('yuzuReset').onclick=resetYuzu; document.getElementById('yuzuCheck').onclick=checkYuzu; document.getElementById('yuzuReplay').onclick=startYuzu;
+
   // Sky-High Spelling
   let skyTimer=null, skyNextTimer=null, skyRemaining=[], skyTotal=20, skyCorrect=0, skyAltitude=58, skyRunning=false, skyFinished=false;
   const skyLandscapeTrack=document.querySelector('.sky-landscape-track');
@@ -1573,12 +1754,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=61',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=72',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=61"></script>
+<script type="module" src="island-quest.js?v=72"></script>
 </body>
 </html>
