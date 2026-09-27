@@ -6,7 +6,7 @@ A touch-first, offline-capable spelling practice PWA for one child using one iPa
 - Picture-supported list of 20 spelling words
 - Type the Word with a one-second preview, picture clues, and the device's speech synthesis
 - Sound the Word with picture clues and capybara-themed sound-to-spelling chunk mapping
-- Word Detective with 20 sentence-matched anime scenes and inline missing-letter clues
+- Word Detective with 20 sentence- and picture-matched clues and inline missing-letter clues
 - Sky-High Spelling, a timed balloon flight where correct spellings create altitude boosts
 - Ice Cream Quest, a 3D Sullivan’s Island adventure with 10 randomly selected spelling challenges and an ice cream finale
 - 20-word Practice Test with score shown at the end
