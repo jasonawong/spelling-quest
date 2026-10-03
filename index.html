@@ -97,7 +97,7 @@
     .answer-input { font-size:2rem; font-weight:900; text-transform:lowercase; }
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
-    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1-v73.png?v=73'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
+    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1-v74.png?v=74'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
@@ -172,7 +172,7 @@
     .detective-card::before { content:''; position:absolute; width:210px; height:210px; right:3%; top:-72px; border:4px dashed rgba(157,86,63,.34); border-radius:999px; transform:rotate(12deg); }
     .detective-card::after { content:'?'; position:absolute; right:9%; bottom:-44px; color:rgba(237,80,87,.14); font-size:10rem; font-weight:1000; line-height:1; transform:rotate(9deg); }
     .detective-card-art { position:relative; z-index:2; width:150px; min-width:150px; height:138px; display:grid; place-items:center; }
-    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-picture-sprites/set-1-v73.png?v=73') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
+    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-picture-sprites/set-1-v74.png?v=74') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
     .detective-card .premier-badge { background:#ed5057; color:white !important; }
     .bridge-card { --premier-shadow:#1f5f78; background:linear-gradient(135deg,#e8f7f7 0%,#d9eff6 58%,#fff2cc 100%); }
     .bridge-card::before { content:''; position:absolute; right:-34px; bottom:-68px; width:285px; height:150px; border:4px solid rgba(31,95,120,.22); border-radius:50%; background:rgba(53,155,181,.14); transform:rotate(-7deg); }
@@ -448,7 +448,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=73" />
+  <link rel="stylesheet" href="island-quest.css?v=74" />
 </head>
 <body>
 <div class="app">
@@ -1080,40 +1080,43 @@
 <script>
 (() => {
   const DEFAULT_WORDS = [
-    'toys','annoy','point','noise','boy','broil','joyful','join','soil','destroy',
-    'loyal','avoid','voyage','coins','voice','fruit','rescue','computer','enjoyable','poisonous'
+    'clown','cloud','crown','flour','flower','brown','sound','mouth','however','towel',
+    'trout','around','meow','shout','about','smile','arrive','confuse','downspout','allowance'
   ];
   const SOUND_MAPS = {
-    toys:['toy','s'], annoy:['a','nnoy'], point:['p','oi','nt'], noise:['n','oi','se'], boy:['b','oy'],
-    broil:['br','oi','l'], joyful:['joy','ful'], join:['j','oi','n'], soil:['s','oi','l'], destroy:['de','stroy'],
-    loyal:['loy','al'], avoid:['a','void'], voyage:['voy','age'], coins:['c','oi','ns'], voice:['v','oi','ce'],
-    fruit:['fr','ui','t'], rescue:['res','cue'], computer:['com','pu','ter'], enjoyable:['en','joy','a','ble'], poisonous:['poi','son','ous']
+    clown:['cl','ow','n'], cloud:['cl','ou','d'], crown:['cr','ow','n'], flour:['fl','our'], flower:['fl','ow','er'],
+    brown:['br','ow','n'], sound:['s','ou','nd'], mouth:['m','ou','th'], however:['how','ev','er'], towel:['tow','el'],
+    trout:['tr','ou','t'], around:['a','round'], meow:['m','eow'], shout:['sh','ou','t'], about:['a','bout'],
+    smile:['sm','i','le'], arrive:['a','rr','i','ve'], confuse:['con','fuse'], downspout:['down','spout'], allowance:['al','low','ance']
   };
-  const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
+  const VISUAL_WORDS = new Map([
+    'clown','cloud','crown','flour','flower','brown','sound','mouth','however','towel',
+    'trout','around','meow','shout','about','smile','confuse','downspout','allowance','arrive'
+  ].map((word,index)=>[word,index]));
   const DETECTIVE_SENTENCES = {
-    toys: 'The toys were put away after playtime.',
-    annoy: 'The buzzing fly can annoy the dog.',
-    point: 'Please point to the star on the map.',
-    noise: 'The drums made a loud noise.',
-    boy: 'The boy raced his toy car down the path.',
-    broil: 'We broil the vegetables on the grill.',
-    joyful: 'The joyful child jumped up and down.',
-    join: 'Two puzzle pieces can join together.',
-    soil: 'The seed grows in dark soil.',
-    destroy: 'The wrecking ball can destroy the old wall.',
-    loyal: 'The loyal dog stayed beside its friend.',
-    avoid: 'We avoid the deep puddle on the path.',
-    voyage: 'The sailboat began a long voyage across the sea.',
-    coins: 'The treasure chest held shiny coins.',
-    voice: 'Her singing voice filled the room.',
-    fruit: 'We packed fresh fruit for our picnic.',
-    rescue: 'The lifeguard came to rescue the puppy.',
-    computer: 'My computer helps me draw a picture.',
-    enjoyable: 'Reading a funny book is enjoyable.',
-    poisonous: 'Never touch a poisonous mushroom.'
+    clown: 'The clown made everyone laugh at the circus.',
+    cloud: 'A fluffy cloud floated across the blue sky.',
+    crown: 'The king placed a golden crown on his head.',
+    flour: 'We mixed flour into the cookie dough.',
+    flower: 'A yellow flower opened in the garden.',
+    brown: 'The brown bear walked through the woods.',
+    sound: 'The drum made a loud sound.',
+    mouth: 'Please cover your mouth when you cough.',
+    however: 'It was raining; however, we still had fun.',
+    towel: 'I dried my hands with a soft towel.',
+    trout: 'A trout swam upstream in the clear creek.',
+    around: 'We walked around the big oak tree.',
+    meow: 'The kitten gave a tiny meow.',
+    shout: 'Do not shout inside the library.',
+    about: 'We read a book about dinosaurs.',
+    smile: 'Her bright smile made everyone feel welcome.',
+    arrive: 'The school bus will arrive at eight o\'clock.',
+    confuse: 'The two similar maps confuse me.',
+    downspout: 'Rainwater poured from the downspout.',
+    allowance: 'Mia saved her allowance in a jar.'
   };
-  const APP_VERSION = 73;
-  const STORAGE_KEY = 'spellingQuestV6';
+  const APP_VERSION = 74;
+  const STORAGE_KEY = 'spellingQuestV7';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
     stars: 0, bestStreak: 0, currentStreak: 0, answers: 0,
@@ -1283,7 +1286,7 @@
     if(!detectiveRemaining.length){ currentWord=null; show('home'); toast(`Word Detective complete — you solved all ${detectiveTotal} cases!`); return; }
     detectiveN++; currentWord=weightedWord(detectiveRemaining); detectiveRemaining=detectiveRemaining.filter(word=>word!==currentWord);
     document.getElementById('detectiveCounter').textContent=`Case ${detectiveN} of ${detectiveTotal}`;
-    const artIndex=DEFAULT_WORDS.indexOf(currentWord.word), artCell=artIndex%4;
+    const artIndex=VISUAL_WORDS.get(currentWord.word), artCell=artIndex%4;
     const image=document.getElementById('detectiveImage');
     image.style.backgroundImage=`url('word-picture-sprites/set-${Math.floor(artIndex/4)+1}-v${APP_VERSION}.png?v=${APP_VERSION}')`;
     image.style.backgroundPosition=`${artCell%2*100}% ${Math.floor(artCell/2)*100}%`;
@@ -1754,12 +1757,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=73',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=74',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=73"></script>
+<script type="module" src="island-quest.js?v=74"></script>
 </body>
 </html>
