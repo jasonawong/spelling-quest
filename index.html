@@ -120,8 +120,11 @@
     .word-pill strong { min-width:0; font-size:1.08rem; overflow-wrap:anywhere; }
     .detective-scene { position:relative; width:min(720px,100%); aspect-ratio:1; margin:12px auto 18px; overflow:hidden; border-radius:26px; background:#eef0f7; box-shadow:0 12px 28px rgba(46,52,90,.16); }
     .detective-image { position:absolute; inset:0; background-color:#eef0f7; background-repeat:no-repeat; background-size:200% 200%; }
-    .detective-bubble { position:absolute; top:4%; right:4%; width:48%; padding:clamp(12px,2.5vw,22px); border:3px solid #30354c; border-radius:28px; background:rgba(255,255,255,.96); box-shadow:0 8px 20px rgba(30,34,53,.16); font-size:clamp(1rem,2.4vw,1.4rem); font-weight:850; line-height:1.55; text-align:left; }
-    .detective-bubble::after { content:''; position:absolute; left:12%; bottom:-22px; width:34px; height:34px; background:white; border-right:3px solid #30354c; border-bottom:3px solid #30354c; transform:skew(-24deg) rotate(36deg); }
+    .detective-bubble { --tail-width:36px; --tail-height:30px; position:absolute; top:4%; right:4%; width:48%; padding:clamp(12px,2.5vw,22px); border:3px solid #30354c; border-radius:28px; background:white; box-shadow:0 8px 20px rgba(30,34,53,.16); font-size:clamp(1rem,2.4vw,1.4rem); font-weight:850; line-height:1.55; text-align:left; }
+    .detective-bubble::before,.detective-bubble::after { content:''; position:absolute; left:12%; bottom:calc(-1 * var(--tail-height)); width:var(--tail-width); height:var(--tail-height); clip-path:polygon(0 0,100% 0,0 100%); pointer-events:none; }
+    .detective-bubble::before { background:#30354c; }
+    /* Overlap the bottom border with the tail fill to keep the join seamless. */
+    .detective-bubble::after { left:calc(12% + 3px); bottom:calc(6.5px - var(--tail-height)); background:white; }
     .detective-word { display:inline-flex; align-items:baseline; gap:3px; margin:0 .22em; padding:.08em .38em .16em; border-radius:11px; background:#fff0a8; box-shadow:inset 0 -3px 0 #ffd35c, 0 2px 7px rgba(95,72,15,.16); white-space:nowrap; vertical-align:middle; }
     .detective-shown { display:inline-block; min-width:.62em; text-align:center; }
     .detective-letter { width:1.05em; min-width:24px; height:1.45em; margin:0 1px; padding:0; border:0; border-bottom:3px solid #5148db; border-radius:5px 5px 0 0; outline:none; background:#fff; color:var(--ink); font:inherit; font-weight:1000; line-height:1; text-align:center; text-transform:lowercase; }
@@ -132,8 +135,7 @@
       #detective .panel { padding:14px 20px 12px; }
       #detective .question-meta { margin-bottom:6px; }
       #detective .detective-scene { width:clamp(320px,calc(100vh - 385px),450px); max-width:100%; margin:4px auto 8px; border-radius:20px; }
-      #detective .detective-bubble { width:52%; padding:10px 12px; border-radius:20px; font-size:clamp(.82rem,1.35vw,1rem); line-height:1.35; }
-      #detective .detective-bubble::after { bottom:-16px; width:24px; height:24px; }
+      #detective .detective-bubble { --tail-width:24px; --tail-height:20px; width:52%; padding:10px 12px; border-radius:20px; font-size:clamp(.82rem,1.35vw,1rem); line-height:1.35; }
       #detective .detective-letter { min-width:18px; border-bottom-width:2px; }
       #detective .sub { margin-bottom:8px; font-size:.9rem; }
       #detectiveCheck { min-height:44px; padding:0 16px; border-radius:13px; }
@@ -1765,7 +1767,7 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=76',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=77',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
