@@ -57,6 +57,9 @@
     .hero-row { display:flex; justify-content:space-between; align-items:center; gap:16px; flex-wrap:wrap; }
     .hero h2 { margin:0; font-size:clamp(1.7rem,5vw,2.5rem); }
     .hero p { margin:7px 0 0; opacity:.9; font-weight:700; }
+    .quest-details { display:grid; gap:6px; margin:10px 0 18px; line-height:1.4; }
+    .quest-details p { margin:0; font-weight:700; }
+    .hero .quest-details { margin-bottom:0; }
     .hero-reset { min-height:44px; margin-top:14px; padding:0 16px; border:2px solid rgba(255,255,255,.7); border-radius:14px; background:rgba(255,255,255,.14); color:white; font-weight:900; cursor:pointer; }
     .hero-reset:active { background:rgba(255,255,255,.25); transform:translateY(1px); }
     .progress-wrap { min-width:250px; flex:1; max-width:420px; }
@@ -97,7 +100,7 @@
     .answer-input { font-size:2rem; font-weight:900; text-transform:lowercase; }
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
-    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1-v75.png?v=75'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
+    .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1-v76.png?v=76'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
@@ -172,7 +175,7 @@
     .detective-card::before { content:''; position:absolute; width:210px; height:210px; right:3%; top:-72px; border:4px dashed rgba(157,86,63,.34); border-radius:999px; transform:rotate(12deg); }
     .detective-card::after { content:'?'; position:absolute; right:9%; bottom:-44px; color:rgba(237,80,87,.14); font-size:10rem; font-weight:1000; line-height:1; transform:rotate(9deg); }
     .detective-card-art { position:relative; z-index:2; width:150px; min-width:150px; height:138px; display:grid; place-items:center; }
-    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-picture-sprites/set-1-v75.png?v=75') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
+    .detective-card-image { width:118px; height:118px; border:4px solid #17251f; border-radius:24px; background:url('word-picture-sprites/set-1-v76.png?v=76') left top/200% 200% no-repeat; box-shadow:7px 8px 0 rgba(157,86,63,.32); transform:rotate(2deg); }
     .detective-card .premier-badge { background:#ed5057; color:white !important; }
     .bridge-card { --premier-shadow:#1f5f78; background:linear-gradient(135deg,#e8f7f7 0%,#d9eff6 58%,#fff2cc 100%); }
     .bridge-card::before { content:''; position:absolute; right:-34px; bottom:-68px; width:285px; height:150px; border:4px solid rgba(31,95,120,.22); border-radius:50%; background:rgba(53,155,181,.14); transform:rotate(-7deg); }
@@ -448,7 +451,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=75" />
+  <link rel="stylesheet" href="island-quest.css?v=76" />
 </head>
 <body>
 <div class="app">
@@ -466,6 +469,10 @@
         <div class="hero-row">
           <div>
             <h2>This week's quest</h2>
+            <div class="quest-details" aria-label="Spelling list details">
+              <p><strong>Spelling List:</strong> C-10</p>
+              <p><strong>Theme:</strong> Words with double consonants</p>
+            </div>
             <button class="hero-reset" id="resetProgressBtn">Reset Progress</button>
           </div>
           <div class="progress-wrap">
@@ -590,6 +597,10 @@
       <button class="btn ghost back" data-go="home">← Home</button>
       <div class="panel">
         <h2>Word List</h2>
+        <div class="quest-details" aria-label="Spelling list details">
+          <p><strong>Spelling List:</strong> C-10</p>
+          <p><strong>Theme:</strong> Words with double consonants</p>
+        </div>
         <p class="sub">Review all 20 words and their picture clues.</p>
         <div id="wordListDisplay" class="word-list"></div>
       </div>
@@ -1080,40 +1091,40 @@
 <script>
 (() => {
   const DEFAULT_WORDS = [
-    'golfer','felt','farmer','full','feelings','family','cough','enough','roof','rough',
-    'forgetful','fashion','photograph','tough','phrase','noise','destroy','voice','paragraph','difference'
+    'spill','berry','happy','really','messy','lettuce','carrot','puzzle','traffic','pizza',
+    'errand','litter','address','collect','happen','however','about','flower','successful','necessary'
   ];
   const SOUND_MAPS = {
-    golfer:['g','o','l','f','er'], felt:['f','e','l','t'], farmer:['f','ar','m','er'], full:['f','u','ll'], feelings:['f','ee','l','i','ng','s'],
-    family:['f','a','m','i','l','y'], cough:['c','ou','gh'], enough:['e','n','ou','gh'], roof:['r','oo','f'], rough:['r','ou','gh'],
-    forgetful:['f','or','g','e','t','f','u','l'], fashion:['f','a','sh','ion'], photograph:['ph','o','t','o','gr','a','ph'], tough:['t','ou','gh'], phrase:['ph','r','a','se'],
-    noise:['n','oi','se'], destroy:['d','e','str','oy'], voice:['v','oi','ce'], paragraph:['p','a','r','a','gr','a','ph'], difference:['d','i','ff','er','en','ce']
+    spill:['sp','i','ll'], berry:['b','e','rr','y'], happy:['h','a','pp','y'], really:['r','ea','ll','y'], messy:['m','e','ss','y'],
+    lettuce:['l','e','tt','u','ce'], carrot:['c','a','rr','o','t'], puzzle:['p','u','zz','le'], traffic:['tr','a','ff','i','c'], pizza:['p','i','zz','a'],
+    errand:['e','rr','a','n','d'], litter:['l','i','tt','er'], address:['a','dd','r','e','ss'], collect:['c','o','ll','e','c','t'], happen:['h','a','pp','en'],
+    however:['how','ev','er'], about:['a','bout'], flower:['fl','ow','er'], successful:['s','u','cc','e','ss','f','u','l'], necessary:['n','e','c','e','ss','a','r','y']
   };
   const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
   const DETECTIVE_SENTENCES = {
-    golfer: 'The golfer putted the ball toward the hole.',
-    felt: 'I cut soft felt into shapes for my craft.',
-    farmer: 'The farmer gathered carrots from the garden.',
-    full: 'The glass is full of orange juice.',
-    feelings: 'Our faces can show our different feelings.',
-    family: 'My family enjoys spending time together.',
-    cough: 'Please cover your mouth with your elbow when you cough.',
-    enough: 'We have enough sandwiches for everyone at the picnic.',
-    roof: 'The house has a red tiled roof.',
-    rough: 'The jagged rock has a rough surface.',
-    forgetful: 'The forgetful child left a lunchbox on the counter.',
-    fashion: 'She enjoys fashion and choosing colorful outfits.',
-    photograph: 'I held a photograph of our puppy.',
-    tough: 'My tough hiking boots protect my feet on rocky trails.',
-    phrase: 'Good morning is a friendly phrase to say.',
-    noise: 'The drums and cymbals made a loud noise.',
-    destroy: 'One push can destroy the tower of blocks.',
-    voice: 'Her singing voice filled the room.',
-    paragraph: 'I wrote a paragraph about my weekend.',
-    difference: 'I spotted the difference between the two toy houses.'
+    spill: 'Be careful not to spill the milk on the table.',
+    berry: 'I picked a ripe red berry from the plant.',
+    happy: 'The happy child jumped for joy.',
+    really: 'The giraffe is really tall.',
+    messy: 'Toys and clothes covered the messy bedroom floor.',
+    lettuce: 'We added fresh green lettuce to our sandwiches.',
+    carrot: 'I pulled an orange carrot from the garden.',
+    puzzle: 'I fitted the last piece into the puzzle.',
+    traffic: 'The cars waited in traffic at the red light.',
+    pizza: 'We shared a cheese and tomato pizza for lunch.',
+    errand: 'We ran an errand to post a letter.',
+    litter: 'We picked up litter to keep the park clean.',
+    address: 'I wrote our address on the envelope.',
+    collect: 'I like to collect shiny pebbles in a jar.',
+    happen: 'What will happen when the ball hits the blocks?',
+    however: 'It was raining; however, we still enjoyed our picnic.',
+    about: 'This book is about dinosaurs.',
+    flower: 'A yellow flower opened in the garden.',
+    successful: 'Our kite launch was successful.',
+    necessary: 'A helmet is necessary when you ride a bike.'
   };
-  const APP_VERSION = 75;
-  const STORAGE_KEY = 'spellingQuestV8';
+  const APP_VERSION = 76;
+  const STORAGE_KEY = 'spellingQuestV9';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
     stars: 0, bestStreak: 0, currentStreak: 0, answers: 0,
@@ -1754,12 +1765,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=75',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=76',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=75"></script>
+<script type="module" src="island-quest.js?v=76"></script>
 </body>
 </html>
