@@ -1,6 +1,5 @@
-const CACHE = 'spelling-quest-v77';
-// The v77 HTML styling update uses the existing v76 artwork and modules.
-const APP_VERSION = '76';
+const CACHE = 'spelling-quest-v78';
+const APP_VERSION = '78';
 const WORD_PICTURE_SPRITES = [1,2,3,4,5].map(number=>`./word-picture-sprites/set-${number}-v${APP_VERSION}.png?v=${APP_VERSION}`);
 const ASSETS = ['./','./index.html',`./island-quest.css?v=${APP_VERSION}`,`./island-quest.js?v=${APP_VERSION}`,'./vendor/three.module.min.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./sound-the-word-capybara.png','./sky-high-balloon.png','./capybara-yuzu-scramble-onsen.png','./capybara-yuzu-scramble-capybara.png',...WORD_PICTURE_SPRITES];
 self.addEventListener('install', event => {
