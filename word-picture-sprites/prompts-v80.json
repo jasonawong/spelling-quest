@@ -1,0 +1,63 @@
+{
+  "version": 80,
+  "list": "C-13",
+  "theme": "Homophones",
+  "method": "built-in image generation",
+  "references": [
+    "set-2-v78.png",
+    "set-3-v78.png",
+    "set-4-v78.png"
+  ],
+  "sheets": [
+    {
+      "key": "set-1",
+      "words": [
+        "ant",
+        "aunt",
+        "there",
+        "their"
+      ],
+      "prompt": "Use case: illustration-story\nAsset type: 2x2 picture-clue sprite sheet for children's spelling list C-13 Homophones.\nInput images: STYLE REFERENCES ONLY; match the cheerful polished softly shaded 3D children's storybook illustrations, expressive big-eyed diverse characters, rounded forms, detailed materials, bright natural colors, warm daylight and rich scenery of the license, distance and yesterday panels. All scenes should look illustrated by the same artist. No flat icons or emoji.\nPrimary request: exactly FOUR complete independent scenes in a perfect 2x2 grid, in this order:\nTop left: ant — close-up of one tiny ant with six legs carrying a bread crumb toward its nest on a sunny garden path\nTop right: aunt — a smiling adult woman warmly hugging her young niece at a family gathering, clearly an adult relative\nBottom left: there — a child pointing toward a box across the room beside the doorway, a clear pointing gesture toward a distant place\nBottom right: their — two children hanging their own coats on adjacent coat hooks, each child holding a sleeve of their own coat\nComposition: square image, exactly equal square quadrants with thin perfectly straight centered white vertical and horizontal dividers, no outer border, no extra panels. Frame each subject prominently and entirely within its quadrant, recognizable at thumbnail size. Opaque backgrounds. Do not write the spelling words, captions, labels, dialogue, logos, signatures, watermarks or readable words on any objects. Only 17 and 18 may be legible in the calendar scene. Keep main action in lower/left part where practical so a sentence bubble can overlay upper right."
+    },
+    {
+      "key": "set-2",
+      "words": [
+        "they're",
+        "brake",
+        "break",
+        "your"
+      ],
+      "prompt": "Use case: illustration-story\nAsset type: 2x2 picture-clue sprite sheet for children's spelling list C-13 Homophones.\nInput images: STYLE REFERENCES ONLY; match the cheerful polished softly shaded 3D children's storybook illustrations, expressive big-eyed diverse characters, rounded forms, detailed materials, bright natural colors, warm daylight and rich scenery of the license, distance and yesterday panels. All scenes should look illustrated by the same artist. No flat icons or emoji.\nPrimary request: exactly FOUR complete independent scenes in a perfect 2x2 grid, in this order:\nTop left: they're — two children actively running and playing together outside, emphasizing THEY ARE playing\nTop right: brake — close-up of a child's hand squeezing a bicycle brake lever, with visible cable and stopped wheel, safe helmeted rider\nBottom left: break — a child's hands carefully snapping a thin dry twig into two pieces, visibly separated broken ends\nBottom right: your — a friendly child handing a backpack directly toward the viewer, clear offering gesture for YOUR backpack\nComposition: square image, exactly equal square quadrants with thin perfectly straight centered white vertical and horizontal dividers, no outer border, no extra panels. Frame each subject prominently and entirely within its quadrant, recognizable at thumbnail size. Opaque backgrounds. Do not write the spelling words, captions, labels, dialogue, logos, signatures, watermarks or readable words on any objects. Only 17 and 18 may be legible in the calendar scene. Keep main action in lower/left part where practical so a sentence bubble can overlay upper right."
+    },
+    {
+      "key": "set-3",
+      "words": [
+        "you're",
+        "beat",
+        "beet",
+        "sail"
+      ],
+      "prompt": "Use case: illustration-story\nAsset type: 2x2 picture-clue sprite sheet for children's spelling list C-13 Homophones.\nInput images: STYLE REFERENCES ONLY; match the cheerful polished softly shaded 3D children's storybook illustrations, expressive big-eyed diverse characters, rounded forms, detailed materials, bright natural colors, warm daylight and rich scenery of the license, distance and yesterday panels. All scenes should look illustrated by the same artist. No flat icons or emoji.\nPrimary request: exactly FOUR complete independent scenes in a perfect 2x2 grid, in this order:\nTop left: you're — one child warmly pointing toward the viewer with an encouraging smile and holding a gold star award out to the viewer, YOU ARE a wonderful friend\nTop right: beat — a child tapping a drum with two drumsticks, lively steady rhythm, the drum is the focal point\nBottom left: beet — a large red-purple garden beet with leafy green tops and one sliced half revealing dark red concentric flesh, in a garden harvest basket\nBottom right: sail — children with life jackets and an adult sailing a small sailboat across a bright blue lake, large white sail\nComposition: square image, exactly equal square quadrants with thin perfectly straight centered white vertical and horizontal dividers, no outer border, no extra panels. Frame each subject prominently and entirely within its quadrant, recognizable at thumbnail size. Opaque backgrounds. Do not write the spelling words, captions, labels, dialogue, logos, signatures, watermarks or readable words on any objects. Only 17 and 18 may be legible in the calendar scene. Keep main action in lower/left part where practical so a sentence bubble can overlay upper right."
+    },
+    {
+      "key": "set-4",
+      "words": [
+        "sale",
+        "bare",
+        "bear",
+        "license"
+      ],
+      "prompt": "Use case: illustration-story\nAsset type: 2x2 picture-clue sprite sheet for children's spelling list C-13 Homophones.\nInput images: STYLE REFERENCES ONLY; match the cheerful polished softly shaded 3D children's storybook illustrations, expressive big-eyed diverse characters, rounded forms, detailed materials, bright natural colors, warm daylight and rich scenery of the license, distance and yesterday panels. All scenes should look illustrated by the same artist. No flat icons or emoji.\nPrimary request: exactly FOUR complete independent scenes in a perfect 2x2 grid, in this order:\nTop left: sale — a friendly toy store discount display with a toy teddy bear and a large hanging price tag showing only a simple downward arrow, a shopper making a purchase, no written words or prices\nTop right: bare — close-up of a child's bare feet and uncovered toes on warm beach sand with shoes set aside\nBottom left: bear — a friendly brown bear catching a fish beside a forest river, clearly an animal\nBottom right: license — smiling adult driver holding a generic driver's license beside a parked blue car, card has small portrait and undecipherable gray lines\nComposition: square image, exactly equal square quadrants with thin perfectly straight centered white vertical and horizontal dividers, no outer border, no extra panels. Frame each subject prominently and entirely within its quadrant, recognizable at thumbnail size. Opaque backgrounds. Do not write the spelling words, captions, labels, dialogue, logos, signatures, watermarks or readable words on any objects. Only 17 and 18 may be legible in the calendar scene. Keep main action in lower/left part where practical so a sentence bubble can overlay upper right."
+    },
+    {
+      "key": "set-5",
+      "words": [
+        "distance",
+        "yesterday",
+        "clothes",
+        "close"
+      ],
+      "prompt": "Use case: illustration-story\nAsset type: 2x2 picture-clue sprite sheet for children's spelling list C-13 Homophones.\nInput images: STYLE REFERENCES ONLY; match the cheerful polished softly shaded 3D children's storybook illustrations, expressive big-eyed diverse characters, rounded forms, detailed materials, bright natural colors, warm daylight and rich scenery of the license, distance and yesterday panels. All scenes should look illustrated by the same artist. No flat icons or emoji.\nPrimary request: exactly FOUR complete independent scenes in a perfect 2x2 grid, in this order:\nTop left: distance — two children standing far apart measuring the distance across a grassy field using a long yellow measuring tape stretched between them\nTop right: yesterday — a cheerful child pointing to a large calendar with adjacent date squares 17 and 18, a curved backward red arrow from 18 to highlighted 17, only these two numbers legible\nBottom left: clothes — a child folding clean colorful shirts and trousers into a neat stack in a cheerful bedroom, clothes prominent\nBottom right: close — a child gently pushing a room door closed with one hand, door nearly shut with a small gap, clearly the action CLOSE the door\nComposition: square image, exactly equal square quadrants with thin perfectly straight centered white vertical and horizontal dividers, no outer border, no extra panels. Frame each subject prominently and entirely within its quadrant, recognizable at thumbnail size. Opaque backgrounds. Do not write the spelling words, captions, labels, dialogue, logos, signatures, watermarks or readable words on any objects. Only 17 and 18 may be legible in the calendar scene. Keep main action in lower/left part where practical so a sentence bubble can overlay upper right."
+    }
+  ]
+}
