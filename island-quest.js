@@ -115,7 +115,7 @@ function bindRefs(){
 }
 
 function normalize(value){
-  return (value || '').trim().toLowerCase().replace(/[^a-z'-]/g, '');
+  return (value || '').trim().toLowerCase().replace(/[’‘]/g, "'").replace(/[^a-z'-]/g, '');
 }
 
 function shuffled(values){

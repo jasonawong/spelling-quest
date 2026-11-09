@@ -101,7 +101,9 @@
     .speak { width:116px; height:116px; border:none; border-radius:999px; background:var(--primary); color:white; font-size:48px; box-shadow:0 12px 30px rgba(108,99,255,.3); cursor:pointer; }
     .picture-cue { display:flex; align-items:center; justify-content:center; gap:clamp(18px,5vw,36px); flex-wrap:wrap; margin:12px 0 18px; }
     .word-picture { width:min(250px,72vw); border-radius:24px; background-color:#fffdf8; background-image:url('word-picture-sprites/set-1-v78.png?v=78'); background-repeat:no-repeat; box-shadow:0 10px 24px rgba(46,52,90,.12); }
-    .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:5rem; }
+    .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:3rem; }
+    .word-list-picture.fallback { font-size:1.35rem; }
+    .detective-image.fallback { display:grid; place-items:center; align-content:end; padding-bottom:18%; font-size:clamp(3rem,12vw,7rem); }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
     .feedback { min-height:56px; margin-top:14px; font-size:1.12rem; font-weight:900; text-align:center; display:grid; place-items:center; }
@@ -453,7 +455,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=78" />
+  <link rel="stylesheet" href="island-quest.css?v=79" />
 </head>
 <body>
 <div class="app">
@@ -472,8 +474,8 @@
           <div>
             <h2>This week's quest</h2>
             <div class="quest-details" aria-label="Spelling list details">
-              <p><strong>Spelling List:</strong> C-11</p>
-              <p><strong>Theme:</strong> s and z</p>
+              <p><strong>Spelling List:</strong> C-13</p>
+              <p><strong>Theme:</strong> Homophones</p>
             </div>
             <button class="hero-reset" id="resetProgressBtn">Reset Progress</button>
           </div>
@@ -600,8 +602,8 @@
       <div class="panel">
         <h2>Word List</h2>
         <div class="quest-details" aria-label="Spelling list details">
-          <p><strong>Spelling List:</strong> C-11</p>
-          <p><strong>Theme:</strong> s and z</p>
+          <p><strong>Spelling List:</strong> C-13</p>
+          <p><strong>Theme:</strong> Homophones</p>
         </div>
         <p class="sub">Review all 20 words and their picture clues.</p>
         <div id="wordListDisplay" class="word-list"></div>
@@ -1093,40 +1095,48 @@
 <script>
 (() => {
   const DEFAULT_WORDS = [
-    'daisy','vase','plastic','zipper','reuse','sense','does','license','closet','season',
-    'bicycle','distance','service','classes','yesterday','fashion','photograph','enough','sincerely','citizen'
+    'ant','aunt','there','their',"they're",'brake','break','your',"you're",'beat',
+    'beet','sail','sale','bare','bear','license','distance','yesterday','clothes','close'
   ];
   const SOUND_MAPS = {
-    daisy:['d','ai','s','y'], vase:['v','a','se'], plastic:['pl','a','s','t','i','c'], zipper:['z','i','pp','er'], reuse:['r','e','u','se'],
-    sense:['s','e','n','se'], does:['d','oe','s'], license:['l','i','c','e','n','se'], closet:['cl','o','s','e','t'], season:['s','ea','s','on'],
-    bicycle:['b','i','c','y','c','le'], distance:['d','i','s','t','a','n','ce'], service:['s','er','v','i','ce'], classes:['cl','a','ss','es'], yesterday:['y','e','s','t','er','d','ay'],
-    fashion:['f','a','sh','ion'], photograph:['ph','o','t','o','gr','a','ph'], enough:['e','n','ou','gh'], sincerely:['s','i','n','c','ere','l','y'], citizen:['c','i','t','i','z','en']
+    ant:['a','n','t'], aunt:['au','n','t'], there:['th','ere'], their:['th','eir'], "they're":['th','ey',"'re"],
+    brake:['br','a','ke'], break:['br','ea','k'], your:['y','our'], "you're":['y','ou',"'re"], beat:['b','ea','t'],
+    beet:['b','ee','t'], sail:['s','ai','l'], sale:['s','a','le'], bare:['b','are'], bear:['b','ear'],
+    license:['l','i','c','e','n','se'], distance:['d','i','s','t','a','n','ce'], yesterday:['y','e','s','t','er','d','ay'],
+    clothes:['cl','o','th','es'], close:['cl','o','se']
   };
-  const VISUAL_WORDS = new Map(DEFAULT_WORDS.map((word,index)=>[word,index]));
+  // Retain the matching illustrations from the previous list for review words.
+  const PICTURE_VERSION = 78;
+  const VISUAL_WORDS = new Map([['license',7],['distance',11],['yesterday',14]]);
+  const WORD_ICONS = {
+    ant:'🐜', aunt:'👩‍👧', there:'👉', their:'👧👦🎒', "they're":'👧👦🏃',
+    brake:'🚲🛑', break:'🪵💥', your:'👉🎒', "you're":'👉🌟', beat:'🥁',
+    beet:'🥬', sail:'⛵', sale:'🏷️', bare:'🦶', bear:'🐻', clothes:'👕👖', close:'🚪'
+  };
   const DETECTIVE_SENTENCES = {
-    daisy: 'A white daisy bloomed in the garden.',
-    vase: 'I put the flowers in a blue vase.',
-    plastic: 'These colorful cups are made of plastic.',
-    zipper: 'I pulled up the zipper on my jacket.',
-    reuse: 'We reuse an empty jar to hold our pencils.',
-    sense: 'My sense of smell helps me enjoy the rose.',
-    does: 'She does her homework after school.',
+    ant: 'A tiny ant carried a crumb to its nest.',
+    aunt: "My aunt is my mother's sister.",
+    there: 'Put the box over there beside the door.',
+    their: 'The children hung their coats on the hooks.',
+    "they're": "I think they're playing outside together.",
+    brake: 'Use the brake to stop your bicycle.',
+    break: 'Be careful so you do not break the glass.',
+    your: 'Please put your backpack on the hook.',
+    "you're": "I think you're a wonderful friend.",
+    beat: 'Tap the drum to keep a steady beat.',
+    beet: 'We picked a red beet from the garden.',
+    sail: 'We will sail our boat across the lake.',
+    sale: 'The store has toys on sale for half price.',
+    bare: 'I walked on the sand with bare feet.',
+    bear: 'A brown bear caught a fish in the river.',
     license: 'The driver showed us a license.',
-    closet: 'I chose a sweater from the closet.',
-    season: 'Autumn is the season for picking apples.',
-    bicycle: 'My bicycle is ready for a ride in the park.',
     distance: 'We measured the distance across the field.',
-    service: 'The waiter gave us friendly service.',
-    classes: 'Our classes learn new things every day.',
-    yesterday: 'I marked yesterday on the calendar.',
-    fashion: 'She enjoys fashion and choosing colorful outfits.',
-    photograph: 'I held a photograph of our puppy.',
-    enough: 'We have enough sandwiches for everyone at the picnic.',
-    sincerely: 'I ended my letter with sincerely and signed my name.',
-    citizen: 'A good citizen helps care for the neighborhood.'
+    yesterday: 'We went to the park yesterday.',
+    clothes: 'I folded my clean clothes and put them away.',
+    close: 'Please close the door to keep the room warm.'
   };
-  const APP_VERSION = 78;
-  const STORAGE_KEY = 'spellingQuestV10';
+  const APP_VERSION = 79;
+  const STORAGE_KEY = 'spellingQuestC13';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
     stars: 0, bestStreak: 0, currentStreak: 0, answers: 0,
@@ -1154,7 +1164,7 @@
     catch { return sampleState(); }
   }
   function saveState(){ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); refreshHome(); }
-  function normalize(s){ return (s||'').trim().toLowerCase().replace(/[^a-z'-]/g,''); }
+  function normalize(s){ return (s||'').trim().toLowerCase().replace(/[’‘]/g,"'").replace(/[^a-z'-]/g,''); }
   function mastery(w){ const attempts=w.correct+w.wrong; if(w.correct>=3 && w.correct >= w.wrong*2) return 2; if(attempts>0) return 1; return 0; }
   function masteredCount(){ return state.words.filter(w => mastery(w)===2).length; }
   function weightedWord(pool=state.words){
@@ -1178,7 +1188,8 @@
   function speak(text){
     if(!('speechSynthesis' in window)){ toast('Speech is not available on this device.'); return; }
     speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
+    const clue = DETECTIVE_SENTENCES[text];
+    const u = new SpeechSynthesisUtterance(clue ? `${text}. ${clue} ${text}.` : text);
     u.rate=.78; u.pitch=1.0;
     speechSynthesis.speak(u);
   }
@@ -1188,11 +1199,11 @@
   function requireWords(){ if(!state.words || state.words.length<1){ toast('The word list is empty.'); return false; } return true; }
   function showWordPicture(element, word){
     const index=VISUAL_WORDS.get(word);
-    if(index===undefined){ element.classList.add('fallback'); element.textContent='🖼️'; element.style.aspectRatio='5/4'; element.style.backgroundImage='none'; element.style.backgroundSize='auto'; element.style.backgroundPosition='center'; element.setAttribute('aria-label',`Picture clue unavailable for ${word}`); return; }
+    if(index===undefined){ element.classList.add('fallback'); element.textContent=WORD_ICONS[word]||'🖼️'; element.style.aspectRatio='1'; element.style.backgroundImage='none'; element.style.backgroundSize='auto'; element.style.backgroundPosition='center'; element.setAttribute('aria-label',DETECTIVE_SENTENCES[word]||`Picture clue unavailable for ${word}`); return; }
     const artCell=index%4;
     element.classList.remove('fallback'); element.textContent='';
     element.style.aspectRatio='1';
-    element.style.backgroundImage=`url('word-picture-sprites/set-${Math.floor(index/4)+1}-v${APP_VERSION}.png?v=${APP_VERSION}')`;
+    element.style.backgroundImage=`url('word-picture-sprites/set-${Math.floor(index/4)+1}-v${PICTURE_VERSION}.png?v=${PICTURE_VERSION}')`;
     element.style.backgroundSize='200% 200%';
     element.style.backgroundPosition=`${artCell%2*100}% ${Math.floor(artCell/2)*100}%`;
     element.setAttribute('aria-label',`Picture clue for ${word}`);
@@ -1296,11 +1307,7 @@
     if(!detectiveRemaining.length){ currentWord=null; show('home'); toast(`Word Detective complete — you solved all ${detectiveTotal} cases!`); return; }
     detectiveN++; currentWord=weightedWord(detectiveRemaining); detectiveRemaining=detectiveRemaining.filter(word=>word!==currentWord);
     document.getElementById('detectiveCounter').textContent=`Case ${detectiveN} of ${detectiveTotal}`;
-    const artIndex=VISUAL_WORDS.get(currentWord.word), artCell=artIndex%4;
-    const image=document.getElementById('detectiveImage');
-    image.style.backgroundImage=`url('word-picture-sprites/set-${Math.floor(artIndex/4)+1}-v${APP_VERSION}.png?v=${APP_VERSION}')`;
-    image.style.backgroundPosition=`${artCell%2*100}% ${Math.floor(artCell/2)*100}%`;
-    image.setAttribute('aria-label',`Illustrated scene clue for ${currentWord.word}`);
+    showWordPicture(document.getElementById('detectiveImage'),currentWord.word);
     const feedback=document.getElementById('detectiveFeedback'); feedback.className='feedback'; feedback.textContent='';
     document.getElementById('detectiveCheck').disabled=false; renderDetectiveSentence();
     setTimeout(()=>document.querySelector('#detectiveBubble .detective-letter')?.focus(),80);
@@ -1767,12 +1774,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=78',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=79',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=78"></script>
+<script type="module" src="island-quest.js?v=79"></script>
 </body>
 </html>

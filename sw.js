@@ -1,6 +1,7 @@
-const CACHE = 'spelling-quest-v78';
-const APP_VERSION = '78';
-const WORD_PICTURE_SPRITES = [1,2,3,4,5].map(number=>`./word-picture-sprites/set-${number}-v${APP_VERSION}.png?v=${APP_VERSION}`);
+const CACHE = 'spelling-quest-v79';
+const APP_VERSION = '79';
+const PICTURE_VERSION = '78';
+const WORD_PICTURE_SPRITES = [1,2,3,4,5].map(number=>`./word-picture-sprites/set-${number}-v${PICTURE_VERSION}.png?v=${PICTURE_VERSION}`);
 const ASSETS = ['./','./index.html',`./island-quest.css?v=${APP_VERSION}`,`./island-quest.js?v=${APP_VERSION}`,'./vendor/three.module.min.js','./manifest.webmanifest','./icon-192.png','./icon-512.png','./sound-the-word-capybara.png','./sky-high-balloon.png','./capybara-yuzu-scramble-onsen.png','./capybara-yuzu-scramble-capybara.png',...WORD_PICTURE_SPRITES];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => Promise.all(ASSETS.map(url => cache.add(new Request(new URL(url,self.location).href,{ cache:'reload' }))))).then(()=>self.skipWaiting()));
