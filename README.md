@@ -4,6 +4,7 @@ A touch-first, offline-capable spelling practice PWA for one child using one iPa
 
 ## Included
 - Picture-supported list of 20 spelling words
+- Homophone Match: pair pictures and spellings across seven sets covering the first 15 C-13 words, with sentence clues, first-try scoring, and stars
 - Type the Word with a one-second preview, picture clues, and the device's speech synthesis
 - Sound the Word with picture clues and capybara-themed sound-to-spelling chunk mapping
 - Word Detective with 20 sentence- and picture-matched clues and inline missing-letter clues

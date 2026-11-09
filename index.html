@@ -104,6 +104,24 @@
     .word-picture.fallback { background-image:none; display:grid; place-items:center; font-size:3rem; }
     .word-list-picture.fallback { font-size:1.35rem; }
     .detective-image.fallback { display:grid; place-items:center; align-content:end; padding-bottom:18%; font-size:clamp(3rem,12vw,7rem); }
+    .homophone-bank { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin:20px 0; }
+    .homophone-word { min-width:110px; border:3px solid transparent; font-size:1.3rem; }
+    .homophone-word[aria-pressed="true"] { border-color:var(--primary-dark); background:#e7e4ff; }
+    .homophone-word:disabled { opacity:1; background:#e2f6eb; color:#176342; }
+    .homophone-pictures { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+    .homophone-pictures[data-count="2"] { grid-template-columns:repeat(2,minmax(0,1fr)); max-width:640px; margin:auto; }
+    .homophone-picture { display:flex; flex-direction:column; min-width:0; padding:10px; border:3px solid var(--line); border-radius:22px; background:#fffdf8; color:var(--ink); cursor:pointer; text-align:center; }
+    .homophone-picture .word-picture { display:block; flex:none; width:100%; border-radius:14px; }
+    .homophone-picture .homophone-sentence { display:block; margin:12px 0; font-size:1rem; font-weight:750; line-height:1.5; }
+    .homophone-picture .homophone-label { display:block; margin-top:auto; min-height:32px; font-size:1.25rem; font-weight:900; color:var(--primary-dark); }
+    .homophone-picture.matched { border-color:var(--good); background:#eefaf3; cursor:default; }
+    .homophone-picture.matched .homophone-label { color:#176342; }
+    .homophone-word:focus-visible,.homophone-picture:focus-visible { outline:4px solid var(--primary); outline-offset:4px; }
+    .homophone-results { padding:24px 0; }
+    @media (max-width:560px) {
+      .homophone-pictures,.homophone-pictures[data-count="2"] { grid-template-columns:1fr; max-width:340px; margin:auto; }
+      .homophone-word { min-width:90px; }
+    }
     .center { text-align:center; }
     .question-meta { display:flex; justify-content:space-between; gap:10px; align-items:center; color:var(--muted); font-weight:900; margin-bottom:18px; }
     .feedback { min-height:56px; margin-top:14px; font-size:1.12rem; font-weight:900; text-align:center; display:grid; place-items:center; }
@@ -455,7 +473,7 @@
     .toast { position:fixed; left:50%; bottom:max(22px,env(safe-area-inset-bottom)); transform:translateX(-50%) translateY(20px); background:#191d30; color:white; padding:12px 18px; border-radius:999px; font-weight:850; opacity:0; pointer-events:none; transition:.2s; z-index:99; max-width:90%; text-align:center; }
     .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
   </style>
-  <link rel="stylesheet" href="island-quest.css?v=80" />
+  <link rel="stylesheet" href="island-quest.css?v=81" />
 </head>
 <body>
 <div class="app">
@@ -498,6 +516,8 @@
           <p>Review the words, pictures, spelling, and sounds before the big adventures.</p>
         </div>
         <div class="grid warmup-grid">
+          <button class="game-card" data-action="homophones"><div class="emoji" aria-hidden="true">🧩</div><div><strong>Homophone Match</strong><span>Match the first 15 words to their pictures in seven sound-alike sets.</span></div></button>
+
           <button class="game-card" data-action="word-list"><div class="emoji">🖼️</div><div><strong>View the Word List</strong><span>See all 20 words with their related pictures.</span></div></button>
           <button class="game-card" data-action="listen"><div class="keycap-icon" aria-hidden="true">A</div><div><strong>Type the Word</strong><span>See and hear a word, then type the spelling.</span></div></button>
           <button class="game-card" data-action="sound"><img class="game-card-icon" src="sound-the-word-capybara.png" alt="" /><div><strong>Sound the Word</strong><span>Map each sound to its spelling chunk.</span></div></button>
@@ -607,6 +627,27 @@
         </div>
         <p class="sub">Review all 20 words and their picture clues.</p>
         <div id="wordListDisplay" class="word-list"></div>
+      </div>
+    </section>
+
+    <section id="homophones" class="screen">
+      <button class="btn ghost back" data-go="home">← Home</button>
+      <div class="panel center">
+        <h2>Homophone Match</h2>
+        <div id="homophoneRound">
+          <div class="question-meta"><span id="homophoneCounter"></span><span id="homophoneProgress"></span></div>
+          <p class="sub" id="homophoneInstructions">Tap a spelling, then tap its matching picture. Use the sentence to help you.</p>
+          <div id="homophoneWords" class="homophone-bank" role="group" aria-label="Choose a spelling"></div>
+          <div id="homophonePictures" class="homophone-pictures" role="group" aria-label="Match the spelling to a picture"></div>
+          <div id="homophoneFeedback" class="feedback" role="status" aria-live="polite" aria-atomic="true"></div>
+          <button class="btn primary" id="homophoneNext" disabled>Next set →</button>
+        </div>
+        <div id="homophoneResults" class="homophone-results" hidden>
+          <div class="result-trophy" aria-hidden="true">🏆</div>
+          <h3 tabindex="-1" id="homophoneResultTitle">All seven sets matched!</h3>
+          <p class="sub" id="homophoneResultLine"></p>
+          <button class="btn primary" id="homophoneAgain">Play again</button>
+        </div>
       </div>
     </section>
 
@@ -1129,7 +1170,7 @@
     clothes: 'I folded my clean clothes and put them away.',
     close: 'Please close the door to keep the room warm.'
   };
-  const APP_VERSION = 80;
+  const APP_VERSION = 81;
   const STORAGE_KEY = 'spellingQuestC13';
   const sampleState = () => ({
     words: DEFAULT_WORDS.map(w => ({ word:w, correct:0, wrong:0, streak:0 })),
@@ -1260,6 +1301,7 @@
     if(a==='listen') startListen();
     if(a==='build') startBuild();
     if(a==='sound') startSound();
+    if(a==='homophones') startHomophones();
     if(a==='detective') startDetective();
     if(a==='island') startIsland();
     if(a==='sky') startSky();
@@ -1267,6 +1309,103 @@
     if(a==='yuzu') startYuzu();
     if(a==='test') startTest();
   });
+
+  // Homophone Match: the first 15 C-13 words, grouped by their shared sound.
+  const HOMOPHONE_SETS = [
+    ['ant','aunt'], ['there','their',"they're"], ['brake','break'],
+    ['your',"you're"], ['beat','beet'], ['sail','sale'], ['bare','bear']
+  ];
+  let homophoneSession = null;
+  function homophoneFeedback(message,kind=''){
+    const feedback=document.getElementById('homophoneFeedback');
+    feedback.textContent=message; feedback.className='feedback '+kind;
+  }
+  function startHomophones(){
+    homophoneSession={index:0,selected:null,matched:new Set(),mistakes:new Set(),completed:0,firstTry:0,stars:0};
+    document.getElementById('homophoneRound').hidden=false;
+    document.getElementById('homophoneResults').hidden=true;
+    show('homophones'); renderHomophoneSet();
+  }
+  function renderHomophoneSet(){
+    const session=homophoneSession, words=HOMOPHONE_SETS[session.index];
+    session.selected=null; session.matched=new Set(); session.mistakes=new Set();
+    document.getElementById('homophoneCounter').textContent=`Set ${session.index+1} of ${HOMOPHONE_SETS.length}`;
+    document.getElementById('homophoneProgress').textContent=`${session.completed} / 15 matched`;
+    const next=document.getElementById('homophoneNext'); next.disabled=true;
+    next.textContent=session.index===HOMOPHONE_SETS.length-1?'See results →':'Next set →';
+    homophoneFeedback('Choose a spelling to begin.');
+    const bank=document.getElementById('homophoneWords'); bank.replaceChildren();
+    shuffle([...words]).forEach(word=>{
+      const button=document.createElement('button'); button.className='btn homophone-word';
+      button.textContent=word; button.dataset.word=word; button.setAttribute('aria-pressed','false');
+      button.onclick=()=>{
+        session.selected=word;
+        bank.querySelectorAll('button').forEach(choice=>choice.setAttribute('aria-pressed',String(choice===button)));
+        homophoneFeedback(`Now tap the picture for “${word}”.`);
+      };
+      bank.appendChild(button);
+    });
+    const pictures=document.getElementById('homophonePictures'); pictures.replaceChildren(); pictures.dataset.count=words.length;
+    shuffle([...words]).forEach((word,index)=>{
+      const button=document.createElement('button'); button.className='homophone-picture';
+      const sentence=DETECTIVE_SENTENCES[word];
+      const blank=sentence.replace(new RegExp(`\\b${word}\\b`,'i'),'_____');
+      button.setAttribute('aria-label',`Picture ${index+1}. ${blank}`);
+      button.setAttribute('aria-describedby','homophoneInstructions');
+      const image=document.createElement('span'); image.className='word-picture'; showWordPicture(image,word);
+      // The sentence describes the picture without revealing the answer to assistive technology.
+      image.removeAttribute('aria-label'); image.setAttribute('aria-hidden','true');
+      const clue=document.createElement('span'); clue.className='homophone-sentence'; clue.textContent=blank;
+      const label=document.createElement('span'); label.className='homophone-label'; label.textContent='Tap to match';
+      button.append(image,clue,label);
+      button.onclick=()=>matchHomophone(word,button,label);
+      pictures.appendChild(button);
+    });
+  }
+  function matchHomophone(word,button,label){
+    const session=homophoneSession;
+    if(!session || session.matched.has(word)) return;
+    if(!session.selected){ homophoneFeedback('Tap a spelling first, then choose its picture.'); return; }
+    const wordObject=state.words.find(item=>item.word===word);
+    if(session.selected!==word){
+      if(!session.mistakes.has(session.selected)) record(state.words.find(item=>item.word===session.selected),false,0);
+      session.mistakes.add(session.selected);
+      homophoneFeedback('Try another picture, or choose a different spelling. Read the sentence for a clue.','bad');
+      return;
+    }
+    const firstTry=!session.mistakes.has(word), stars=firstTry?10:5;
+    record(wordObject,true,stars); session.stars+=stars;
+    if(firstTry) session.firstTry++;
+    session.matched.add(word); session.completed++; session.selected=null;
+    label.textContent=`✓ ${word}`; button.classList.add('matched'); button.disabled=true;
+    button.setAttribute('aria-label',`Matched: ${word}. ${DETECTIVE_SENTENCES[word]}`);
+    const bank=document.getElementById('homophoneWords');
+    bank.querySelectorAll('button').forEach(choice=>{
+      choice.setAttribute('aria-pressed','false');
+      if(choice.dataset.word===word) choice.disabled=true;
+    });
+    document.getElementById('homophoneProgress').textContent=`${session.completed} / 15 matched`;
+    const complete=session.matched.size===HOMOPHONE_SETS[session.index].length;
+    document.getElementById('homophoneNext').disabled=!complete;
+    homophoneFeedback(complete?'Great work! You matched every word in this set.':`Correct! “${word}” matches this picture. Choose the next spelling.`,'good');
+    if(complete) document.getElementById('homophoneNext').focus();
+    else bank.querySelector('button:not(:disabled)')?.focus();
+  }
+  document.getElementById('homophoneNext').onclick=()=>{
+    const session=homophoneSession;
+    if(!session || session.matched.size!==HOMOPHONE_SETS[session.index].length) return;
+    if(session.index===HOMOPHONE_SETS.length-1){
+      document.getElementById('homophoneRound').hidden=true;
+      document.getElementById('homophoneResults').hidden=false;
+      document.getElementById('homophoneResultLine').textContent=`You matched all 15 words! ${session.firstTry} of 15 matched on the first try. You earned ${session.stars} stars.`;
+      document.getElementById('homophoneResultTitle').focus();
+      return;
+    }
+    session.index++; renderHomophoneSet();
+    document.getElementById('homophoneWords').querySelector('button')?.focus();
+    document.getElementById('homophones').scrollIntoView({block:'start'});
+  };
+  document.getElementById('homophoneAgain').onclick=startHomophones;
 
   // Word Detective
   let detectiveN=0, detectiveRemaining=[], detectiveTotal=0;
@@ -1768,12 +1907,12 @@
 
   // Service worker
   if('serviceWorker' in navigator && location.protocol!=='file:'){
-    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=80',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js?v=81',{ updateViaCache:'none' }).then(registration=>registration.update()).catch(()=>{}));
   }
 
   refreshHome();
 })();
 </script>
-<script type="module" src="island-quest.js?v=80"></script>
+<script type="module" src="island-quest.js?v=81"></script>
 </body>
 </html>
